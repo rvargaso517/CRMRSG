@@ -1,0 +1,325 @@
+@{
+    ViewBag.Title = "Dashboard - CRM";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Header -->
+<div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between">
+    <h1>
+        Dashboard CRM
+        <small>Panel de Control</small>
+    </h1>
+    <ol class="breadcrumb p-0">
+        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="fa fa-dashboard"></i> Inicio</a></li>
+        <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+</div>
+
+<!-- KPI Cards -->
+<div class="row first-section">
+    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+        <div class="box pull-up bg-primary">
+            <div class="box-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="me-15 text-center">
+                        <i class="si-people si fs-40"></i>
+                    </div>
+                    <div class="d-flex flex-column text-end">
+                        <h2 class="fs-30 mb-1 mt-0">145</h2>
+                        <p class="m-0">Clientes Totales</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+        <div class="box pull-up bg-success">
+            <div class="box-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="me-15 text-center">
+                        <i class="ti-bag fs-40"></i>
+                    </div>
+                    <div class="d-flex flex-column text-end">
+                        <h2 class="fs-30 mb-1 mt-0">32</h2>
+                        <p class="m-0">Oportunidades Activas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+        <div class="box pull-up bg-warning">
+            <div class="box-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="me-15 text-center">
+                        <i class="ti-check-box fs-40"></i>
+                    </div>
+                    <div class="d-flex flex-column text-end">
+                        <h2 class="fs-30 mb-1 mt-0">18</h2>
+                        <p class="m-0">Tareas Pendientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+        <div class="box pull-up bg-danger">
+            <div class="box-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="me-15 text-center">
+                        <i class="ti-bar-chart fs-40"></i>
+                    </div>
+                    <div class="d-flex flex-column text-end">
+                        <h2 class="fs-30 mb-1 mt-0">$425K</h2>
+                        <p class="m-0">Ingresos Potenciales</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+    <div class="col-xxl-8 col-xl-8 col-lg-12 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Oportunidades por Etapa</h4>
+            </div>
+            <div class="box-body">
+                <div id="oportunidades-chart" style="height:300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-4 col-xl-4 col-lg-12 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Clientes por Región</h4>
+            </div>
+            <div class="box-body">
+                <div id="clientes-region-chart" style="height:300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metrics -->
+<div class="row">
+    <div class="col-xxl-4 col-lg-4 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <h5 class="text-muted fw-normal mt-0">Tasa de Conversión</h5>
+                        <h3 class="m-0">28%</h3>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <div id="conversion-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-4 col-lg-4 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <h5 class="text-muted fw-normal mt-0">Nuevos Clientes</h5>
+                        <h3 class="m-0">24</h3>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <div id="new-clients-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-4 col-lg-4 col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-6">
+                        <h5 class="text-muted fw-normal mt-0">Valor Promedio</h5>
+                        <h3 class="m-0">$13.3K</h3>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-end">
+                            <div id="avg-value-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lists -->
+<div class="row">
+    <div class="col-xxl-6 col-xl-6 col-lg-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Últimas Actividades</h4>
+            </div>
+            <div class="box-body p-0">
+                <div class="media-list media-list-hover media-list-divided">
+                    <a class="media media-single" href="~/Clientes/Detalle/1">
+                        <div class="me-15">
+                            <img class="avatar avatar-md" src="~/Content/images/avatar/avatar-1.png" alt="Cliente">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Acme Corporation</h6>
+                            <p class="text-muted fs-12 mb-0">Contacto realizado</p>
+                        </div>
+                        <span class="badge badge-primary-light">Hace 2h</span>
+                    </a>
+
+                    <a class="media media-single" href="~/Clientes/Detalle/2">
+                        <div class="me-15">
+                            <img class="avatar avatar-md" src="~/Content/images/avatar/avatar-2.png" alt="Cliente">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Tech Solutions Inc</h6>
+                            <p class="text-muted fs-12 mb-0">Propuesta enviada</p>
+                        </div>
+                        <span class="badge badge-success-light">Hace 4h</span>
+                    </a>
+
+                    <a class="media media-single" href="~/Clientes/Detalle/3">
+                        <div class="me-15">
+                            <img class="avatar avatar-md" src="~/Content/images/avatar/avatar-3.png" alt="Cliente">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Global Enterprises</h6>
+                            <p class="text-muted fs-12 mb-0">Reunión agendada</p>
+                        </div>
+                        <span class="badge badge-info-light">Hace 1 día</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-6 col-xl-6 col-lg-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Tareas Próximas</h4>
+            </div>
+            <div class="box-body p-0">
+                <div class="media-list media-list-hover media-list-divided">
+                    <a class="media media-single" href="~/Tareas/Editar/1">
+                        <div class="me-10">
+                            <input type="checkbox" class="filled-in">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Llamar a cliente de Acme Corp</h6>
+                            <p class="text-muted fs-12 mb-0">Hoy - 14:00</p>
+                        </div>
+                        <span class="badge badge-danger-light">Urgente</span>
+                    </a>
+
+                    <a class="media media-single" href="~/Tareas/Editar/2">
+                        <div class="me-10">
+                            <input type="checkbox" class="filled-in">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Enviar propuesta a Tech Solutions</h6>
+                            <p class="text-muted fs-12 mb-0">Mañana - 10:00</p>
+                        </div>
+                        <span class="badge badge-warning-light">Normal</span>
+                    </a>
+
+                    <a class="media media-single" href="~/Tareas/Editar/3">
+                        <div class="me-10">
+                            <input type="checkbox" class="filled-in">
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Seguimiento de Global Enterprises</h6>
+                            <p class="text-muted fs-12 mb-0">24 Mar 2024</p>
+                        </div>
+                        <span class="badge badge-info-light">Baja</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/Content/assets/vendor_components/c3/d3.min.js"></script>
+    <script src="~/Content/assets/vendor_components/c3/c3.min.js"></script>
+    <script src="~/Content/assets/vendor_components/echarts/dist/echarts-en.min.js"></script>
+    <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Oportunidades por Etapa - ApexCharts Bar
+            if($('#oportunidades-chart').length > 0) {
+                var options1 = {
+                    series: [{ name: 'Valor ($)', data: [44000, 55000, 41000, 67000, 22000, 43000] }],
+                    chart: { type: 'bar', height: 300, toolbar: { show: false } },
+                    plotOptions: { bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded' } },
+                    dataLabels: { enabled: false },
+                    stroke: { show: true, width: 2, colors: ['transparent'] },
+                    xaxis: { categories: ['Prospección', 'Calificación', 'Propuesta', 'Negociación', 'Ganada', 'Perdida'] },
+                    fill: { opacity: 1 },
+                    colors: ['#0052cc']
+                };
+                new ApexCharts(document.querySelector("#oportunidades-chart"), options1).render();
+            }
+
+            // Clientes por Región - ApexCharts Donut
+            if($('#clientes-region-chart').length > 0) {
+                var options2 = {
+                    series: [44, 55, 13, 43],
+                    chart: { type: 'donut', height: 300 },
+                    labels: ['Norteamérica', 'Europa', 'Latam', 'Asia'],
+                    colors: ['#0052cc', '#ff9920', '#10c469', '#ff5b5b'],
+                    legend: { position: 'bottom' }
+                };
+                new ApexCharts(document.querySelector("#clientes-region-chart"), options2).render();
+            }
+
+            // Small Metrics Charts - C3
+            if($('#conversion-chart').length > 0) {
+                c3.generate({
+                    bindto: '#conversion-chart',
+                    data: { columns: [['data', 28, 35, 30, 45, 55, 38]], type: 'line' },
+                    axis: { x: {show: false}, y: {show: false} },
+                    size: { height: 50, width: 120 },
+                    legend: { show: false },
+                    color: { pattern: ['#10c469'] }
+                });
+            }
+            if($('#new-clients-chart').length > 0) {
+                c3.generate({
+                    bindto: '#new-clients-chart',
+                    data: { columns: [['data', 12, 14, 18, 22, 19, 24]], type: 'bar' },
+                    axis: { x: {show: false}, y: {show: false} },
+                    size: { height: 50, width: 120 },
+                    legend: { show: false },
+                    color: { pattern: ['#0052cc'] }
+                });
+            }
+            if($('#avg-value-chart').length > 0) {
+                c3.generate({
+                    bindto: '#avg-value-chart',
+                    data: { columns: [['data', 10, 11, 10.5, 12, 13.3]], type: 'area-spline' },
+                    axis: { x: {show: false}, y: {show: false} },
+                    size: { height: 50, width: 120 },
+                    legend: { show: false },
+                    color: { pattern: ['#ff9920'] }
+                });
+            }
+        });
+    </script>
+}

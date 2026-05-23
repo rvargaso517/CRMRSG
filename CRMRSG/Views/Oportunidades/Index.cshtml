@@ -1,0 +1,114 @@
+@{
+    ViewBag.Title = "Oportunidades";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Oportunidades</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Listado de Oportunidades</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h3 class="box-title">Todas las Oportunidades</h3>
+                <a href="~/Oportunidades/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nueva Oportunidad</a>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Cliente</th>
+                                <th>Valor Est.</th>
+                                <th>Etapa</th>
+                                <th>Probabilidad</th>
+                                <th>Cierre Est.</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><a href="#" class="fw-bold">Renovación de Licencias</a></td>
+                                <td>Acme Corporation</td>
+                                <td>$15,000</td>
+                                <td><span class="badge badge-primary-light">Propuesta Enviada</span></td>
+                                <td>
+                                    <div class="progress progress-sm mb-0">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small>70%</small>
+                                </td>
+                                <td>15 May 2024</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><a href="#" class="fw-bold">Implementación ERP</a></td>
+                                <td>Tech Solutions LLC</td>
+                                <td>$120,000</td>
+                                <td><span class="badge badge-warning-light">Negociación</span></td>
+                                <td>
+                                    <div class="progress progress-sm mb-0">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small>50%</small>
+                                </td>
+                                <td>30 Jun 2024</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><a href="#" class="fw-bold">Soporte Técnico Anual</a></td>
+                                <td>Global Enterprises</td>
+                                <td>$8,500</td>
+                                <td><span class="badge badge-success-light">Ganada</span></td>
+                                <td>
+                                    <div class="progress progress-sm mb-0">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small>100%</small>
+                                </td>
+                                <td>01 Abr 2024</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><a href="#" class="fw-bold">Auditoría de Seguridad</a></td>
+                                <td>Stark Industries</td>
+                                <td>$45,000</td>
+                                <td><span class="badge badge-danger-light">Perdida</span></td>
+                                <td>
+                                    <div class="progress progress-sm mb-0">
+                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small>0%</small>
+                                </td>
+                                <td>10 Mar 2024</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

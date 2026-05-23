@@ -1,0 +1,87 @@
+@{
+    ViewBag.Title = "Nueva Oportunidad";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Nueva Oportunidad</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item"><a href="~/Oportunidades">Oportunidades</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Crear</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Detalles de la Oportunidad</h4>
+            </div>
+            <form class="form">
+                <div class="box-body">
+                    <div class="form-group">
+                        <label class="form-label">Nombre de la Oportunidad</label>
+                        <input type="text" class="form-control" placeholder="Ej: Venta de Licencias Q3">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Cliente Asociado</label>
+                                <select class="form-select">
+                                    <option>Seleccione un cliente...</option>
+                                    <option>Acme Corporation</option>
+                                    <option>Tech Solutions LLC</option>
+                                    <option>Global Enterprises</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Valor Estimado ($)</label>
+                                <input type="number" class="form-control" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Etapa de Venta</label>
+                                <select class="form-select">
+                                    <option>Prospección</option>
+                                    <option>Calificación</option>
+                                    <option>Propuesta</option>
+                                    <option>Negociación</option>
+                                    <option>Cerrada Ganada</option>
+                                    <option>Cerrada Perdida</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Fecha de Cierre Estimada</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <textarea rows="4" class="form-control" placeholder="Detalles adicionales sobre la oportunidad..."></textarea>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <a href="~/Oportunidades" class="btn btn-warning me-1">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Oportunidad</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

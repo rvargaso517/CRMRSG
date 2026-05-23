@@ -1,0 +1,110 @@
+@{
+    ViewBag.Title = "Clientes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Clientes</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Listado de Clientes</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h3 class="box-title">Todos los Clientes</h3>
+                <a href="~/Clientes/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Cliente</a>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Empresa</th>
+                                <th>Contacto Principal</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#C-001</td>
+                                <td><a href="~/Clientes/Detalle/1" class="fw-bold">Acme Corporation</a></td>
+                                <td>Juan Pérez</td>
+                                <td>juan@acme.com</td>
+                                <td>+1 555-0123</td>
+                                <td><span class="badge badge-success-light">Activo</span></td>
+                                <td>
+                                    <a href="~/Clientes/Editar/1" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#C-002</td>
+                                <td><a href="~/Clientes/Detalle/2" class="fw-bold">Tech Solutions LLC</a></td>
+                                <td>Ana Martínez</td>
+                                <td>ana@techsolutions.com</td>
+                                <td>+1 555-0456</td>
+                                <td><span class="badge badge-success-light">Activo</span></td>
+                                <td>
+                                    <a href="~/Clientes/Editar/2" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#C-003</td>
+                                <td><a href="~/Clientes/Detalle/3" class="fw-bold">Global Enterprises</a></td>
+                                <td>Carlos Ruiz</td>
+                                <td>carlos@globalent.com</td>
+                                <td>+1 555-0789</td>
+                                <td><span class="badge badge-warning-light">En Negociación</span></td>
+                                <td>
+                                    <a href="~/Clientes/Editar/3" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#C-004</td>
+                                <td><a href="~/Clientes/Detalle/4" class="fw-bold">Stark Industries</a></td>
+                                <td>Tony Stark</td>
+                                <td>t.stark@stark.com</td>
+                                <td>+1 555-9999</td>
+                                <td><span class="badge badge-danger-light">Inactivo</span></td>
+                                <td>
+                                    <a href="~/Clientes/Editar/4" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#C-005</td>
+                                <td><a href="~/Clientes/Detalle/5" class="fw-bold">Wayne Enterprises</a></td>
+                                <td>Bruce Wayne</td>
+                                <td>b.wayne@wayne.com</td>
+                                <td>+1 555-8888</td>
+                                <td><span class="badge badge-success-light">Activo</span></td>
+                                <td>
+                                    <a href="~/Clientes/Editar/5" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
+                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

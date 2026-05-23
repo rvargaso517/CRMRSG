@@ -1,0 +1,161 @@
+@{
+    ViewBag.Title = "Calendario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Calendario</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Calendario</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-xl-9">									
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="mb-30 mb-xl-0">
+                                <div id="calendar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>							
+                <div class="col-xl-3">
+                    <div class="d-grid">
+                        <button class="btn btn-danger" id="btn-new-event">Crear Nuevo Evento</button>
+                    </div>
+                    <div id="external-events" class="mt-20">
+                        <br>
+                        <p class="text-muted">Arrastra y suelta un evento en el calendario</p>
+                        <div class="external-event bg-success" data-class="bg-success">
+                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Almuerzo de Negocios
+                        </div>
+                        <div class="external-event bg-primary" data-class="bg-primary">
+                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Reunión de Equipo
+                        </div>
+                        <div class="external-event bg-warning" data-class="bg-warning">
+                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Llamada de Seguimiento
+                        </div>
+                        <div class="external-event bg-info" data-class="bg-info">
+                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Presentación de Propuesta
+                        </div>
+                    </div>
+                </div>
+            </div>					
+        </div>				
+    </div> 
+</section>
+
+@section scripts {
+    <script src="~/Content/assets/vendor_components/full-calendar/moment.js"></script>
+    <script src="~/Content/assets/vendor_components/full-calendar/fullcalendar.min.js"></script>
+    
+    <!-- Script para inicializar y quemar datos en el calendario -->
+    <script>
+        $(document.ready).ready(function() {
+            var date = new Date();
+            var d    = date.getDate(),
+                m    = date.getMonth(),
+                y    = date.getFullYear();
+
+            $('#calendar').fullCalendar({
+                header: {
+                    left  : 'prev,next today',
+                    center: 'title',
+                    right : 'month,agendaWeek,agendaDay'
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week : 'Semana',
+                    day  : 'Día'
+                },
+                events: [
+                    {
+                        title          : 'Reunión Mensual',
+                        start          : new Date(y, m, 1),
+                        backgroundColor: '#0052cc', // primary
+                        borderColor    : '#0052cc'
+                    },
+                    {
+                        title          : 'Presentación Tech Solutions',
+                        start          : new Date(y, m, d - 5),
+                        end            : new Date(y, m, d - 2),
+                        backgroundColor: '#ff9920', // warning
+                        borderColor    : '#ff9920'
+                    },
+                    {
+                        title          : 'Demo Acme Corp',
+                        start          : new Date(y, m, d, 10, 30),
+                        allDay         : false,
+                        backgroundColor: '#188ae2', // info
+                        borderColor    : '#188ae2'
+                    },
+                    {
+                        title          : 'Almuerzo Cliente VIP',
+                        start          : new Date(y, m, d, 12, 0),
+                        end            : new Date(y, m, d, 14, 0),
+                        allDay         : false,
+                        backgroundColor: '#10c469', // success
+                        borderColor    : '#10c469'
+                    },
+                    {
+                        title          : 'Cierre de Contrato',
+                        start          : new Date(y, m, d + 1, 19, 0),
+                        end            : new Date(y, m, d + 1, 22, 30),
+                        allDay         : false,
+                        backgroundColor: '#ff5b5b', // danger
+                        borderColor    : '#ff5b5b'
+                    },
+                    {
+                        title          : 'Renovación de Licencias',
+                        start          : new Date(y, m, 28),
+                        end            : new Date(y, m, 29),
+                        url            : '#',
+                        backgroundColor: '#3b5998', 
+                        borderColor    : '#3b5998'
+                    }
+                ],
+                editable  : true,
+                droppable : true, 
+                drop      : function (date, allDay) { 
+                    var originalEventObject = $(this).data('eventObject');
+                    var copiedEventObject = $.extend({}, originalEventObject);
+                    copiedEventObject.start           = date;
+                    copiedEventObject.allDay          = allDay;
+                    copiedEventObject.backgroundColor = $(this).css('background-color');
+                    copiedEventObject.borderColor     = $(this).css('border-color');
+                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
+                }
+            });
+
+            /* initialize the external events */
+            function init_events(ele) {
+                ele.each(function () {
+                    var eventObject = {
+                        title: $.trim($(this).text()) 
+                    };
+                    $(this).data('eventObject', eventObject);
+                    $(this).draggable({
+                        zIndex        : 1070,
+                        revert        : true, 
+                        revertDuration: 0  
+                    });
+                });
+            }
+            init_events($('#external-events div.external-event'));
+        });
+    </script>
+}

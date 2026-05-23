@@ -1,0 +1,101 @@
+@{
+    ViewBag.Title = "Mis Tareas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Tareas</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Mis Tareas</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h3 class="box-title">Lista de Tareas</h3>
+                <a href="~/Tareas/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nueva Tarea</a>
+            </div>
+            <div class="box-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th style="width: 50px;"></th>
+                                <th>Descripción de la Tarea</th>
+                                <th>Relacionado con</th>
+                                <th>Vencimiento</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="checkbox">
+                                        <input type="checkbox" id="task1">
+                                        <label for="task1"></label>
+                                    </div>
+                                </td>
+                                <td><a href="#" class="text-dark fw-500 hover-primary">Llamada de seguimiento inicial</a></td>
+                                <td>Acme Corporation (Cliente)</td>
+                                <td>Hoy</td>
+                                <td><span class="badge badge-danger">Alta</span></td>
+                                <td><span class="badge badge-warning-light">Pendiente</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="checkbox">
+                                        <input type="checkbox" id="task2">
+                                        <label for="task2"></label>
+                                    </div>
+                                </td>
+                                <td><a href="#" class="text-dark fw-500 hover-primary">Enviar cotización detallada</a></td>
+                                <td>Implementación ERP (Oportunidad)</td>
+                                <td>Mañana</td>
+                                <td><span class="badge badge-warning">Media</span></td>
+                                <td><span class="badge badge-warning-light">Pendiente</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="checkbox">
+                                        <input type="checkbox" id="task3" checked>
+                                        <label for="task3"></label>
+                                    </div>
+                                </td>
+                                <td><del class="text-muted">Revisar contrato de confidencialidad</del></td>
+                                <td>Tech Solutions LLC (Cliente)</td>
+                                <td>Ayer</td>
+                                <td><span class="badge badge-info">Baja</span></td>
+                                <td><span class="badge badge-success-light">Completada</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="checkbox">
+                                        <input type="checkbox" id="task4">
+                                        <label for="task4"></label>
+                                    </div>
+                                </td>
+                                <td><a href="#" class="text-dark fw-500 hover-primary">Agendar demo técnica</a></td>
+                                <td>Global Enterprises (Cliente)</td>
+                                <td>28 Abr 2024</td>
+                                <td><span class="badge badge-warning">Media</span></td>
+                                <td><span class="badge badge-warning-light">Pendiente</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
