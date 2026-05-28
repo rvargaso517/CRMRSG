@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="f8cb3fb3fb0e433eaff4f28ed9f2a9b0" Name="Diagram1">
+        <EntityTypeShape EntityType="crm_rsgModel.bitacora" Width="1.5" PointX="5.25" PointY="5.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.citas" Width="1.5" PointX="11.125" PointY="11.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.clientes" Width="1.5" PointX="5.25" PointY="12.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.notificaciones" Width="1.5" PointX="5.25" PointY="17.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.oportunidades" Width="1.5" PointX="13.375" PointY="11.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.reportes" Width="1.5" PointX="15.625" PointY="12.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.roles" Width="1.5" PointX="0.75" PointY="11.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.sysdiagrams" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.tareas" Width="1.5" PointX="7.5" PointY="15.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="crm_rsgModel.usuarios" Width="1.5" PointX="2.875" PointY="10" IsExpanded="true" />
+        <AssociationConnector Association="crm_rsgModel.FK_bitacora_usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_citas_clientes" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_citas_usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_clientes_usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_oportunidades_clientes" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_tareas_clientes" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_notificaciones_usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_oportunidades_usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_reportes_usuarios" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_usuarios_roles" ManuallyRouted="false" />
+        <AssociationConnector Association="crm_rsgModel.FK_tareas_usuarios" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

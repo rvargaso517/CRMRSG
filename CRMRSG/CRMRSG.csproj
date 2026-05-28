@@ -1989,9 +1989,6 @@
     <Content Include="Content\scss\_variable.scss" />
     <Content Include="Content\scss\_waves.scss" />
     <Content Include="Content\scss\_width_height.scss" />
-    <Content Include="README.md" />
-    <Content Include="INSTRUCCIONES_VISTAS.md" />
-    <Content Include="RESUMEN_EJECUTIVO.md" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -2192,6 +2189,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Content\images\front-end-img\pagebanner\" />
     <Folder Include="Content\images\front-end-img\promo\" />
+    <Folder Include="EntityFramework\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
