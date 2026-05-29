@@ -10,23 +10,22 @@ namespace CRMRSG.Controllers
     {
         public ActionResult Index()
         {
-            // Redirect to Login by default
-            return RedirectToAction("Login", "Home");
+            return RedirectToAction("Login", "Autenticacion");
         }
 
         public ActionResult Login()
         {
-            return View();
+            return RedirectToAction("Login", "Autenticacion");
         }
 
         public ActionResult Register()
         {
-            return View();
+            return RedirectToAction("Registro", "Autenticacion");
         }
 
         public ActionResult RecoverPassword()
         {
-            return View();
+            return RedirectToAction("CambiarContraseña", "Autenticacion");
         }
     }
 }

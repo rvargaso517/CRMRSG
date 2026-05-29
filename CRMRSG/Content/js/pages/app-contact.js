@@ -1,6 +1,6 @@
 //[app contact Javascript]
 
-//Project:	Alfa Admin - Responsive Admin Template
+//Project:	CRM-RSG - Responsive Admin Template
 //Primary use:   Used only for the Data Table
 
 $(function () {

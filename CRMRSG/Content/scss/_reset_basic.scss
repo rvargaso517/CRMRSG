@@ -113,7 +113,7 @@ img {
 .base-font{font-family: $bodyfont !important; }
 .heading-font{font-family: $headingfont !important; }
 $font-size-map: ( fs-: font-size);
-$sizes-list: 0 10 11 12 13 14 15 16 17 18 19 20 21 22 24 26 30 32 36 38 40 42 46 48 50 60 70 72 76 78 80 100 140 180 200;
+$sizes-list: 0 10 11 12 13 14 15 16 17 18 19 20 21 22 24 25 26 30 32 35 36 38 40 42 45 46 48 50 52 55 56 58 60 62 65 66 68 70 72 76 78 80 85 90 100 140 180 200;
 @each $size in $sizes-list {
     $val: $size / 13 + rem + !important;
     @each $keyword,
@@ -125,7 +125,7 @@ $sizes-list: 0 10 11 12 13 14 15 16 17 18 19 20 21 22 24 26 30 32 36 38 40 42 46
 }
 
 $line-height-map: ( l-h-: line-height);
-$sizes-list: 0 10 11 12 13 14 15 16 17 18 19 20 21 22 24 25 26 30 32 35 36 38 40 42 45 46 48 50 60 70 72 76 78 80 85 90 100 140 180 200;
+$sizes-list: 0 10 11 12 13 14 15 16 17 18 19 20 21 22 24 25 26 30 32 35 36 38 40 42 45 46 48 50 52 55 56 58 60 62 65 66 68 70 72 76 78 80 85 90 100 140 180 200;
 @each $size in $sizes-list {
     $val: $size / 14 + rem + !important;
     @each $keyword,

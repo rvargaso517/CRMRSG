@@ -7,9 +7,9 @@ $headingfont:'Poppins', sans-serif;
 
 $p100: 100%;
 
-$sid-bar-w: 19.29rem;
+$sid-bar-w: 18.58rem;
 $hed-max: 125px;
-$main-hed-nav: 80px;
+$main-hed-nav: 60px;
 $default-border-radius: 5px;
 $fct-border-radius: 5px;
 $border-circle: 50%;
@@ -151,8 +151,8 @@ $border-color: $gray-400;
 
 $wrapper: #EAEDF7;
 $wrapper-dark: #24243E;
-/*Lite color*/
 
+/*Lite color*/
 
 
 /*Theme Colors For Dark*/
@@ -216,6 +216,7 @@ $theme-warning-grd-dark: linear-gradient(45deg, darken($warning, 20%), darken($w
 
 $theme-secondary-grd: linear-gradient(45deg, $secondary, $secondary-active);
 $theme-secondary-grd-dark: linear-gradient(45deg, darken($secondary, 20%), darken($secondary-active, 25%));
+
 
 /*theme-danger*/
 $theme-danger-primary:     $danger;
@@ -304,8 +305,6 @@ $theme-warning-info-lite:       $info-lite;
 $theme-warning-danger-lite:     $danger-lite;
 $theme-warning-warning-lite:    $primary-lite;
 $theme-warning-secondary-lite:  $secondary-lite;
-
-
 
 
 

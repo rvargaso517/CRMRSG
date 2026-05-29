@@ -11,20 +11,15 @@
 }
 
 .main-header{
-    margin-left: 0;
-    margin-right: 0;
-    max-height: $hed-max;
-    z-index: 999;
-    position: relative;
-    @include transition(margin-left .3s ease-in-out);
     div.logo-box{        
-        width: $sid-bar-w;
+        width: $sid-bar-w - 5;
         float: left;        
         -webkit-transition: -webkit-transform .3s ease-in-out, width .3s ease-in-out;
         -moz-transition: -moz-transform .3s ease-in-out, width .3s ease-in-out;
         -o-transition: -o-transform .3s ease-in-out, width .3s ease-in-out;
         transition: transform .3s ease-in-out, width .3s ease-in-out;
-        background-color: $wrapper-dark;
+        background: transparent;
+        border-top-right-radius: 0px;
     }
     .push-btn, .full-screen, .svg-bt-icon, .skin-toggle{
         height: 45px;
@@ -34,8 +29,8 @@
         line-height: 24px;
         font-size: $fs-24;
         margin: 0 5px;
-        background-color: transparent;
         color: $white;
+        background-color: transparent;
         border-radius: $default-border-radius;
         -webkit-box-shadow: 0 3px 5px 1px rgba(0,0,0,.0);
         box-shadow: 0 3px 5px 1px rgba(0,0,0,.0); 
@@ -47,6 +42,7 @@
     .push-btn img, .full-screen img, .svg-bt-icon img{
         height: 20px;
         width: 20px;    
+        margin-top: -7px;
     }
     .logo-box{
         border-right: 1px solid rgba($dx-blue,0);
@@ -59,8 +55,8 @@
             border-radius: $default-border-radius;
             overflow: hidden;
           input[type="search"] {
-            background-color: $wrapper;
-            color: $gray-600;
+            background-color: $gray-800;
+            color: $white;
             font-size: 16px;
             padding-left: 20px;
             border: none;
@@ -68,7 +64,7 @@
             height: 45px;
           }
           ::placeholder {
-            color: $gray-600;
+            color: #717C99;
           }
           .input-group{
              margin-top: 0px;
@@ -77,8 +73,8 @@
             margin-left: 0px;
           }
           .btn {
-            background-color: $wrapper;
-            color: $gray-600;
+            background-color: $gray-800;	
+            color: $white;
             font-weight: 700;
             font-size: 18px;
             border-radius: 0 $default-border-radius $default-border-radius 0;
@@ -97,18 +93,17 @@
     position: relative;
     .r-side {
         .app-menu, .btn-group a{ 
-            margin: 18px 5px;
+            margin: 10px 5px;
         }
     }
     .navbar{
         @include transition(margin-left .3s ease-in-out);
         margin-bottom: 0;
-        margin-left: 0;
+        margin-left: $sid-bar-w;
         min-height: $main-hed-nav;
-        margin-top: 0;
         border-radius: 0;
-        border-bottom: 0px solid rgba($gray-300,1);
-        padding: 0 $default-gutter-width;
+        border-bottom: 0px solid rgba($dx-blue,0.16);
+        padding: 0 ($default-gutter-width / 2);
         box-shadow: none;
         .nav{
             >li{
@@ -131,9 +126,7 @@
         text-align: left;
         padding: 0 15px;
         position: relative;
-        z-index: 999;        
-        justify-content: center;
-        width: 100%;
+        z-index: 999;
         .logo-lg{
             line-height: $main-hed-nav;
 	        display: inline-block;
@@ -146,6 +139,7 @@
             }
         }
         .logo-mini{
+            line-height: $main-hed-nav;
             display: inline-block;
             .dark-logo{
                 display: none;
@@ -171,6 +165,7 @@
     }
     .navbar-custom-menu{
         float: right;
+        
         &.r-side{
             li.dropdown{
                 .dropdown-toggle{
@@ -256,8 +251,6 @@
     .main-header{
         position: relative;
 	    z-index: 999;
-        margin-left: 0;
-        margin-right: 0;
         .navbar-right {            
             padding-right: 0px;
             float: none;
@@ -276,8 +269,6 @@
             float: none;
             margin: 0;
 	        z-index: 999;
-            border-radius: 0;
-            padding: 0 0.5rem;
         }
         .navbar-custom-menu{
             float: right;
@@ -327,14 +318,12 @@
 @include screen-md {
     .main-header {
         .logo {
-            display: flex;
+            display: block;
         }
     }
     .sidebar-mini{
         &.sidebar-collapse{
             .main-header{
-                 margin-left: 0;
-                 @include transition(margin-left .3s ease-in-out);
                 .logo-box{
                     width: $mini-sid-bar-w;
                     -webkit-transition: -webkit-transform .3s ease-in-out, width .3s ease-in-out;
@@ -343,18 +332,21 @@
                     transition: transform .3s ease-in-out, width .3s ease-in-out;
                 }
                 .logo{
+                    width: 0;
 	                text-align: center;
                     padding: 0;
-                    margin: 0 auto;
                     >.logo-mini{
                         display: inline-block;
+                        margin-left: -15px;
+                        margin-right: -15px;
+                        font-size: 18px;
                     }
                     >.logo-lg {
-                        display: none;
+                        display: block;
                     }
                 }
                 .navbar{
-                    margin-left: 0;
+                    margin-left: $mini-sid-bar-w;
                 }
             }
         }
@@ -400,7 +392,7 @@
                     }
                 }
             }                     
-            .full-screen, .skin-toggle{
+             .full-screen, .skin-toggle{
                 margin: 3px 5px !important;
                 padding: 10px;
             }
@@ -447,8 +439,9 @@
                     height: 45px;
                     text-align: center;
                     width: 45px;
-                    line-height: 24px;
-                    margin: 18px 5px;        
+                    line-height: 30px;
+                    color: $white;
+                    margin: 10px 5px;                    
                     -webkit-box-shadow: 0 3px 5px 1px rgba(0,0,0,.0);
                     box-shadow: 0 3px 5px 1px rgba(0,0,0,.0);
                     border-radius: $default-border-radius;
@@ -467,11 +460,10 @@
                 text-align: center;
                 width: 45px;
                 line-height: 24px;
-                margin: 18px 5px;
-                -webkit-box-shadow: 0 3px 5px 1px rgba(0,0,0,.0);
-                box-shadow: 0 3px 5px 1px rgba(0,0,0,.0);
+                margin: 10px 5px;                
+                -webkit-box-shadow: 0 0 30px 0 rgba(82, 63, 105, 0.0);
+                box-shadow: 0 0 30px 0 rgba(82, 63, 105, 0.0);
                 border-radius: $default-border-radius;
-                background-color: $wrapper;
                 }
             }  
         }
@@ -508,7 +500,7 @@
         }
         .search-bar{
             > div{
-                padding: 12px 0 25px;
+                padding: 10px 0 25px;
             }
             .lookup::before{
                 color: rgba($dark, 1);
@@ -646,20 +638,20 @@ body{
             li{ 
                 >a{
                     &.dropdown-toggle{
-                        line-height: 25px;
+                        line-height: 20px;
                     }
                 }
             }
             >li{
                 &:last-child{
                     >a{
-                        line-height: 25px;
+                        line-height: 20px;
                     }
                 } 
             }
             .search-box{
                 >a{
-                    line-height: 25px;
+                    line-height: 20px;
                 }
             }
         }
@@ -745,7 +737,7 @@ body{
                         }
                         .menu{
                             margin: 0;
-                            padding: 5px;
+                            padding: 0;
                             list-style: none;
                             overflow-x: hidden;
                             >li{
@@ -753,7 +745,6 @@ body{
                                     display: block;
                                     white-space: nowrap;
                                     border-bottom: 1px solid $light;
-                                    border-radius: $fct-border-radius;
                                     &:hover{
                                         background: $light;
                                         text-decoration: none; 
@@ -777,10 +768,10 @@ body{
                 .menu{
                     >li{
                         >a{
+                            color: $dark;
                             overflow: hidden;
                             text-overflow: ellipsis;
-                            padding: 10px; 
-                            margin: 0;
+                            padding: 10px;  
                         }
                     }
                 }
@@ -1230,6 +1221,7 @@ body{
     opacity: 0;
   }
 }
+
 /*-----Preloader---*/
 
 #loader {
@@ -1240,6 +1232,7 @@ body{
     overflow: visible;
     background: #fff url('../../../../images/preloaders/1.gif') no-repeat center center;
 }
+
 .skin-toggle{
       .switch {
         line-height: 24px;

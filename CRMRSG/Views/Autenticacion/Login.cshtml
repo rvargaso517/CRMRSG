@@ -1,0 +1,99 @@
+@{
+    Layout = null;
+    ViewBag.Title = "Iniciar Sesi&oacute;n";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="~/Content/images/favicon.ico">
+
+    <title>CRM-RSG - Iniciar Sesi&oacute;n</title>
+
+    <!-- Vendors Style-->
+    <link rel="stylesheet" href="~/Content/css/vendors_css.css">
+
+    <!-- Style-->
+    <link rel="stylesheet" href="~/Content/css/style.css">
+    <link rel="stylesheet" href="~/Content/css/skin_color.css">
+
+</head>
+
+<body class="hold-transition theme-primary bg-img" style="background-image: url(@Url.Content("~/Content/images/auth-bg/bg-16.jpg"))">
+
+    <div class="container h-p100">
+        <div class="row align-items-center justify-content-md-center h-p100">
+
+            <div class="col-12">
+                <div class="row justify-content-center g-0">
+                    <div class="col-lg-5 col-md-5 col-12">
+                        <div class="bg-white rounded10 shadow-lg">
+                            <div class="content-top-agile p-20 pb-0">
+                                <h2 class="text-primary fw-600">Bienvenido a CRM</h2>
+                                <p class="mb-0 text-fade">Inicie sesi&oacute;n para continuar.</p>
+                            </div>
+                            <div class="p-40">
+                                @if (ViewBag.Error != null)
+                                {
+                                    <div class="alert alert-danger" role="alert">
+                                        @ViewBag.Error
+                                    </div>
+                                }
+                                @if (ViewBag.Success != null)
+                                {
+                                    <div class="alert alert-success" role="alert">
+                                        @ViewBag.Success
+                                    </div>
+                                }
+                                <form action="@Url.Action("Login", "Autenticacion")" method="post">
+                                    <div class="form-group">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text bg-transparent"><i class="text-fade ti-user"></i></span>
+                                            <input type="email" name="correo" class="form-control ps-15 bg-transparent" placeholder="Correo Electr&oacute;nico" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
+                                            <input type="password" name="password" class="form-control ps-15 bg-transparent" placeholder="Contrase&ntilde;a" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="checkbox">
+                                                <input type="checkbox" id="basic_checkbox_1">
+                                                <label for="basic_checkbox_1">Recuerd&aacute;me</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="fog-pwd text-end">
+                                                <a href="@Url.Action("CambiarContrasena", "Autenticacion")" class="text-primary fw-500 hover-primary">
+                                                    <i class="ion ion-locked"></i> &iquest;Olvid&oacute; su contrase&ntilde;a?
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 text-center">
+                                            <button type="submit" class="btn btn-primary w-p100 mt-10">INGRESAR</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="text-center">
+                                    <p class="mt-15 mb-0 text-fade">&iquest;No tiene una cuenta? <a href="@Url.Action("Registro", "Autenticacion")" class="text-primary ms-5">Registrarse</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor JS -->
+    <script src="~/Content/js/vendors.min.js"></script>
+    <script src="~/Content/assets/icons/feather-icons/feather.min.js"></script>
+
+</body>
+</html>

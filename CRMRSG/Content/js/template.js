@@ -1,7 +1,7 @@
 //[Master Javascript]
 
-//Project:	Alfa Admin Admin - Responsive Admin Template
-//Primary use:	Alfa Admin Admin - Responsive Admin Template
+//Project:	RSG-CRM - Responsive Admin Template
+//Primary use:	RSG-CRM - Responsive Admin Template
 
 //should be included in all pages. It controls some layout
 
@@ -28,7 +28,7 @@ throw new Error('template requires jQuery')
   var DataKey = 'Masteradmin.layout'
 
   var Default = {
-    slimscroll : false,
+    slimscroll : true,
     resetHeight: true
   }
 
@@ -216,7 +216,7 @@ throw new Error('template requires jQuery')
     searchInput   : '.sidebar-form .form-control',
     button        : '[data-toggle="push-menu"]',
     mini          : '.sidebar-mini',
-    expanded      : '',
+    expanded      : '.sidebar-expanded-on-hover',
     layoutFixed   : '.fixed'
   }
 
@@ -224,8 +224,8 @@ throw new Error('template requires jQuery')
     collapsed    : 'sidebar-collapse',
     open         : 'sidebar-open',
     mini         : 'sidebar-mini',
-    expanded     : '',
-    expandFeature: '',
+    expanded     : 'sidebar-expanded-on-hover',
+    expandFeature: 'sidebar-mini-expand-feature',
     layoutFixed  : 'fixed'
   }
 
@@ -241,11 +241,11 @@ throw new Error('template requires jQuery')
   }
 
   PushMenu.prototype.init = function () {
-    //if (this.options.expandOnHover
-//      || ($('body').is(Selector.mini + Selector.layoutFixed))) {
-//      this.expandOnHover()
-//      $('body').addClass(ClassName.expandFeature)
-//    }
+    if (this.options.expandOnHover
+      || ($('body').is(Selector.mini + Selector.layoutFixed))) {
+      this.expandOnHover()
+      $('body').addClass(ClassName.expandFeature)
+    }
 
     $(Selector.contentWrapper).on(function () {
       // Enable hide menu when clicking on the content-wrapper on small screens
@@ -312,12 +312,12 @@ throw new Error('template requires jQuery')
     }.bind(this))
   }
 
-//  PushMenu.prototype.expand = function () {
-//    setTimeout(function () {
-//      $('body').removeClass(ClassName.collapsed)
-//        .addClass(ClassName.expanded)
-//    }, this.options.expandTransitionDelay)
-//  }
+  PushMenu.prototype.expand = function () {
+    setTimeout(function () {
+      $('body').removeClass(ClassName.collapsed)
+        .addClass(ClassName.expanded)
+    }, this.options.expandTransitionDelay)
+  }
 
   PushMenu.prototype.collapse = function () {
     setTimeout(function () {
@@ -995,7 +995,7 @@ throw new Error('template requires jQuery')
   });
 
   $('.chat-box-one-side3').slimScroll({
-    height: '675'
+    height: '685'
   });
 	
   $('.notification-side').slimScroll({
@@ -1015,15 +1015,6 @@ throw new Error('template requires jQuery')
   });
 $('.demo-panel-bx').slimScroll({
     height: 'auto'
-  });
-$('.scroll').slimScroll({	
-    height: 'auto'	
-  });	
-$('.scroll2').slimScroll({	
-    height: '60%'	
-  });	
-$('.scroll-nav').slimScroll({	
-    height: '350'	
   });
   
   $(".search-box a, .search-box .app-search .srh-btn").on('click', function() {
@@ -1540,7 +1531,10 @@ $('.scroll-nav').slimScroll({
 
 })(window);
 
-
+	var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))	
+	var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {	
+	  return new bootstrap.Tooltip(tooltipTriggerEl)	
+	})
 
 // Demo panel
 function w3_open() {
@@ -1577,8 +1571,6 @@ function w3_close() {
 		loadNow(1);
 	});
 
-
-new PerfectScrollbar(".multinav-scroll");
 new PerfectScrollbar(".slim-scroll3");
 
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))

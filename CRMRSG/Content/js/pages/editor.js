@@ -1,6 +1,6 @@
 //[editor Javascript]
 
-//Project:	Alfa Admin - Responsive Admin Template
+//Project:	RSG-CRM - Responsive Admin Template
 //Primary use:   Used only for the wysihtml5 Editor 
 
 

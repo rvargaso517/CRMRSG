@@ -23,11 +23,11 @@ Theme Info Color
     .art-bg{@extend .bg-gradient-primary}
     &.fixed {        
         .main-header {
-            background: $white;
+            background: $body-dark;
         }
     }
     .main-header{
-        background: $white;
+        background: $body-dark;
     }
 }
 
@@ -44,11 +44,11 @@ Theme Info Color
     .art-bg{@extend .bg-gradient-primary-dark}
     &.fixed {        
         .main-header {
-            background: $wrapper-dark;
+            background: $body-dark;
         }
     }
     .main-header{
-        background: $wrapper-dark;
+        background: $body-dark;
     }
 }
 }
@@ -120,7 +120,7 @@ Theme Info Color
             >li{
                 &.active.treeview {
                     >a{
-                        background-color: transparent;
+                        background: transparent;
                         color: $theme-info-primary !important;
                         > i{
                            color: $theme-info-primary; 
@@ -138,7 +138,7 @@ Theme Info Color
                     .treeview-menu{
                         li{
                             a{
-                                color: $gray-500;
+                                color: $dark;
                             }
                         }
                     }
@@ -171,8 +171,8 @@ Theme Info Color
                     }
                     &.treeview {
                         >a{
-                            background-color: $body-dark;
-                            color: $white !important;
+                            background: transparent;
+                            color: $light5 !important;
                             > i{
                                color: $white; 
                             }
@@ -207,23 +207,15 @@ Theme Info Color
     }    
     &.light-skin {
         .sidebar-menu{
-            li{
-                a:hover{
-                    color: rgba($theme-info-primary, 1) !important;
-                }
-            }
-            >li{                
+            >li{
                 @include hover-active-state{                    
                     background-color: rgba($theme-info-primary, 0.0);
                     color: rgba($theme-info-primary, 1);
-                    border-left: 0px solid rgba($theme-info-primary, 0);
-                    > a{
-                        background-color: transparent;
-                    }
+                    border-left: 5px solid rgba($theme-info-primary, 0);
                     a{
                         color: rgba($theme-info-primary, 1);
                         > i{
-                           color: $gray-500 ;
+                           color: $dark ;
                            background-color: rgba($theme-info-primary, 0) ;
                         }                        
                         > svg{
@@ -239,12 +231,10 @@ Theme Info Color
                 &.active{
                     background-color: rgba($theme-info-primary, 0.0);
                     color: rgba($theme-info-primary, 1);
-                    border-left: 0px solid rgba($theme-info-primary, 1);
-                    >a{
-                        background-color: transparent;
-                    }
+                    border-left: 5px solid rgba($theme-info-primary, 1);
                     a{
                         color: rgba($theme-info-primary, 1);
+                        background-color: transparent;
                         > i{
                            color: $theme-info-primary ;
                            background-color: rgba($theme-info-primary, 0) ;
@@ -273,7 +263,7 @@ Theme Info Color
                         li{
                             a{                                
                                 > i{
-                                   color: $gray-500 ;
+                                   color: $dark ;
                                    background-color: rgba($theme-info-primary, 0) ;
                                 } 
                             }
@@ -295,7 +285,7 @@ Theme Info Color
                                     &.active{
                                         background-color: rgba($theme-info-primary, 0.0);
                                         color: rgba($theme-info-primary, 1);
-                                        >a{
+                                        a{
                                             color: rgba($theme-info-primary, 1);                                
                                             > i{
                                                color: rgba($theme-info-primary, 1) ;
@@ -304,9 +294,9 @@ Theme Info Color
                                         }
                                     }
                                     a{    
-                                        color: $gray-500 ;
+                                        color: $dark ;
                                         > i{
-                                           color: $gray-500 ;
+                                           color: $dark ;
                                            background-color: rgba($theme-info-primary, 0) ;
                                         } 
                                     }
@@ -322,36 +312,25 @@ Theme Info Color
         .sidebar-menu{
             >li{
                 @include hover-active-state{    
+                    
                 }
                 &.active{
                     border-left: 0px solid rgba($theme-info-primary, 1);
-                    border-right: 0px solid rgba($theme-info-primary, 1);
+                    border-right: 5px solid rgba($theme-info-primary, 1);
                 }
             } 
         }
     }
     &.dark-skin {
-        .sidebar-menu{            
-            li{
-                a:hover{
-                    color: rgba($theme-info-primary, 1) !important;
-                }
-            }
+        .sidebar-menu{
             >li{
-                @include hover-active-state{                    
-                    > a{
-                        background-color: $body-dark;
-                    }
-                }
                 &.active{
                     background-color: rgba($theme-info-primary, 0.0);
                     color: rgba($white, 1);
-                    border-left: 0px solid rgba($theme-info-primary, 1);
-                    >a{                        
-                        background-color: $body-dark;
-                    }
+                    border-left: 5px solid rgba($theme-info-primary, 1);
                     a{
                         color: rgba($white, 1);
+                        background-color: transparent;
                         > i{
                            color: rgba($white, 1) ;
                         }
@@ -382,7 +361,7 @@ Theme Info Color
             >li{
                 &.active{
                     border-left: 0px solid rgba($theme-info-primary, 1);
-                    border-right: 0px solid rgba($theme-info-primary, 1);
+                    border-right: 5px solid rgba($theme-info-primary, 1);
                 }
             } 
         }
@@ -427,11 +406,11 @@ Theme Info Color
         ul{
             a{
                 @include hover-state{
-                    background: $light2;
+                    background: $body-dark;
                     color: $theme-info-primary !important;
                 }
                 &.highlighted{
-                    background: $light2;
+                    background: $body-dark;
                     color: $theme-info-primary !important;
                 }
             }
@@ -1583,7 +1562,6 @@ Theme Info Color
       background-color: $light !important;
     }
 }
-
     /*---text---*/
 .theme-info {
     .text-primary {
@@ -2443,8 +2421,7 @@ $box-bod-s: solid;
     }
     }
 }
-
-.theme-info .chart-switch {
+.theme-primary .chart-switch {
     .switch{    
     input {
     &:checked {
@@ -2460,7 +2437,7 @@ $box-bod-s: solid;
         input {
         &:checked {
             ~ .switch-indicator{
-                background-color: $theme-info-primary;
+                background-color: $theme-primary-primary;
               &::after {
                 background-color: $white;
               }
@@ -2472,7 +2449,7 @@ $box-bod-s: solid;
         input {
         &:checked {
             ~ .switch-indicator{
-                background-color: $theme-info-info;
+                background-color: $theme-primary-info;
               &::after {
                 background-color: $white;
               }
@@ -2484,7 +2461,7 @@ $box-bod-s: solid;
         input {
         &:checked {
             ~ .switch-indicator{
-                background-color: $theme-info-success;
+                background-color: $theme-primary-success;
               &::after {
                 background-color: $white;
               }
@@ -2496,7 +2473,7 @@ $box-bod-s: solid;
         input {
         &:checked {
             ~ .switch-indicator{
-                background-color: $theme-info-danger;
+                background-color: $theme-primary-danger;
               &::after {
                 background-color: $white;
               }
@@ -2508,7 +2485,7 @@ $box-bod-s: solid;
         input {
         &:checked {
             ~ .switch-indicator{
-                background-color: $theme-info-warning;
+                background-color: $theme-primary-warning;
               &::after {
                 background-color: $white;
               }

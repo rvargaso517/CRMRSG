@@ -243,7 +243,7 @@
     @include hover-full-state{
         background-color: lighten($dark, 10%) !important;
         border-color: lighten($dark, 10%) !important;
-        color: $white;
+        color: $white !important;
     } 
     &:disabled {
         background-color: lighten($dark, 10%);
@@ -665,8 +665,6 @@ a{
     }
 } 
 
-
-
 .text-white {
   color: $white !important;
 }
@@ -738,11 +736,12 @@ a{
 
 /*---color skin---*/
 
-@import 'color_skin/theme_primary';  
+@import 'color_skin/theme_primary'; 
 @import 'color_skin/theme_info';
 @import 'color_skin/theme_success';
 @import 'color_skin/theme_danger';
 @import 'color_skin/theme_warning';
+
 
 
 

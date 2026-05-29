@@ -1,6 +1,6 @@
 //[widget inline charts Javascript]
 
-//Project:	Alfa Admin - Responsive Admin Template
+//Project:	RSG-CRM - Responsive Admin Template
 //Primary use:   Used only for the  widget inline charts
 
 

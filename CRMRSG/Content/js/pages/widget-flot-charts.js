@@ -1,6 +1,6 @@
 //[widget flot charts Javascript]
 
-//Project:	Alfa Admin - Responsive Admin Template
+//Project:	RSG-CRM - Responsive Admin Template
 //Primary use:   Used only for the  widget flot charts
 
 

@@ -1,7 +1,7 @@
 //[custom Javascript]
 
-//Project:	Alfa Admin - Responsive Admin Template
-//Primary use:	Alfa Admin - Responsive Admin Template
+//Project:	RSG-CRM - Responsive Admin Template
+//Primary use:	RSG-CRM - Responsive Admin Template
 
 //should be included in all pages. It controls some layout
 

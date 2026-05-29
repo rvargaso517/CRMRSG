@@ -454,6 +454,9 @@
             >a{
               margin-right: 0;  
             }
+        }               
+        &.nav-item:first-child > a{
+            margin-right:4px;
         }
     }
     [data-bs-toggle="dropdown"], .box-btn-reload{

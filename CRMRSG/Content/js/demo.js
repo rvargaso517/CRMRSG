@@ -1,6 +1,6 @@
 //[Preview Menu Javascript]
 
-//Project:	edulearn - Responsive Admin Template
+//Project:	Specie Admin Admin - Responsive Admin Template
 //Primary use:   This file is for demo purposes only.
 
 $(function () {
@@ -227,65 +227,38 @@ $(function () {
 	+ '</div>'
   )
 
-  // Layout options
-  $demoSettings.append(
-    '<h4 class="control-sidebar-heading p-0">'
-    + '</h4>'
-    // Sidebar Toggle
-	+ '<div class="flexbox mb-10">'
-	+ '<label for="toggle_sidebar" class="control-sidebar-subheading">'
-    + 'Toggle Sidebar'
-    + '</label>'
-	+ '<label class="switch switch-border switch-danger">'
-	+ '<input type="checkbox" data-layout="sidebar-collapse" id="toggle_sidebar">'
-	+ '<span class="switch-indicator"></span>'
-	+ '<span class="switch-description"></span>'
-	+ '</label>'
-	+ '</div>'  
-    // Control Sidebar Toggle
-	+ '<div class="flexbox mb-10">'
-	+ '<label for="toggle_right_sidebar" class="control-sidebar-subheading">'
-    + 'Toggle Right Sidebar Slide'
-    + '</label>'
-	+ '<label class="switch switch-border switch-danger">'
-	+ '<input type="checkbox" data-controlsidebar="control-sidebar-open" id="toggle_right_sidebar">'
-	+ '<span class="switch-indicator"></span>'
-	+ '<span class="switch-description"></span>'
-	+ '</label>'
-	+ '</div>'	  
-	
-  )
+
   
-  var $skinsList = $('<ul />', { 'class': 'list-unstyled clearfix theme-switch' })
+  var $skinsList = $('<ul />', { 'class': 'list-inline clearfix theme-switch' })
 
   // Dark sidebar skins
   var $themePrimary =
         $('<li />', { style: 'padding: 5px;' })
-          .append('<a href="javascript:void(0)" data-theme="theme-primary" style="background: #4d7cff; display: block;vertical-align: middle;" class="clearfix rounded w-p100 h-30 mb-5" title="Theme primary">'
+          .append('<a href="javascript:void(0)" data-theme="theme-primary" style="display: block;vertical-align: middle;" class="bg-primary clearfix rounded w-100 h-100 mb-5" title="Theme primary">'
             + '</a>')
   $skinsList.append($themePrimary)
 
   var $themeInfo =
         $('<li />', { style: 'padding: 5px;' })
-          .append('<a href="javascript:void(0)" data-theme="theme-info" style="background: #733aeb; display: block;vertical-align: middle;" class="clearfix rounded w-p100 h-30 mb-5" title="Theme info">'
+          .append('<a href="javascript:void(0)" data-theme="theme-info" style="display: block;vertical-align: middle;" class="bg-info clearfix rounded w-100 h-100 mb-5" title="Theme info">'
             + '</a>')
   $skinsList.append($themeInfo)
 
   var $themeSuccess =
         $('<li />', { style: 'padding: 5px;' })
-          .append('<a href="javascript:void(0)" data-theme="theme-success" style="background: #51ce8a; display: block;vertical-align: middle;" class="clearfix rounded w-p100 h-30 mb-5" title="Theme success">'
+          .append('<a href="javascript:void(0)" data-theme="theme-success" style="display: block;vertical-align: middle;" class="bg-success clearfix rounded w-100 h-100 mb-5" title="Theme success">'
             + '</a>')
   $skinsList.append($themeSuccess)
 
   var $themeDanger =
         $('<li />', { style: 'padding: 5px;' })
-          .append('<a href="javascript:void(0)" data-theme="theme-danger" style="background: #f2426d; display: block;vertical-align: middle;" class="clearfix rounded w-p100 h-30 mb-5" title="Theme danger">'
+          .append('<a href="javascript:void(0)" data-theme="theme-danger" style="display: block;vertical-align: middle;" class="bg-danger clearfix rounded w-100 h-100 mb-5" title="Theme danger">'
             + '</a>')
   $skinsList.append($themeDanger)
 
   var $themeWarning =
         $('<li />', { style: 'padding: 5px;' })
-          .append('<a href="javascript:void(0)" data-theme="theme-warning" style="background: #fec801; display: block;vertical-align: middle;" class="clearfix rounded w-p100 h-30 mb-5" title="Theme warning">'
+          .append('<a href="javascript:void(0)" data-theme="theme-warning" style="display: block;vertical-align: middle;" class="bg-warning clearfix rounded w-100 h-100 mb-5" title="Theme warning">'
             + '</a>')
   $skinsList.append($themeWarning)  
 

@@ -63,9 +63,7 @@ File: scss
     }
     .main-sidebar{
         border-right: 0px solid rgba($dx-blue,0.16);
-        background-color: $wrapper-dark;
-        -webkit-box-shadow: 0 0 35px 0 rgba(154, 161, 171, 0.0);
-        box-shadow: 0 0 35px 0 rgba(154, 161, 171, 0.0);
+        background-color: $white; 
     }
     .user-panel{
         >.info{
@@ -86,7 +84,6 @@ File: scss
                 >a{
                     background-color: $dark;
                     color: $white;
-                    box-shadow: 0 3px 5px 1px rgba(0,0,0,.0);
                     > i{
                        color: $white; 
                     }
@@ -106,11 +103,9 @@ File: scss
             }
             &.menu-open{
                 >a{
-                   color: $gray-500; 
-                   box-shadow: 0 3px 5px 1px rgba(0,0,0,.0); 
-                   background-color: transparent;
-                    svg{
-                        color: $gray-500;
+                   color: $dark; 
+                    svg{	
+                        color: $dark;	
                     }
                 }
             }
@@ -123,11 +118,11 @@ File: scss
         .sidebar-menu{
             >li{
                 >.treeview-menu{
-                    background-color: $wrapper-dark;    
+                    background-color: $white;    
                     box-shadow: 5px 8px 10px 0px rgba(0, 0, 0, 0.1);
-                    > .treeview .treeview-menu{
-                        background-color: $wrapper-dark;    
-                        box-shadow: 5px 8px 10px 0px rgba(0, 0, 0, 0.1);
+                    > .treeview .treeview-menu{	
+                        background-color: $white;    	
+                        box-shadow: 5px 8px 10px 0px rgba(0, 0, 0, 0.1);	
                     }
                 }
             }
@@ -157,7 +152,7 @@ File: scss
     }
     .sidebar{
         a{
-          color: $gray-500;  
+          color: $icon-lite-color;    
             &:hover{
                text-decoration: none; 
             }
@@ -248,7 +243,7 @@ File: scss
                 } 
             }
         }
-    }       
+    }
     .d-dark{
         display: none;
     }
@@ -299,11 +294,11 @@ File: scss
 
 body{
     &.dark-skin{
-        background-color: $wrapper-dark;
-	    color: rgba(255, 255, 255, 0.85);  
-        .content-wrapper{
-            background-color: $wrapper-dark;
-        }
+        background-color: $wrapper-dark;	
+	    color: rgba(255, 255, 255, 0.85);  	
+        .content-wrapper{	
+            background-color: $wrapper-dark;	
+        }      
         .navbar-nav{
             >.user-menu{
                 >.dropdown-menu{
@@ -350,11 +345,6 @@ body{
                 } 
             }
         }
-        .main-header {
-            .navbar{
-                background-color: $body-dark;
-            }
-        }        
         .d-dark{
             display: block;
         }
@@ -365,7 +355,7 @@ body{
 }
 .dark-skin{
     h1, h2, h3, h4, h5, h6{
-        color: rgba($white, 0.85); 
+        color: rgba($white, 0.85);  
     }
     a{
         color: $dark-text; 
@@ -378,12 +368,12 @@ body{
     .form-control, .form-select{
         background-color: $dark3;
 	    color: $dark-text; 
-    }    
+    }
     .form-control{
         &:focus {
             border-color: $d-gray-900;
             background-color: $d-gray-900;
-        }     
+        }  
     }
     .form-control-plaintext{
         color: $d-gray-600;
@@ -417,8 +407,8 @@ body{
             }
         }
     }
-    .box-solid .box-controls .dropdown-item {
-        color: $dark-text;
+    .box-solid .box-controls .dropdown-item {	
+        color: $dark-text;	
     }
     .dropdown-grid{
         border-color: $dark-border;
@@ -454,8 +444,8 @@ body{
     .subheader_daterange{
         background-color: lighten($body-dark, 25%);
     }
-    .nav-tabs-custom > .nav-tabs > li > a {
-        color: $dark-text;
+    .nav-tabs-custom > .nav-tabs > li > a {	
+        color: $dark-text;	
     }
     .ranges{
         li{
@@ -756,8 +746,8 @@ body{
                 }
             } 
         }
-        &.table-striped > tbody > tr:nth-of-type(odd) {
-            color: inherit;
+        &.table-striped > tbody > tr:nth-of-type(odd) {	
+            color: inherit;	
         }
     }
     .table-bordered{
@@ -765,30 +755,30 @@ body{
         >tbody{
             >tr{
                 >td{
-                   border-color: $dark-border !important; 
+                   border-color: $dark-border !important;  
                 } 
                 >th{
-                   border-color: $dark-border !important; 
+                   border-color: $dark-border !important;  
                 }
             }
         }
         >tfoot{
             >tr{
                 >td{
-                   border-color: $dark-border !important; 
+                   border-color: $dark-border !important;  
                 } 
                 >th{
-                   border-color: $dark-border !important; 
+                   border-color: $dark-border !important;  
                 }
             }
         }
         >thead{
             >tr{
                 >td{
-                   border-color: $dark-border !important; 
+                   border-color: $dark-border !important;  
                 } 
                 >th{
-                   border-color: $dark-border !important; 
+                   border-color: $dark-border !important;  
                 }
             }
         }
@@ -852,7 +842,7 @@ body{
         >li{
             >a{
                 @include hover-state{
-                    color: $primary;
+                    color: lighten($dark, 25%);
                 }
             }
         }
@@ -894,7 +884,7 @@ body{
             color: $dark-text;
         } 
     }
-    .media-list-hover{
+     .media-list-hover{
         > .media:not(.media-list-header):not(.media-list-footer):hover, .media-list-body > .media:hover{
             background-color: lighten($body-dark, 05%); 
             a:not(.btn):not(.avatar){
@@ -1270,7 +1260,7 @@ body{
                     color: $white !important;
                 }
             }
-        }
+        }        
         &.pill-light{            
             >li{
                 >a{
@@ -1325,7 +1315,7 @@ body{
                 }
                 &:before{
                     border-left-color: $dark-border;
-                    border-right-color: $dark-border
+                    border-right-color: $dark-border;
                 }
                 &:after{                    
                     border-left-color: $d-gray-900;
@@ -1356,7 +1346,7 @@ body{
     }
     .ion-icon-list{
         .ion-hover {
-            color: $d-gray-600;
+            color: $dark-text;
         }
     }
     .bs-glyphicons{
@@ -1367,7 +1357,7 @@ body{
     }
     .icon-list-demo{
         div{
-            color: $d-gray-600;
+            color: $dark-text;
         }
     }
     .dp-off{
@@ -1406,11 +1396,11 @@ body{
     }
     .invoice{
         border-color: $dark-border;
-        background-color: lighten($dark3, 05%);
+        background-color: $d-gray-800;
     }
     .invoice-details{
         border-color: $dark-border;
-        background-color: lighten($dark3, 05%);
+        background-color: $d-gray-800;
     }
     .product-list-in-box{
         >.item {
@@ -1419,7 +1409,7 @@ body{
     }
     .list-group-item{        
         background-color: $dark3;    
-	    border: 1px solid $dark-border;
+	    border: 1px solid $dark-border;        
         color: $dark-text;
     }
     .list-style-none{
@@ -1475,22 +1465,22 @@ body{
     
     .main-header{
         .logo-box{
-            background: $gray-900 !important;
-            >a.push-btn{                       
-                background-color: $body-dark; 
+            
+            >a.push-btn{                       	
+                background-color: $body-dark; 	
             }
         }
         .app-menu{        
             .search-bx {   
               input[type="search"] {
-                background-color: $wrapper-dark;
+                background-color: $d-gray-800;
                 color: $dark-text;
               }
               ::placeholder {
                 color: $dark-text;
               }
               .btn {
-                background-color: $wrapper-dark;
+                background-color: $d-gray-800;
                 color: $dark-text !important;
               }
             }
@@ -1534,10 +1524,12 @@ body{
         }
     }    
     .main-footer{
+        background: $wrapper-dark;
         color: $dark-text;
+        border-color: rgba($white, 0.12);
     }
     .main-sidebar{
-        background-color: $gray-900;
+        background-color: $d-gray-800;
     }
     .left-side{
         box-shadow: 0 10px 15px -5px rgba(lighten($dark, 15%), .07);
@@ -1554,7 +1546,7 @@ body{
     
     .sidebar-menu{
         >li{
-            border-left: 0px solid $body-dark;
+            border-left: 3px solid $body-dark;
         }
     }
     .main-sidebar{
@@ -1636,8 +1628,8 @@ body{
             >li{
                 >.treeview-menu{
                     background-color: $body-dark;
-                    > .treeview .treeview-menu{
-                        background-color: $body-dark;   
+                    > .treeview .treeview-menu{	
+                        background-color: $body-dark;   	
                     }
                 } 
             }
@@ -1665,7 +1657,26 @@ body{
             }
         }
     }
-    
+}
+.dark-skin{
+    &.layout-top-nav{
+        .main-header{
+            .inside-header{
+               background: $wrapper-dark;
+            }
+        }
+        .main-menu-btn-icon{            
+            background: $white;
+            @include before-after-state {
+                background: $white;
+            }
+        }
+    }
+}
+.dark-skin.layout-top-nav.fixed .main-header {
+    background: $wrapper-dark;
+}
+.dark-skin{
     .bg-secondary{
         background-color: $gray-700 !important;
     }
@@ -1679,7 +1690,6 @@ body{
         border-color: $dark-border $dark-border $d-gray-800;
     }
 }
-
 @include screen-sm-max{
     .dark-skin{
         &.sidebar-mini{
@@ -1709,20 +1719,11 @@ body{
 }
 .dark-skin{
     .sidebar{
-        .logo-lg{
-            .light-logo{
-                color: $white;
-            }
-        }
         a{
           color: $dark-text; 
             &:hover{
                text-decoration: none; 
             }
-            >svg{
-                color: $dark-text !important; 
-                fill: rgba(27, 46, 75, 0.3);
-            }  
         }
     }
     .sidebar-form{
@@ -1760,7 +1761,7 @@ body{
     }
     .box{        
         background-color: $d-gray-800;
-	    box-shadow: -7.829px 11.607px 21px 0px rgba(25, 42, 70, 0.0);
+	    box-shadow: -7.829px 11.607px 21px 0px rgba(25, 42, 70, 0);
         &.box-solid{
             .box-title{
                 color: $white;
@@ -1841,7 +1842,6 @@ body{
     .dropdown-grid{
         color: $dark-text;
     }
-    
     .table-hover tbody tr:hover {
         color: $dark-title; 
     }
@@ -2218,8 +2218,7 @@ body{
     }
     .card-pricing .card-pricing-features{
         color: $d-gray-600;
-    } 
-    
+    }
     .fontawesome-icon-list .fa-hover i, .bs-glyphicons .glyphicon {
         color: $d-gray-600;
     }
@@ -2231,16 +2230,31 @@ body{
     }
     .bs-glyphicons li:hover {
         color: $primary;
-    }
+    }  
     .icons-list-demo .col-md-4:hover, .icons-list-demo .col-3:hover {
         color: $primary;
     }
     .icons-list-demo .col-md-4:hover i, .icons-list-demo .col-3:hover i{
         color: $primary;
     }
-    .bg-gray-300{
-        background: $gray-900 !important;
+    /*widget-testimonial*/
+    .testimonial-widget {
+        .testimonial-content {
+            background: $d-gray-900;
+            &:before {
+                border-color: $d-gray-900 transparent transparent transparent;
+            }
+        }
     }
+    .review-bx-star.bg-gray-100{
+        background: $d-gray-900 !important;
+    }
+    .course-overview.bg-gray-100{
+        background: $d-gray-900 !important;
+    }    
+    .bg-gray-300{
+        background: $d-gray-900 !important;
+    }    
     div.dt-button-info{
         background-color:$d-gray-900;
         border:2px solid $d-gray-900;
@@ -2248,7 +2262,7 @@ body{
     div.dt-button-info h2{
         border-bottom:1px solid $d-gray-900;
         background-color:$d-gray-900;
-    }
+    }    
     .avatar .avatar-name {
         background-color: $d-gray-900;
         color: $d-gray-600;
@@ -2290,9 +2304,7 @@ body{
 }
 
 
- 
 
- 
 
 
 

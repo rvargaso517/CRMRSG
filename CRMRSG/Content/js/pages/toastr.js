@@ -1,7 +1,7 @@
 $(document).ready(function () {
     $(".tst1").on("click", function () {
         $.toast({
-            heading: 'Welcome to my Alfa Admin',
+            heading: 'Welcome to my RSG-CRM',
             text: 'Use the predefined ones, or specify a custom position object.',
             position: 'top-right',
             loaderBg: '#ff6849',
@@ -14,7 +14,7 @@ $(document).ready(function () {
 
     $(".tst2").on("click", function () {
         $.toast({
-            heading: 'Welcome to my Alfa Admin',
+            heading: 'Welcome to my RSG-CRM',
             text: 'Use the predefined ones, or specify a custom position object.',
             position: 'top-right',
             loaderBg: '#ff6849',
@@ -26,7 +26,7 @@ $(document).ready(function () {
     });
     $(".tst3").on("click", function () {
         $.toast({
-            heading: 'Welcome to my Alfa Admin',
+            heading: 'Welcome to my RSG-CRM',
             text: 'Use the predefined ones, or specify a custom position object.',
             position: 'top-right',
             loaderBg: '#ff6849',
@@ -39,7 +39,7 @@ $(document).ready(function () {
 
     $(".tst4").on("click", function () {
         $.toast({
-            heading: 'Welcome to my Alfa Admin',
+            heading: 'Welcome to my RSG-CRM',
             text: 'Use the predefined ones, or specify a custom position object.',
             position: 'top-right',
             loaderBg: '#ff6849',

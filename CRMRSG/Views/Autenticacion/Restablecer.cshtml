@@ -1,0 +1,33 @@
+@{
+    Layout = null;
+    ViewBag.Title = "Restablecer contraseña";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Restablecer contraseña</title>
+</head>
+<body>
+    <h2>Restablecer contraseña</h2>
+    @if (ViewBag.Error != null) { <div style="color:red">@ViewBag.Error</div> }
+    @if (ViewBag.Success != null) { <div style="color:green">@ViewBag.Success</div> }
+
+    @using (Html.BeginForm("Restablecer", "Autenticacion", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="token" value="@(ViewBag.Token ?? "")" />
+        <div>
+            <label>Nueva contraseña</label>
+            <input type="password" name="password" required />
+        </div>
+        <div>
+            <label>Confirmar contraseña</label>
+            <input type="password" name="confirmPassword" required />
+        </div>
+        <div>
+            <button type="submit">Restablecer contraseña</button>
+        </div>
+    }
+</body>
+</html>

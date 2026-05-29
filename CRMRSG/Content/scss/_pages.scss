@@ -4,7 +4,7 @@
 
 .content-header{    
     position: relative;
-    padding: $default-gutter-width $default-gutter-width 0px;
+    padding: 0 0 $default-gutter-width;
     .page-title{        
         margin: 0 0px 0 0;
         display: inline-block;
@@ -277,6 +277,7 @@
     -webkit-box-shadow: none;
     box-shadow: none;
     .progress-bar{        
+        
     }
     >.progress-bar{        
         -webkit-box-shadow: none;
@@ -599,8 +600,7 @@
         >.steps{
             position: relative;
             display: block;
-            width: 100%;
-            max-width: 1600px;
+            width: 99%;
             margin: 0 auto;    
             z-index: 1;
             .current-info{
@@ -720,6 +720,7 @@
                 >.steps{
                     .step{
                         left: 50%;
+                         
                     } 
                 }
             }
@@ -2276,7 +2277,6 @@ ul{
         padding-top: 10px;
     }
 }
-
 /*---Notification---*/
 .myadmin-alert{    
     border-radius: 0;
@@ -3838,7 +3838,7 @@ time {
     background: $white;
     border: 1px solid $light;
     padding: 20px;
-    margin: 10px 10px;
+    margin: $default-gutter-width;
 }
 .invoice-details{
     padding-top: 15px;
@@ -3983,7 +3983,7 @@ time {
     background: transparent;
     border: 0;
     &:first-of-type{
-        
+         
     }    
     &:last-of-type {
         border-right: 1px solid $gray-200;
@@ -3995,7 +3995,7 @@ time {
 .fc-widget-content{
     border-color: $gray-200 !important;
     &:first-of-type{
-        
+         
     }
     &:last-of-type {
         border-right: 1px solid $gray-200;
@@ -4134,6 +4134,7 @@ time {
 .dask .fc-day-number {
      font-size: $fs-14; 
 }
+
 #add-new-event {
     -webkit-transition: all linear .3s;
     -o-transition: all linear .3s;
@@ -4598,6 +4599,7 @@ th.fc-day-header {
   margin: 3rem auto;
 }
 
+
 /*---grid-stack---*/
 .grid-stack>.grid-stack-item>.grid-stack-item-content {
     border: 1px solid rgba(lighten($black, 20%), 0.13);
@@ -4841,7 +4843,7 @@ th.fc-day-header {
     }
 }
 .product-text{
-    padding-left: $default-gutter-width;
+    padding-left: $default-gutter-width;	
     padding-right: $default-gutter-width;
     position: relative;
     .pro-img-overlay {
@@ -4853,7 +4855,7 @@ th.fc-day-header {
     .pro-price {
         position: absolute;
         text-align: center;
-        top: 0;
+        top: 0px;
         right: 5px;
         margin: 0;
         font-weight: 500;
@@ -5072,7 +5074,6 @@ th.fc-day-header {
         color: $gray-500;
     }
 }
-
 /*---web tickers---*/
 .tickers-block .tickercontainer {
     .cc {
@@ -5370,7 +5371,6 @@ th.fc-day-header {
     border-top: 6px solid #fff;
     top: 0;
 }
-
 .widget-timeline-icon{
     ul{
         padding-left: 0;
@@ -5827,6 +5827,18 @@ th.fc-day-header {
     }
 }
 
+.box[class*=bg]{
+    .apexcharts-canvas{
+        text{
+            fill: $white !important;
+        }
+        g{
+            line [stroke="#e0e0e0"]{
+                stroke: $white !important;
+            }
+        }
+    }
+}
 .apexcharts-canvas{
     text{
         fill: $gray-400 !important;

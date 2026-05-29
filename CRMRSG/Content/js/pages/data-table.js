@@ -1,6 +1,6 @@
 //[Data Table Javascript]
 
-//Project:	EduAdmin - Responsive Admin Template
+//Project:	RSG-CRM - Responsive Admin Template
 //Primary use:   Used only for the Data Table
 
 $(function () {
@@ -73,7 +73,7 @@ $(function () {
 	//---------------Form inputs
 	var table = $('#example6').DataTable();
  
-    $('button').click( function() {
+    $('#data-update').click( function() {
         var data = table.$('input, select').serialize();
         alert(
             "The following data would have been submitted to the server: \n\n"+
