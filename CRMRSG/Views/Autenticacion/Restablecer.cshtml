@@ -3,31 +3,83 @@
     ViewBag.Title = "Restablecer contraseña";
 }
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <title>Restablecer contraseña</title>
-</head>
-<body>
-    <h2>Restablecer contraseña</h2>
-    @if (ViewBag.Error != null) { <div style="color:red">@ViewBag.Error</div> }
-    @if (ViewBag.Success != null) { <div style="color:green">@ViewBag.Success</div> }
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RSG-CRM - Restablecer contraseña</title>
 
-    @using (Html.BeginForm("Restablecer", "Autenticacion", FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="token" value="@(ViewBag.Token ?? "")" />
-        <div>
-            <label>Nueva contraseña</label>
-            <input type="password" name="password" required />
+    <!-- Vendors Style-->
+    <link rel="stylesheet" href="@(Url.Content("~/Content/css/vendors_css.css"))">
+
+    <!-- Style-->  
+    <link rel="stylesheet" href="@(Url.Content("~/Content/css/style.css"))">
+    <link rel="stylesheet" href="@(Url.Content("~/Content/css/skin_color.css"))">    
+
+</head>
+<body class="hold-transition theme-primary bg-img" style="background-image: url('@(Url.Content("~/Content/images/auth-bg/bg-16.jpg"))')">
+
+    <div class="container h-p100">
+        <div class="row align-items-center justify-content-md-center h-p100">
+            <div class="col-12">
+                <div class="row justify-content-center g-0">
+                    <div class="col-lg-5 col-md-5 col-12">                        
+                        <div class="bg-white rounded10 shadow-lg">
+                            <div class="content-top-agile p-20 pb-0">
+                                <h2 class="mb-10 fw-600 text-primary">Restablecer contrasena</h2>
+                                <p class="mb-0 text-fade">Ingrese su nueva contrasena.</p>
+                            </div>
+                            <div class="p-40">
+                                @if (ViewBag.Error != null)
+                                {
+                                    <div class="alert alert-danger" role="alert">@ViewBag.Error</div>
+                                }
+                                @if (ViewBag.Success != null)
+                                {
+                                    <div class="alert alert-success" role="alert">@ViewBag.Success</div>
+                                }
+
+                                @using (Html.BeginForm("Restablecer", "Autenticacion", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="token" value="@(ViewBag.Token ?? "")" />
+
+                                    <div class="form-group">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
+                                            <input type="password" name="password" class="form-control ps-15 bg-transparent" placeholder="Nueva contrasena" required />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
+                                            <input type="password" name="confirmPassword" class="form-control ps-15 bg-transparent" placeholder="Confirmar contrasena" required />
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12 text-center">
+                                          <button type="submit" class="btn btn-primary w-p100 mt-10">Restablecer</button>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="text-center">
+                                    <p class="mt-15 mb-0 text-fade">Recordo su contrasena? <a href="../Autenticacion/Login" class="text-primary ms-5">Iniciar Sesion</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>
-            <label>Confirmar contraseña</label>
-            <input type="password" name="confirmPassword" required />
-        </div>
-        <div>
-            <button type="submit">Restablecer contraseña</button>
-        </div>
-    }
+    </div>
+
+    <!-- Vendor JS -->
+    <script src="@(Url.Content("~/Content/js/vendors.min.js"))"></script>
+    <script src="@(Url.Content("~/Content/assets/icons/feather-icons/feather.min.js"))"></script>    
+
 </body>
 </html>

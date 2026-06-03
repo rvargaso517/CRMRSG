@@ -2271,9 +2271,10 @@
     <Content Include="Views\Clientes\Index_new.cshtml" />
     <Content Include="Views\Autenticacion\Login.cshtml" />
     <Content Include="Views\Autenticacion\Registro.cshtml" />
-    <Content Include="Views\Autenticacion\CambiarContrasena.cshtml" />
     <Content Include="Views\Autenticacion\Restablecer.cshtml" />
     <Content Include="Views\Emails\RecoverPasswordTemplate.cshtml" />
+    <Content Include="Views\Autenticacion\RecuperacionEnviada.cshtml" />
+    <Content Include="Views\Autenticacion\CambiarContrasena.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

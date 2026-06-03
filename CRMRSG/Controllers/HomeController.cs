@@ -25,7 +25,8 @@ namespace CRMRSG.Controllers
 
         public ActionResult RecoverPassword()
         {
-            return RedirectToAction("CambiarContraseña", "Autenticacion");
+            // Redirect to the correct action name in AutenticacionController (without accent)
+            return RedirectToAction("CambiarContrasena", "Autenticacion");
         }
     }
 }
