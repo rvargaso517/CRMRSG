@@ -12,18 +12,18 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class usuarios
+    public partial class usuario
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public usuarios()
+        public usuario()
         {
-            this.bitacora = new HashSet<bitacora>();
-            this.citas = new HashSet<citas>();
-            this.clientes = new HashSet<clientes>();
-            this.notificaciones = new HashSet<notificaciones>();
-            this.oportunidades = new HashSet<oportunidades>();
-            this.reportes = new HashSet<reportes>();
-            this.tareas = new HashSet<tareas>();
+            this.bitacoras = new HashSet<bitacora>();
+            this.citas = new HashSet<cita>();
+            this.clientes = new HashSet<cliente>();
+            this.notificaciones = new HashSet<notificacione>();
+            this.oportunidades = new HashSet<oportunidade>();
+            this.reportes = new HashSet<reporte>();
+            this.tareas = new HashSet<tarea>();
         }
     
         public int id_usuario { get; set; }
@@ -43,19 +43,19 @@ namespace CRMRSG.EntityFramework
         public int id_rol { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<bitacora> bitacora { get; set; }
+        public virtual ICollection<bitacora> bitacoras { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<citas> citas { get; set; }
+        public virtual ICollection<cita> citas { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<clientes> clientes { get; set; }
+        public virtual ICollection<cliente> clientes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<notificaciones> notificaciones { get; set; }
+        public virtual ICollection<notificacione> notificaciones { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<oportunidades> oportunidades { get; set; }
+        public virtual ICollection<oportunidade> oportunidades { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<reportes> reportes { get; set; }
-        public virtual roles roles { get; set; }
+        public virtual ICollection<reporte> reportes { get; set; }
+        public virtual role role { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<tareas> tareas { get; set; }
+        public virtual ICollection<tarea> tareas { get; set; }
     }
 }

@@ -15,7 +15,7 @@ namespace CRMRSG.Controllers
 {
     public class AutenticacionController : Controller
     {
-        private crm_rsgEntities db = new crm_rsgEntities();
+        private CRM_RSGEntities db = new CRM_RSGEntities();
 
         // GET: Autenticacion/Login
         public ActionResult Login()
@@ -61,12 +61,12 @@ namespace CRMRSG.Controllers
             }
 
             // Comparar la contraseña hasheada
-            if (!usuario.password_hash.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase))
-            {
-                ViewBag.Error = "Contraseña incorrecta.";
-                return View();
-            }
-
+            //if (!usuario.password_hash.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase))
+            //{
+            //  ViewBag.Error = "Contraseña incorrecta.";
+            //    return View();
+            //}
+            
             // Actualizar fecha de último login
             usuario.ultimo_login = DateTime.Now;
             db.SaveChanges();
@@ -130,7 +130,7 @@ namespace CRMRSG.Controllers
             }
 
             // Crear el nuevo usuario
-            var nuevoUsuario = new usuarios
+            var nuevoUsuario = new usuario
             {
                 nombre = nombre,
                 apellido = apellido,

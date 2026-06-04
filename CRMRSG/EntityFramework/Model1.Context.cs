@@ -13,10 +13,10 @@ namespace CRMRSG.EntityFramework
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
     
-    public partial class crm_rsgEntities : DbContext
+    public partial class CRM_RSGEntities : DbContext
     {
-        public crm_rsgEntities()
-            : base("name=crm_rsgEntities")
+        public CRM_RSGEntities()
+            : base("name=CRM_RSGEntities")
         {
         }
     
@@ -25,15 +25,14 @@ namespace CRMRSG.EntityFramework
             throw new UnintentionalCodeFirstException();
         }
     
-        public virtual DbSet<bitacora> bitacora { get; set; }
-        public virtual DbSet<citas> citas { get; set; }
-        public virtual DbSet<clientes> clientes { get; set; }
-        public virtual DbSet<notificaciones> notificaciones { get; set; }
-        public virtual DbSet<oportunidades> oportunidades { get; set; }
-        public virtual DbSet<reportes> reportes { get; set; }
-        public virtual DbSet<roles> roles { get; set; }
-        public virtual DbSet<sysdiagrams> sysdiagrams { get; set; }
-        public virtual DbSet<tareas> tareas { get; set; }
-        public virtual DbSet<usuarios> usuarios { get; set; }
+        public virtual DbSet<bitacora> bitacoras { get; set; }
+        public virtual DbSet<cita> citas { get; set; }
+        public virtual DbSet<cliente> clientes { get; set; }
+        public virtual DbSet<notificacione> notificaciones { get; set; }
+        public virtual DbSet<oportunidade> oportunidades { get; set; }
+        public virtual DbSet<reporte> reportes { get; set; }
+        public virtual DbSet<role> roles { get; set; }
+        public virtual DbSet<tarea> tareas { get; set; }
+        public virtual DbSet<usuario> usuarios { get; set; }
     }
 }

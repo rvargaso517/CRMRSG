@@ -24,6 +24,6 @@ namespace CRMRSG.EntityFramework
         public string direccion_ip { get; set; }
         public Nullable<int> id_usuario { get; set; }
     
-        public virtual usuarios usuarios { get; set; }
+        public virtual usuario usuario { get; set; }
     }
 }

@@ -12,19 +12,14 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class roles
+    public partial class reporte
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public roles()
-        {
-            this.usuarios = new HashSet<usuarios>();
-        }
-    
-        public int id_rol { get; set; }
-        public string nombre { get; set; }
+        public int id_reporte { get; set; }
+        public string tipo_reporte { get; set; }
+        public Nullable<System.DateTime> fecha_generacion { get; set; }
         public string descripcion { get; set; }
+        public Nullable<int> id_usuario { get; set; }
     
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<usuarios> usuarios { get; set; }
+        public virtual usuario usuario { get; set; }
     }
 }

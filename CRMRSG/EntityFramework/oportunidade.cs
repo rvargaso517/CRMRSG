@@ -12,14 +12,20 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class reportes
+    public partial class oportunidade
     {
-        public int id_reporte { get; set; }
-        public string tipo_reporte { get; set; }
-        public Nullable<System.DateTime> fecha_generacion { get; set; }
+        public int id_oportunidad { get; set; }
+        public string nombre { get; set; }
         public string descripcion { get; set; }
+        public string etapa { get; set; }
+        public Nullable<decimal> probabilidad { get; set; }
+        public Nullable<decimal> valor_estimado { get; set; }
+        public Nullable<System.DateTime> fecha_creacion { get; set; }
+        public string estado { get; set; }
+        public Nullable<int> id_cliente { get; set; }
         public Nullable<int> id_usuario { get; set; }
     
-        public virtual usuarios usuarios { get; set; }
+        public virtual cliente cliente { get; set; }
+        public virtual usuario usuario { get; set; }
     }
 }

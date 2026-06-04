@@ -1,3 +1,4 @@
+@model IEnumerable<CRMRSG.EntityFramework.cliente>
 @{
     ViewBag.Title = "Clientes";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -35,72 +36,53 @@
                                 <th>Empresa</th>
                                 <th>Contacto Principal</th>
                                 <th>Email</th>
-                                <th>Teléfono</th>
+                                <th>Tel&eacute;fono</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>#C-001</td>
-                                <td><a href="~/Clientes/Detalle/1" class="fw-bold">Acme Corporation</a></td>
-                                <td>Juan Pérez</td>
-                                <td>juan@acme.com</td>
-                                <td>+1 555-0123</td>
-                                <td><span class="badge badge-success-light">Activo</span></td>
-                                <td>
-                                    <a href="~/Clientes/Editar/1" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#C-002</td>
-                                <td><a href="~/Clientes/Detalle/2" class="fw-bold">Tech Solutions LLC</a></td>
-                                <td>Ana Martínez</td>
-                                <td>ana@techsolutions.com</td>
-                                <td>+1 555-0456</td>
-                                <td><span class="badge badge-success-light">Activo</span></td>
-                                <td>
-                                    <a href="~/Clientes/Editar/2" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#C-003</td>
-                                <td><a href="~/Clientes/Detalle/3" class="fw-bold">Global Enterprises</a></td>
-                                <td>Carlos Ruiz</td>
-                                <td>carlos@globalent.com</td>
-                                <td>+1 555-0789</td>
-                                <td><span class="badge badge-warning-light">En Negociación</span></td>
-                                <td>
-                                    <a href="~/Clientes/Editar/3" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#C-004</td>
-                                <td><a href="~/Clientes/Detalle/4" class="fw-bold">Stark Industries</a></td>
-                                <td>Tony Stark</td>
-                                <td>t.stark@stark.com</td>
-                                <td>+1 555-9999</td>
-                                <td><span class="badge badge-danger-light">Inactivo</span></td>
-                                <td>
-                                    <a href="~/Clientes/Editar/4" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#C-005</td>
-                                <td><a href="~/Clientes/Detalle/5" class="fw-bold">Wayne Enterprises</a></td>
-                                <td>Bruce Wayne</td>
-                                <td>b.wayne@wayne.com</td>
-                                <td>+1 555-8888</td>
-                                <td><span class="badge badge-success-light">Activo</span></td>
-                                <td>
-                                    <a href="~/Clientes/Editar/5" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-danger-light"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>#C-@item.id_cliente.ToString("D3")</td>
+                                        <td><a href="~/Clientes/Detalle/@item.id_cliente" class="fw-bold">@item.empresa</a></td>
+                                        <td>@item.nombre</td>
+                                        <td>@item.correo</td>
+                                        <td>@item.telefono</td>
+                                        <td>
+                                            @if (item.estado == "Activo" || item.estado == "1")
+                                            {
+                                                <span class="badge badge-success-light">Activo</span>
+                                            }
+                                            else if (item.estado != null && (item.estado.Contains("Negociac") || item.estado == "En Negociación"))
+                                            {
+                                                <span class="badge badge-warning-light">En Negociaci&oacute;n</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-danger-light">Inactivo</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a href="@Url.Action("Editar", "Clientes", new { id = item.id_cliente })" class="btn btn-sm btn-info-light" title="Editar">
+                                                <i class="fa fa-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger-light" onclick="confirmarEliminar(@item.id_cliente, '@item.empresa')" title="Eliminar">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No hay clientes registrados en la base de datos.</td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -108,3 +90,32 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+
+function confirmarEliminar(id, empresa) {
+        var urlEliminar = '@Url.Action("Eliminar", "Clientes")';
+
+        // Cambiado para que mencione el sistema CRM-RSG y mantenga el formato limpio sin tildes raras
+        if (confirm("Sistema CRM-RSG: Esta seguro de que desea eliminar permanentemente a la empresa '" + empresa + "'?")) {
+            $.ajax({
+                url: urlEliminar,
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload(); // Recarga la tabla en limpio
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Ocurrio un error en el servidor al intentar eliminar.");
+                }
+            });
+        }
+    }
+</script>
+   

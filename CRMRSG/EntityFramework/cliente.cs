@@ -12,14 +12,14 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class clientes
+    public partial class cliente
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public clientes()
+        public cliente()
         {
-            this.citas = new HashSet<citas>();
-            this.oportunidades = new HashSet<oportunidades>();
-            this.tareas = new HashSet<tareas>();
+            this.citas = new HashSet<cita>();
+            this.oportunidades = new HashSet<oportunidade>();
+            this.tareas = new HashSet<tarea>();
         }
     
         public int id_cliente { get; set; }
@@ -33,11 +33,11 @@ namespace CRMRSG.EntityFramework
         public Nullable<int> id_usuario { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<citas> citas { get; set; }
-        public virtual usuarios usuarios { get; set; }
+        public virtual ICollection<cita> citas { get; set; }
+        public virtual usuario usuario { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<oportunidades> oportunidades { get; set; }
+        public virtual ICollection<oportunidade> oportunidades { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<tareas> tareas { get; set; }
+        public virtual ICollection<tarea> tareas { get; set; }
     }
 }

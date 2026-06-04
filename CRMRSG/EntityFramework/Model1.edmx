@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="crm_rsgModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+      <Schema Namespace="CRM_RSGModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="bitacora">
           <Key>
             <PropertyRef Name="id_registro" />
@@ -88,16 +88,6 @@
           <Property Name="id_rol" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="nombre" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="descripcion" Type="varchar" MaxLength="255" />
-        </EntityType>
-        <EntityType Name="sysdiagrams">
-          <Key>
-            <PropertyRef Name="diagram_id" />
-          </Key>
-          <Property Name="name" Type="nvarchar" MaxLength="128" Nullable="false" />
-          <Property Name="principal_id" Type="int" Nullable="false" />
-          <Property Name="diagram_id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="version" Type="int" />
-          <Property Name="definition" Type="varbinary(max)" />
         </EntityType>
         <EntityType Name="tareas">
           <Key>
@@ -264,7 +254,7 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityContainer Name="crm_rsgModelStoreContainer">
+        <EntityContainer Name="CRM_RSGModelStoreContainer">
           <EntitySet Name="bitacora" EntityType="Self.bitacora" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="citas" EntityType="Self.citas" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="clientes" EntityType="Self.clientes" Schema="dbo" store:Type="Tables" />
@@ -272,7 +262,6 @@
           <EntitySet Name="oportunidades" EntityType="Self.oportunidades" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="reportes" EntityType="Self.reportes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="roles" EntityType="Self.roles" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagrams" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="tareas" EntityType="Self.tareas" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="usuarios" EntityType="Self.usuarios" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_bitacora_usuarios" Association="Self.FK_bitacora_usuarios">
@@ -324,7 +313,7 @@
     </edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
-      <Schema Namespace="crm_rsgModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+      <Schema Namespace="CRM_RSGModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityType Name="bitacora">
           <Key>
             <PropertyRef Name="id_registro" />
@@ -338,9 +327,9 @@
           <Property Name="fecha_hora" Type="DateTime" Precision="3" />
           <Property Name="direccion_ip" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
           <Property Name="id_usuario" Type="Int32" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_bitacora_usuarios" FromRole="bitacora" ToRole="usuarios" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_bitacora_usuarios" FromRole="bitacora" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="citas">
+        <EntityType Name="cita">
           <Key>
             <PropertyRef Name="id_cita" />
           </Key>
@@ -352,10 +341,10 @@
           <Property Name="estado" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="id_cliente" Type="Int32" />
           <Property Name="id_usuario" Type="Int32" />
-          <NavigationProperty Name="clientes" Relationship="Self.FK_citas_clientes" FromRole="citas" ToRole="clientes" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_citas_usuarios" FromRole="citas" ToRole="usuarios" />
+          <NavigationProperty Name="cliente" Relationship="Self.FK_citas_clientes" FromRole="citas" ToRole="clientes" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_citas_usuarios" FromRole="citas" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="clientes">
+        <EntityType Name="cliente">
           <Key>
             <PropertyRef Name="id_cliente" />
           </Key>
@@ -369,11 +358,11 @@
           <Property Name="fecha_registro" Type="DateTime" Precision="3" />
           <Property Name="id_usuario" Type="Int32" />
           <NavigationProperty Name="citas" Relationship="Self.FK_citas_clientes" FromRole="clientes" ToRole="citas" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_clientes_usuarios" FromRole="clientes" ToRole="usuarios" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_clientes_usuarios" FromRole="clientes" ToRole="usuarios" />
           <NavigationProperty Name="oportunidades" Relationship="Self.FK_oportunidades_clientes" FromRole="clientes" ToRole="oportunidades" />
           <NavigationProperty Name="tareas" Relationship="Self.FK_tareas_clientes" FromRole="clientes" ToRole="tareas" />
         </EntityType>
-        <EntityType Name="notificaciones">
+        <EntityType Name="notificacione">
           <Key>
             <PropertyRef Name="id_notificacion" />
           </Key>
@@ -382,9 +371,9 @@
           <Property Name="fecha" Type="DateTime" Precision="3" />
           <Property Name="leida" Type="Boolean" />
           <Property Name="id_usuario" Type="Int32" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_notificaciones_usuarios" FromRole="notificaciones" ToRole="usuarios" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_notificaciones_usuarios" FromRole="notificaciones" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="oportunidades">
+        <EntityType Name="oportunidade">
           <Key>
             <PropertyRef Name="id_oportunidad" />
           </Key>
@@ -398,10 +387,10 @@
           <Property Name="estado" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
           <Property Name="id_cliente" Type="Int32" />
           <Property Name="id_usuario" Type="Int32" />
-          <NavigationProperty Name="clientes" Relationship="Self.FK_oportunidades_clientes" FromRole="oportunidades" ToRole="clientes" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_oportunidades_usuarios" FromRole="oportunidades" ToRole="usuarios" />
+          <NavigationProperty Name="cliente" Relationship="Self.FK_oportunidades_clientes" FromRole="oportunidades" ToRole="clientes" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_oportunidades_usuarios" FromRole="oportunidades" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="reportes">
+        <EntityType Name="reporte">
           <Key>
             <PropertyRef Name="id_reporte" />
           </Key>
@@ -410,9 +399,9 @@
           <Property Name="fecha_generacion" Type="DateTime" Precision="3" />
           <Property Name="descripcion" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
           <Property Name="id_usuario" Type="Int32" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_reportes_usuarios" FromRole="reportes" ToRole="usuarios" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_reportes_usuarios" FromRole="reportes" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="roles">
+        <EntityType Name="role">
           <Key>
             <PropertyRef Name="id_rol" />
           </Key>
@@ -421,17 +410,7 @@
           <Property Name="descripcion" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="usuarios" Relationship="Self.FK_usuarios_roles" FromRole="roles" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="sysdiagrams">
-          <Key>
-            <PropertyRef Name="diagram_id" />
-          </Key>
-          <Property Name="name" Type="String" MaxLength="128" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="principal_id" Type="Int32" Nullable="false" />
-          <Property Name="diagram_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="version" Type="Int32" />
-          <Property Name="definition" Type="Binary" MaxLength="Max" FixedLength="false" />
-        </EntityType>
-        <EntityType Name="tareas">
+        <EntityType Name="tarea">
           <Key>
             <PropertyRef Name="id_tarea" />
           </Key>
@@ -443,10 +422,10 @@
           <Property Name="fecha_limite" Type="DateTime" Precision="0" />
           <Property Name="id_cliente" Type="Int32" />
           <Property Name="id_usuario" Type="Int32" />
-          <NavigationProperty Name="clientes" Relationship="Self.FK_tareas_clientes" FromRole="tareas" ToRole="clientes" />
-          <NavigationProperty Name="usuarios" Relationship="Self.FK_tareas_usuarios" FromRole="tareas" ToRole="usuarios" />
+          <NavigationProperty Name="cliente" Relationship="Self.FK_tareas_clientes" FromRole="tareas" ToRole="clientes" />
+          <NavigationProperty Name="usuario" Relationship="Self.FK_tareas_usuarios" FromRole="tareas" ToRole="usuarios" />
         </EntityType>
-        <EntityType Name="usuarios">
+        <EntityType Name="usuario">
           <Key>
             <PropertyRef Name="id_usuario" />
           </Key>
@@ -465,17 +444,17 @@
           <Property Name="fecha_creacion" Type="DateTime" Precision="3" />
           <Property Name="ultimo_login" Type="DateTime" Precision="3" />
           <Property Name="id_rol" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="bitacora" Relationship="Self.FK_bitacora_usuarios" FromRole="usuarios" ToRole="bitacora" />
+          <NavigationProperty Name="bitacoras" Relationship="Self.FK_bitacora_usuarios" FromRole="usuarios" ToRole="bitacora" />
           <NavigationProperty Name="citas" Relationship="Self.FK_citas_usuarios" FromRole="usuarios" ToRole="citas" />
           <NavigationProperty Name="clientes" Relationship="Self.FK_clientes_usuarios" FromRole="usuarios" ToRole="clientes" />
           <NavigationProperty Name="notificaciones" Relationship="Self.FK_notificaciones_usuarios" FromRole="usuarios" ToRole="notificaciones" />
           <NavigationProperty Name="oportunidades" Relationship="Self.FK_oportunidades_usuarios" FromRole="usuarios" ToRole="oportunidades" />
           <NavigationProperty Name="reportes" Relationship="Self.FK_reportes_usuarios" FromRole="usuarios" ToRole="reportes" />
-          <NavigationProperty Name="roles" Relationship="Self.FK_usuarios_roles" FromRole="usuarios" ToRole="roles" />
+          <NavigationProperty Name="role" Relationship="Self.FK_usuarios_roles" FromRole="usuarios" ToRole="roles" />
           <NavigationProperty Name="tareas" Relationship="Self.FK_tareas_usuarios" FromRole="usuarios" ToRole="tareas" />
         </EntityType>
         <Association Name="FK_bitacora_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
           <End Role="bitacora" Type="Self.bitacora" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
@@ -487,8 +466,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_citas_clientes">
-          <End Role="clientes" Type="Self.clientes" Multiplicity="0..1" />
-          <End Role="citas" Type="Self.citas" Multiplicity="*" />
+          <End Role="clientes" Type="Self.cliente" Multiplicity="0..1" />
+          <End Role="citas" Type="Self.cita" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="clientes">
               <PropertyRef Name="id_cliente" />
@@ -499,8 +478,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_citas_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
-          <End Role="citas" Type="Self.citas" Multiplicity="*" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
+          <End Role="citas" Type="Self.cita" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
               <PropertyRef Name="id_usuario" />
@@ -511,8 +490,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_clientes_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
-          <End Role="clientes" Type="Self.clientes" Multiplicity="*" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
+          <End Role="clientes" Type="Self.cliente" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
               <PropertyRef Name="id_usuario" />
@@ -523,8 +502,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_oportunidades_clientes">
-          <End Role="clientes" Type="Self.clientes" Multiplicity="0..1" />
-          <End Role="oportunidades" Type="Self.oportunidades" Multiplicity="*" />
+          <End Role="clientes" Type="Self.cliente" Multiplicity="0..1" />
+          <End Role="oportunidades" Type="Self.oportunidade" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="clientes">
               <PropertyRef Name="id_cliente" />
@@ -535,8 +514,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_tareas_clientes">
-          <End Role="clientes" Type="Self.clientes" Multiplicity="0..1" />
-          <End Role="tareas" Type="Self.tareas" Multiplicity="*" />
+          <End Role="clientes" Type="Self.cliente" Multiplicity="0..1" />
+          <End Role="tareas" Type="Self.tarea" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="clientes">
               <PropertyRef Name="id_cliente" />
@@ -547,8 +526,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_notificaciones_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
-          <End Role="notificaciones" Type="Self.notificaciones" Multiplicity="*" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
+          <End Role="notificaciones" Type="Self.notificacione" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
               <PropertyRef Name="id_usuario" />
@@ -559,8 +538,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_oportunidades_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
-          <End Role="oportunidades" Type="Self.oportunidades" Multiplicity="*" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
+          <End Role="oportunidades" Type="Self.oportunidade" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
               <PropertyRef Name="id_usuario" />
@@ -571,8 +550,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_reportes_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
-          <End Role="reportes" Type="Self.reportes" Multiplicity="*" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
+          <End Role="reportes" Type="Self.reporte" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
               <PropertyRef Name="id_usuario" />
@@ -583,8 +562,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_usuarios_roles">
-          <End Role="roles" Type="Self.roles" Multiplicity="1" />
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="*" />
+          <End Role="roles" Type="Self.role" Multiplicity="1" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="roles">
               <PropertyRef Name="id_rol" />
@@ -595,8 +574,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_tareas_usuarios">
-          <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
-          <End Role="tareas" Type="Self.tareas" Multiplicity="*" />
+          <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
+          <End Role="tareas" Type="Self.tarea" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="usuarios">
               <PropertyRef Name="id_usuario" />
@@ -606,20 +585,19 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityContainer Name="crm_rsgEntities" annotation:LazyLoadingEnabled="true">
-          <EntitySet Name="bitacora" EntityType="Self.bitacora" />
-          <EntitySet Name="citas" EntityType="Self.citas" />
-          <EntitySet Name="clientes" EntityType="Self.clientes" />
-          <EntitySet Name="notificaciones" EntityType="Self.notificaciones" />
-          <EntitySet Name="oportunidades" EntityType="Self.oportunidades" />
-          <EntitySet Name="reportes" EntityType="Self.reportes" />
-          <EntitySet Name="roles" EntityType="Self.roles" />
-          <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagrams" />
-          <EntitySet Name="tareas" EntityType="Self.tareas" />
-          <EntitySet Name="usuarios" EntityType="Self.usuarios" />
+        <EntityContainer Name="CRM_RSGEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="bitacoras" EntityType="Self.bitacora" />
+          <EntitySet Name="citas" EntityType="Self.cita" />
+          <EntitySet Name="clientes" EntityType="Self.cliente" />
+          <EntitySet Name="notificaciones" EntityType="Self.notificacione" />
+          <EntitySet Name="oportunidades" EntityType="Self.oportunidade" />
+          <EntitySet Name="reportes" EntityType="Self.reporte" />
+          <EntitySet Name="roles" EntityType="Self.role" />
+          <EntitySet Name="tareas" EntityType="Self.tarea" />
+          <EntitySet Name="usuarios" EntityType="Self.usuario" />
           <AssociationSet Name="FK_bitacora_usuarios" Association="Self.FK_bitacora_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
-            <End Role="bitacora" EntitySet="bitacora" />
+            <End Role="bitacora" EntitySet="bitacoras" />
           </AssociationSet>
           <AssociationSet Name="FK_citas_clientes" Association="Self.FK_citas_clientes">
             <End Role="clientes" EntitySet="clientes" />
@@ -667,9 +645,9 @@
     <!-- C-S mapping content -->
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
-        <EntityContainerMapping StorageEntityContainer="crm_rsgModelStoreContainer" CdmEntityContainer="crm_rsgEntities">
-          <EntitySetMapping Name="bitacora">
-            <EntityTypeMapping TypeName="crm_rsgModel.bitacora">
+        <EntityContainerMapping StorageEntityContainer="CRM_RSGModelStoreContainer" CdmEntityContainer="CRM_RSGEntities">
+          <EntitySetMapping Name="bitacoras">
+            <EntityTypeMapping TypeName="CRM_RSGModel.bitacora">
               <MappingFragment StoreEntitySet="bitacora">
                 <ScalarProperty Name="id_registro" ColumnName="id_registro" />
                 <ScalarProperty Name="accion" ColumnName="accion" />
@@ -684,7 +662,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="citas">
-            <EntityTypeMapping TypeName="crm_rsgModel.citas">
+            <EntityTypeMapping TypeName="CRM_RSGModel.cita">
               <MappingFragment StoreEntitySet="citas">
                 <ScalarProperty Name="id_cita" ColumnName="id_cita" />
                 <ScalarProperty Name="fecha" ColumnName="fecha" />
@@ -698,7 +676,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="clientes">
-            <EntityTypeMapping TypeName="crm_rsgModel.clientes">
+            <EntityTypeMapping TypeName="CRM_RSGModel.cliente">
               <MappingFragment StoreEntitySet="clientes">
                 <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
                 <ScalarProperty Name="nombre" ColumnName="nombre" />
@@ -713,7 +691,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="notificaciones">
-            <EntityTypeMapping TypeName="crm_rsgModel.notificaciones">
+            <EntityTypeMapping TypeName="CRM_RSGModel.notificacione">
               <MappingFragment StoreEntitySet="notificaciones">
                 <ScalarProperty Name="id_notificacion" ColumnName="id_notificacion" />
                 <ScalarProperty Name="mensaje" ColumnName="mensaje" />
@@ -724,7 +702,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="oportunidades">
-            <EntityTypeMapping TypeName="crm_rsgModel.oportunidades">
+            <EntityTypeMapping TypeName="CRM_RSGModel.oportunidade">
               <MappingFragment StoreEntitySet="oportunidades">
                 <ScalarProperty Name="id_oportunidad" ColumnName="id_oportunidad" />
                 <ScalarProperty Name="nombre" ColumnName="nombre" />
@@ -740,7 +718,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="reportes">
-            <EntityTypeMapping TypeName="crm_rsgModel.reportes">
+            <EntityTypeMapping TypeName="CRM_RSGModel.reporte">
               <MappingFragment StoreEntitySet="reportes">
                 <ScalarProperty Name="id_reporte" ColumnName="id_reporte" />
                 <ScalarProperty Name="tipo_reporte" ColumnName="tipo_reporte" />
@@ -751,7 +729,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="roles">
-            <EntityTypeMapping TypeName="crm_rsgModel.roles">
+            <EntityTypeMapping TypeName="CRM_RSGModel.role">
               <MappingFragment StoreEntitySet="roles">
                 <ScalarProperty Name="id_rol" ColumnName="id_rol" />
                 <ScalarProperty Name="nombre" ColumnName="nombre" />
@@ -759,19 +737,8 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="sysdiagrams">
-            <EntityTypeMapping TypeName="crm_rsgModel.sysdiagrams">
-              <MappingFragment StoreEntitySet="sysdiagrams">
-                <ScalarProperty Name="name" ColumnName="name" />
-                <ScalarProperty Name="principal_id" ColumnName="principal_id" />
-                <ScalarProperty Name="diagram_id" ColumnName="diagram_id" />
-                <ScalarProperty Name="version" ColumnName="version" />
-                <ScalarProperty Name="definition" ColumnName="definition" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="tareas">
-            <EntityTypeMapping TypeName="crm_rsgModel.tareas">
+            <EntityTypeMapping TypeName="CRM_RSGModel.tarea">
               <MappingFragment StoreEntitySet="tareas">
                 <ScalarProperty Name="id_tarea" ColumnName="id_tarea" />
                 <ScalarProperty Name="titulo" ColumnName="titulo" />
@@ -785,7 +752,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="usuarios">
-            <EntityTypeMapping TypeName="crm_rsgModel.usuarios">
+            <EntityTypeMapping TypeName="CRM_RSGModel.usuario">
               <MappingFragment StoreEntitySet="usuarios">
                 <ScalarProperty Name="id_usuario" ColumnName="id_usuario" />
                 <ScalarProperty Name="nombre" ColumnName="nombre" />
@@ -819,7 +786,7 @@
     <Options>
       <DesignerInfoPropertySet>
         <DesignerProperty Name="ValidateOnBuild" Value="true" />
-        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
         <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
         <DesignerProperty Name="UseLegacyProvider" Value="false" />
         <DesignerProperty Name="CodeGenerationStrategy" Value="None" />

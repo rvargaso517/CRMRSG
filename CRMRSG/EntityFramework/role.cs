@@ -12,18 +12,19 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class tareas
+    public partial class role
     {
-        public int id_tarea { get; set; }
-        public string titulo { get; set; }
-        public string descripcion { get; set; }
-        public string prioridad { get; set; }
-        public string estado { get; set; }
-        public Nullable<System.DateTime> fecha_limite { get; set; }
-        public Nullable<int> id_cliente { get; set; }
-        public Nullable<int> id_usuario { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public role()
+        {
+            this.usuarios = new HashSet<usuario>();
+        }
     
-        public virtual clientes clientes { get; set; }
-        public virtual usuarios usuarios { get; set; }
+        public int id_rol { get; set; }
+        public string nombre { get; set; }
+        public string descripcion { get; set; }
+    
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<usuario> usuarios { get; set; }
     }
 }

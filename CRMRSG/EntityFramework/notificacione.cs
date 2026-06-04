@@ -12,12 +12,14 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class sysdiagrams
+    public partial class notificacione
     {
-        public string name { get; set; }
-        public int principal_id { get; set; }
-        public int diagram_id { get; set; }
-        public Nullable<int> version { get; set; }
-        public byte[] definition { get; set; }
+        public int id_notificacion { get; set; }
+        public string mensaje { get; set; }
+        public Nullable<System.DateTime> fecha { get; set; }
+        public Nullable<bool> leida { get; set; }
+        public Nullable<int> id_usuario { get; set; }
+    
+        public virtual usuario usuario { get; set; }
     }
 }

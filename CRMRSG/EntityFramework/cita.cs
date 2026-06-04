@@ -12,14 +12,18 @@ namespace CRMRSG.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class notificaciones
+    public partial class cita
     {
-        public int id_notificacion { get; set; }
-        public string mensaje { get; set; }
-        public Nullable<System.DateTime> fecha { get; set; }
-        public Nullable<bool> leida { get; set; }
+        public int id_cita { get; set; }
+        public System.DateTime fecha { get; set; }
+        public System.TimeSpan hora { get; set; }
+        public string descripcion { get; set; }
+        public string lugar { get; set; }
+        public string estado { get; set; }
+        public Nullable<int> id_cliente { get; set; }
         public Nullable<int> id_usuario { get; set; }
     
-        public virtual usuarios usuarios { get; set; }
+        public virtual cliente cliente { get; set; }
+        public virtual usuario usuario { get; set; }
     }
 }
