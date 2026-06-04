@@ -11,39 +11,39 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
-        // GET: Clientes
+        // GET: clientes
         public ActionResult Index()
         {
             // Trae todos los clientes de la base de datos
-            var listaClientes = db.clientes.ToList();
-            return View(listaClientes);
+            var listaclientes = db.clientes.ToList();
+            return View(listaclientes);
         }
 
-        // GET: Clientes/Crear
+        // GET: clientes/Crear
         public ActionResult Crear()
         {
             return View();
         }
 
-        // POST: Clientes/Crear
+        // POST: clientes/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Crear(cliente nuevoCliente)
+        public ActionResult Crear(clientes nuevoclientes)
         {
             if (ModelState.IsValid)
             {
-                nuevoCliente.fecha_registro = DateTime.Now;
+                nuevoclientes.fecha_registro = DateTime.Now;
                 // Asignamos el id del usuario logueado usando la sesión que hackeamos
-                nuevoCliente.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                nuevoclientes.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
 
-                db.clientes.Add(nuevoCliente);
+                db.clientes.Add(nuevoclientes);
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            return View(nuevoCliente);
+            return View(nuevoclientes);
         }
 
-        // GET: Clientes/Editar/5
+        // GET: clientes/Editar/5
         public ActionResult Editar(int? id)
         {
             // 1. Validamos que el ID no venga vacío para evitar la pantalla roja
@@ -54,54 +54,54 @@ namespace CRMRSG.Controllers
 
             using (CRM_RSGEntities db = new CRM_RSGEntities())
             {
-                // 2. Corregido a "db.cliente" en singular para que calce con tu Entity Framework
-                var clienteEditar = db.clientes.Find(id);
+                // 2. Corregido a "db.clientes" en singular para que calce con tu Entity Framework
+                var clientesEditar = db.clientes.Find(id);
 
-                if (clienteEditar == null)
+                if (clientesEditar == null)
                 {
                     return HttpNotFound();
                 }
 
-                return View(clienteEditar);
+                return View(clientesEditar);
             }
         }
 
-        // POST: Clientes/Editar/5
+        // POST: clientes/Editar/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Editar(cliente clienteModificado)
+        public ActionResult Editar(clientes clientesModificado)
         {
             if (ModelState.IsValid)
             {
-                var clienteDb = db.clientes.Find(clienteModificado.id_cliente);
-                if (clienteDb != null)
+                var clientesDb = db.clientes.Find(clientesModificado.id_cliente);
+                if (clientesDb != null)
                 {
-                    clienteDb.nombre = clienteModificado.nombre;
-                    clienteDb.empresa = clienteModificado.empresa;
-                    clienteDb.telefono = clienteModificado.telefono;
-                    clienteDb.correo = clienteModificado.correo;
-                    clienteDb.direccion = clienteModificado.direccion;
-                    clienteDb.estado = clienteModificado.estado;
+                    clientesDb.nombre = clientesModificado.nombre;
+                    clientesDb.empresa = clientesModificado.empresa;
+                    clientesDb.telefono = clientesModificado.telefono;
+                    clientesDb.correo = clientesModificado.correo;
+                    clientesDb.direccion = clientesModificado.direccion;
+                    clientesDb.estado = clientesModificado.estado;
 
                     db.SaveChanges();
                     return RedirectToAction("Index");
                 }
             }
-            return View(clienteModificado);
+            return View(clientesModificado);
         }
 
-        // POST: Clientes/Eliminar/5
+        // POST: clientes/Eliminar/5
         [HttpPost]
         public ActionResult Eliminar(int id)
         {
-            var clienteEliminar = db.clientes.Find(id);
-            if (clienteEliminar != null)
+            var clientesEliminar = db.clientes.Find(id);
+            if (clientesEliminar != null)
             {
-                db.clientes.Remove(clienteEliminar);
+                db.clientes.Remove(clientesEliminar);
                 db.SaveChanges();
-                return Json(new { success = true, message = "Cliente eliminado correctamente." });
+                return Json(new { success = true, message = "clientes eliminado correctamente." });
             }
-            return Json(new { success = false, message = "No se pudo encontrar el cliente." });
+            return Json(new { success = false, message = "No se pudo encontrar el clientes." });
         }
 
         protected override void Dispose(bool disposing)

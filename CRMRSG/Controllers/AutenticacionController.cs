@@ -61,11 +61,11 @@ namespace CRMRSG.Controllers
             }
 
             // Comparar la contraseña hasheada
-            //if (!usuario.password_hash.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase))
-            //{
-            //  ViewBag.Error = "Contraseña incorrecta.";
-            //    return View();
-            //}
+            if (!usuario.password_hash.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase))
+            {
+              ViewBag.Error = "Contraseña incorrecta.";
+                return View();
+            }
             
             // Actualizar fecha de último login
             usuario.ultimo_login = DateTime.Now;
@@ -130,7 +130,7 @@ namespace CRMRSG.Controllers
             }
 
             // Crear el nuevo usuario
-            var nuevoUsuario = new usuario
+            var nuevoUsuario = new usuarios
             {
                 nombre = nombre,
                 apellido = apellido,

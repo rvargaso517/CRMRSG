@@ -136,10 +136,10 @@
     <Compile Include="EntityFramework\bitacora.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\cita.cs">
+    <Compile Include="EntityFramework\citas.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\cliente.cs">
+    <Compile Include="EntityFramework\clientes.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Model1.Context.cs">
@@ -157,22 +157,25 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Model1.edmx</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\notificacione.cs">
+    <Compile Include="EntityFramework\notificaciones.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\oportunidade.cs">
+    <Compile Include="EntityFramework\oportunidades.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\reporte.cs">
+    <Compile Include="EntityFramework\reportes.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\role.cs">
+    <Compile Include="EntityFramework\roles.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\tarea.cs">
+    <Compile Include="EntityFramework\sysdiagrams.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\usuario.cs">
+    <Compile Include="EntityFramework\tareas.cs">
+      <DependentUpon>Model1.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EntityFramework\usuarios.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
     <Compile Include="Global.asax.cs">
@@ -707,6 +710,7 @@
     <Content Include="Content\images\logo\logo-7.png" />
     <Content Include="Content\images\logo\logo-8.png" />
     <Content Include="Content\images\logo\logo-9.png" />
+    <Content Include="Content\images\logo\rsg_logo.jpg" />
     <Content Include="Content\images\master.png" />
     <Content Include="Content\images\mastercard.png" />
     <Content Include="Content\images\model.png" />
