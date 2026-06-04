@@ -1,100 +1,154 @@
+@model CRMRSG.EntityFramework.clientes
+
 @{
     ViewBag.Title = "Nuevo Cliente";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="content-header">
-    <div class="d-flex align-items-center">
-        <div class="me-auto">
-            <h4 class="page-title">Nuevo Cliente</h4>
-            <div class="d-inline-block align-items-center">
-                <nav>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
-                        <li class="breadcrumb-item"><a href="~/Clientes">Clientes</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Crear</li>
-                    </ol>
-                </nav>
+@using (Html.BeginForm("Crear", "Clientes", FormMethod.Post))
+{
+    <div class="box-body">
+
+        <h4 class="box-title text-info mb-0">
+            <i class="ti-user me-15"></i> Perfil Principal
+        </h4>
+
+        <hr class="my-15">
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Nombre de la Empresa</label>
+
+                    @Html.TextBoxFor(m => m.empresa,
+                         new
+                         {
+                             @class = "form-control",
+                             placeholder = "Ej: Acme Corp"
+                         })
+                </div>
             </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+
+                    @Html.DropDownListFor(
+                             m => m.estado,
+                             new List<SelectListItem>
+                             {
+                                    new SelectListItem
+                                    {
+                                        Text = "Activo",
+                                        Value = "Activo"
+                                    },
+                                    new SelectListItem
+                                    {
+                                        Text = "En Negociación",
+                                        Value = "En Negociación"
+                                    },
+                                    new SelectListItem
+                                    {
+                                        Text = "Inactivo",
+                                        Value = "Inactivo"
+                                    }
+                         },
+                             "Seleccione un estado",
+                             new { @class = "form-select" })
+                </div>
+            </div>
+
         </div>
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Contacto</label>
+
+                    @Html.TextBoxFor(m => m.nombre,
+                         new
+                         {
+                             @class = "form-control",
+                             placeholder = "Nombre completo"
+                         })
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Cargo</label>
+
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Ej: Gerente de Compras">
+                </div>
+            </div>
+
+        </div>
+
+        <h4 class="box-title text-info mb-0 mt-20">
+            <i class="ti-envelope me-15"></i> Contacto y Ubicación
+        </h4>
+
+        <hr class="my-15">
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+
+                    @Html.TextBoxFor(m => m.correo,
+                         new
+                         {
+                             @class = "form-control",
+                             type = "email",
+                             placeholder = "email@empresa.com"
+                         })
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+
+                    @Html.TextBoxFor(m => m.telefono,
+                         new
+                         {
+                             @class = "form-control",
+                             placeholder = "+506 8888-8888"
+                         })
+                </div>
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Dirección</label>
+
+            @Html.TextBoxFor(m => m.direccion,
+                 new
+                 {
+                     @class = "form-control",
+                     placeholder = "Calle, Número, Ciudad"
+                 })
+        </div>
+
     </div>
-</div>
 
-<div class="row">
-    <div class="col-lg-8 col-12">
-        <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title">Información del Cliente</h4>
-            </div>
-            <form class="form">
-                <div class="box-body">
-                    <h4 class="box-title text-info mb-0"><i class="ti-user me-15"></i> Perfil Principal</h4>
-                    <hr class="my-15">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Nombre de la Empresa</label>
-                                <input type="text" class="form-control" placeholder="Ej: Acme Corp">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Industria</label>
-                                <select class="form-select">
-                                    <option>Tecnología</option>
-                                    <option>Manufactura</option>
-                                    <option>Servicios</option>
-                                    <option>Salud</option>
-                                    <option>Finanzas</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Nombre del Contacto</label>
-                                <input type="text" class="form-control" placeholder="Nombre completo">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Cargo</label>
-                                <input type="text" class="form-control" placeholder="Ej: Gerente de Compras">
-                            </div>
-                        </div>
-                    </div>
+    <div class="box-footer">
 
-                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-envelope me-15"></i> Contacto y Ubicación</h4>
-                    <hr class="my-15">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" placeholder="email@empresa.com">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" placeholder="+1 234 567 8900">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Dirección</label>
-                        <input type="text" class="form-control" placeholder="Calle, Número, Ciudad">
-                    </div>
-                </div>
-                <div class="box-footer">
-                    <a href="~/Clientes" class="btn btn-warning me-1">
-                        <i class="ti-trash"></i> Cancelar
-                    </a>
-                    <button type="button" class="btn btn-primary">
-                        <i class="ti-save-alt"></i> Guardar Cliente
-                    </button>
-                </div>
-            </form>
-        </div>
+        <a href="~/Clientes" class="btn btn-warning me-1">
+            <i class="ti-trash"></i> Cancelar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="ti-save-alt"></i> Guardar Cliente
+        </button>
+
+    </div>
+}
     </div>
 </div>

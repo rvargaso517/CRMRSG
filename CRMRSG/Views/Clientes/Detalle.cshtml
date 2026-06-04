@@ -1,0 +1,22 @@
+﻿@model CRMRSG.EntityFramework.clientes
+
+@{
+    ViewBag.Title = "Detalle Cliente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+
+    <h2>Detalle Cliente</h2>
+
+    <hr />
+
+    <p><strong>Empresa:</strong> @Model.empresa</p>
+    <p><strong>Contacto:</strong> @Model.nombre</p>
+    <p><strong>Correo:</strong> @Model.correo</p>
+    <p><strong>Teléfono:</strong> @Model.telefono</p>
+    <p><strong>Dirección:</strong> @Model.direccion</p>
+    <p><strong>Estado:</strong> @Model.estado</p>
+    <p><strong>Fecha Registro:</strong> @Model.fecha_registro</p>
+
+</div>

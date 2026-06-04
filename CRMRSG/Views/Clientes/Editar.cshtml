@@ -1,0 +1,60 @@
+﻿
+@model CRMRSG.EntityFramework.clientes
+
+@{
+    ViewBag.Title = "Editar Cliente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+
+    <h2>Editar Cliente</h2>
+
+    @using (Html.BeginForm())
+    {
+        @Html.HiddenFor(m => m.id_cliente)
+
+        <div class="form-group">
+            <label>Empresa</label>
+            @Html.TextBoxFor(m => m.empresa,
+            new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            <label>Contacto</label>
+            @Html.TextBoxFor(m => m.nombre,
+            new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            <label>Correo</label>
+            @Html.TextBoxFor(m => m.correo,
+            new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            <label>Teléfono</label>
+            @Html.TextBoxFor(m => m.telefono,
+            new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            <label>Dirección</label>
+            @Html.TextBoxFor(m => m.direccion,
+            new { @class = "form-control" })
+        </div>
+
+        <div class="form-group">
+            <label>Estado</label>
+            @Html.TextBoxFor(m => m.estado,
+            new { @class = "form-control" })
+        </div>
+
+        <br />
+
+        <button type="submit" class="btn btn-primary">
+            Guardar Cambios
+        </button>
+    }
+
+</div>
