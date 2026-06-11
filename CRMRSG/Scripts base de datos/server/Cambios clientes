@@ -1,0 +1,23 @@
+-- 1. Tabla de Contactos del Cliente (Para tener varios por empresa)
+CREATE TABLE contacto_cliente (
+    id_contacto INT IDENTITY(1,1) PRIMARY KEY,
+    id_cliente INT NOT NULL, -- Llave foránea amarrada al cliente
+    nombre VARCHAR(150) NOT NULL,
+    telefono VARCHAR(50) NULL,
+    correo VARCHAR(100) NULL,
+    puesto VARCHAR(100) NULL, -- Opcional: para saber quién es en la empresa
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE
+);
+
+-- 2. Crear tabla de Tareas / Trabajos (Los antiguos "Eventos")
+CREATE TABLE tarea_cliente (
+    id_tarea INT IDENTITY(1,1) PRIMARY KEY,
+    id_cliente INT NOT NULL, -- Cada tarea va ligada a un cliente
+    tipo_trabajo VARCHAR(150) NOT NULL, -- Ej: Mantenimiento, Instalación, Consultoría
+    descripcion TEXT NULL,
+    ganancia DECIMAL(18,2) NOT NULL DEFAULT 0.00, -- Monto facturado o ganado
+    fecha_inicio DATETIME NOT NULL,
+    fecha_fin DATETIME NULL,
+    estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente', -- Pendiente, En Progreso, Terminado
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE
+);
