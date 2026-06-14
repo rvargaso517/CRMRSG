@@ -1,4 +1,4 @@
-@model IEnumerable<CRMRSG.EntityFramework.clientes>
+﻿@model IEnumerable<CRMRSG.EntityFramework.clientes>
 @{
     ViewBag.Title = "Clientes";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -57,7 +57,7 @@
                                             {
                                                 <span class="badge badge-success-light">Activo</span>
                                             }
-                                            else if (item.estado != null && (item.estado.Contains("Negociac") || item.estado == "En Negociación"))
+                                            else if (item.estado != null && (item.estado.Contains("Negociac") || item.estado == "En Negociaci&oacute;n"))
                                             {
                                                 <span class="badge badge-warning-light">En Negociaci&oacute;n</span>
                                             }
@@ -98,7 +98,7 @@ function confirmarEliminar(id, empresa) {
         var urlEliminar = '@Url.Action("Eliminar", "Clientes")';
 
         // Cambiado para que mencione el sistema CRM-RSG y mantenga el formato limpio sin tildes raras
-        if (confirm("Sistema CRM-RSG: Esta seguro de que desea eliminar permanentemente a la empresa '" + empresa + "'?")) {
+        if (confirm("Sistema CRM-RSG: Â¿Est&aacute; seguro de que desea eliminar permanentemente a la empresa '" + empresa + "'?")) {
             $.ajax({
                 url: urlEliminar,
                 type: 'POST',
@@ -112,10 +112,13 @@ function confirmarEliminar(id, empresa) {
                     }
                 },
                 error: function () {
-                    alert("Ocurrio un error en el servidor al intentar eliminar.");
+                    alert("Ocurri&oacute; un error en el servidor al intentar eliminar.");
                 }
             });
         }
     }
 </script>
    
+
+
+

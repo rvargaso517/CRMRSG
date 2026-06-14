@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@ViewBag.Title - CRM</title>
     
-    <link rel="stylesheet" href="~/Content/css/vendors_css.css">
-    <link rel="stylesheet" href="~/Content/css/style.css">
-    <link rel="stylesheet" href="~/Content/css/skin_color.css">
-    <link rel="stylesheet" href="~/Content/css/custom.css">
     @Styles.Render("~/Content/css")
+    <link rel="stylesheet" href="@Url.Content("~/Content/bootstrap.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/vendors_css.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/style.css")?v=@DateTime.Now.Ticks">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/skin_color.css")?v=@DateTime.Now.Ticks">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/custom.css")?v=@DateTime.Now.Ticks">
     @Scripts.Render("~/bundles/modernizr")
 </head>
 
@@ -22,33 +23,57 @@
     <header class="main-header">
         <div class="d-flex align-items-center logo-box justify-content-start">
             <a href="@Url.Action("Index", "Dashboard")" class="logo">
-                <div class="logo-mini w-40">
-                    <span class="light-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
+                <div class="logo-mini">
+                    <span class="light-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-mini-img"></span>
 
-                    <span class="dark-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
+                    <span class="dark-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-mini-img"></span>
                 </div>
-                <div class="logo-lg">
-                    <span class="light-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
-                    <span class="dark-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
+                <div class="logo-lg d-none d-sm-block">
+                    <span class="light-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-lg-img"></span>
+                    <span class="dark-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-lg-img"></span>
                 </div>
             </a>
         </div>
 
         <nav class="navbar navbar-static-top">
-            <div class="app-menu">
+            
+            <!-- Left Side: Hamburger, Search, Avatar -->
+            <div class="app-menu d-flex align-items-center">
+                <!-- Hamburger -->
                 <ul class="header-megamenu nav">
                     <li class="btn-group nav-item">
-                        <a href="#" class="waves-effect waves-light nav-link push-btn btn-primary-light" data-toggle="push-menu" role="button">
+                        <button class="btn btn-primary-light d-inline d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Toggle navigation">
+                            <i data-feather="menu"></i>
+                        </button>
+                        <a href="#" class="waves-effect waves-light nav-link push-btn btn-primary-light d-none d-xl-inline" data-toggle="push-menu" role="button">
                             <i data-feather="menu"></i>
                         </a>
                     </li>
                 </ul>
+                
+                <!-- Search Bar -->
+                <div class="search-bx mx-3 d-none d-md-block">
+                    <div class="input-group flex-nowrap align-items-center" style="background-color: #f0f4f9; border-radius: 8px;">
+                        <input type="text" class="form-control border-0 bg-transparent shadow-none" placeholder="Search" style="width: 200px;">
+                        <span class="input-group-text bg-transparent border-0 text-muted px-2"><i data-feather="search" style="width: 18px; height: 18px;"></i></span>
+                    </div>
+                </div>
+
+                <!-- User Profile (Avatar) -->
+                <div class="dropdown user user-menu">
+                    <a href="#" class="waves-effect waves-light dropdown-toggle w-auto bg-transparent p-0 no-shadow" title="Usuario" data-bs-toggle="modal" data-bs-target="#quick_user_toggle">
+                        <div class="bg-primary-light rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; overflow: hidden;">
+                            <i data-feather="user" class="text-primary"></i>
+                        </div>
+                    </a>
+                </div>
             </div>
 
+            <!-- Right Side: Icons -->
             <div class="navbar-custom-menu r-side">
                 <ul class="nav navbar-nav">
                     <li class="dropdown notifications-menu btn-group">
-                        <label class="switch">
+                        <label class="switch mb-0">
                             <a class="waves-effect waves-light btn-primary-light svg-bt-icon">
                                 <input type="checkbox" data-mainsidebarskin="toggle" id="toggle_left_sidebar_skin">
                                 <span class="switch-on"><i data-feather="moon"></i></span>
@@ -56,14 +81,19 @@
                             </a>
                         </label>
                     </li>
+                    <li class="btn-group nav-item">
+                        <a href="javascript:void(0);" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon">
+                            <i data-feather="bell"></i>
+                        </a>
+                    </li>
                     <li class="btn-group nav-item d-xl-inline-flex d-none">
-                        <a href="#" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon" title="Full Screen">
+                        <a href="javascript:void(0);" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon" title="Full Screen">
                             <i data-feather="maximize"></i>
                         </a>
                     </li>
-                    <li class="dropdown user user-menu">
-                        <a href="#" class="waves-effect waves-light dropdown-toggle w-auto l-h-12 bg-transparent p-0 no-shadow" title="Usuario" data-bs-toggle="modal" data-bs-target="#quick_user_toggle">
-                            <img src="~/Content/images/avatar/avatar-13.png" class="avatar rounded-circle bg-primary-light h-40 w-40" alt="" />
+                    <li class="btn-group nav-item">
+                        <a href="javascript:void(0);" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon">
+                            <i data-feather="sliders"></i>
                         </a>
                     </li>
                 </ul>
@@ -71,15 +101,15 @@
         </nav>
     </header>
 
-    <!-- Sidebar -->
-    <aside class="main-sidebar">
+    <!-- Sidebar: Desktop aside + Offcanvas mobile -->
+    <aside class="main-sidebar d-none d-xl-block">
         <section class="sidebar position-relative">
             <div class="multinav">
-                <div class="multinav-scroll" style="height: 97%;">
+                <div class="multinav-scroll">
                     <ul class="sidebar-menu" data-widget="tree">
                         <li><a href="@Url.Action("Index", "Dashboard")"><i data-feather="home"></i><span>Dashboard</span></a></li>
                         <li><a href="@Url.Action("Calendar", "Dashboard")"><i data-feather="calendar"></i><span>Calendario</span></a></li>
-                        
+
                         <li class="treeview">
                             <a href="#">
                                 <i data-feather="users"></i>
@@ -154,7 +184,7 @@
                     <div class="sidebar-widgets">
                         <div class="mx-25 mb-30 pb-20 bg-primary-light rounded20">
                             <div class="text-center">
-                                <img src="~/Content/images/trophy.png" class="sideimg p-5" alt="">
+                                <img src="@Url.Content("~/Content/images/trophy.png")" class="sideimg p-5" alt="">
                             </div>
                         </div>
                     </div>
@@ -163,10 +193,27 @@
         </section>
     </aside>
 
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">MenÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âº</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Dashboard")">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="@Url.Action("Calendar", "Dashboard")">Calendario</a></li>
+                    <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Clientes")">Clientes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Oportunidades")">Oportunidades</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
     <!-- Content Wrapper -->
     <div class="content-wrapper">
-        <div class="container-full">
-            <section class="content">
+        <div class="container-fluid" style="width: 100% !important; max-width: 100% !important;">
+            <section class="content" style="width: 100% !important; max-width: 100% !important;">
                 @RenderBody()
             </section>
         </div>
@@ -196,12 +243,16 @@
                         </a>
                     </div>
                     <div>
-                        <div class="d-flex flex-row">
-                            <div><img src="~/Content/images/avatar/avatar-13.png" alt="user" class="rounded bg-danger-light w-150" width="100"></div>
-                            <div class="ps-20">
-                                <h5 class="mb-0">Juan García</h5>
-                                <p class="my-5 text-fade">Gestor de Ventas</p>
-                                <a href="mailto:juan.garcia@crm.com"><span class="icon-Mail-notification me-5 text-success"><span class="path1"></span><span class="path2"></span></span> juan.garcia@crm.com</a>
+                        <div class="d-flex flex-row align-items-center">
+                            <div>
+                                <div class="bg-primary-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i data-feather="user" class="text-primary fs-30"></i>
+                                </div>
+                            </div>
+                            <div class="ps-3">
+                                <h5 class="mb-0">@(Session["NombreCompleto"] ?? "Usuario CRM")</h5>
+                                <p class="my-5 text-fade">Rol: @(Session["RolId"] != null ? (Session["RolId"].ToString() == "1" ? "Admin" : "Usuario") : "Gestor")</p>
+                                <a href="mailto:@(Session["Correo"])"><span class="icon-Mail-notification me-5 text-success"><span class="path1"></span><span class="path2"></span></span> @(Session["Correo"] ?? "correo@crm.com")</a>
                             </div>
                         </div>
                     </div>
@@ -213,13 +264,18 @@
 </div>
 
 <!-- Scripts -->
+<script src="@Url.Content("~/Content/js/vendors.min.js")"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
-<script src="~/Content/js/vendors.min.js"></script>
-<script src="~/Content/js/pages/chat-popup.js"></script>
-<script src="~/Content/assets/icons/feather-icons/feather.min.js"></script>
-<script src="~/Content/js/demo.js"></script>
-<script src="~/Content/js/template.js"></script>
+<script src="@Url.Content("~/Content/js/pages/chat-popup.js")"></script>
+<script src="@Url.Content("~/Content/assets/icons/feather-icons/feather.min.js")"></script>
+<script src="@Url.Content("~/Content/js/demo.js")"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="@Url.Content("~/Content/js/template.js")"></script>
 @RenderSection("scripts", required: false)
 
 </body>
 </html>
+
+
+
+

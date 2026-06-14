@@ -172,3 +172,79 @@
     }
 
 }
+
+/* ==================================
+   Custom Overrides (Typography & Grid)
+==================================== */
+
+/* Fix container and grid collapsing issue for full-width forms */
+html, body, .wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.container-fluid, .content {
+    max-width: 100% !important;
+}
+
+.col-12, .col-lg-12, .col-md-12, .col-xl-12 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.box, .card {
+    width: 100% !important;
+}
+
+/* Fix "a" looking like "g" in titles (Tgreas vs Tareas) */
+h1, h2, h3, h4, h5, h6, .page-title {
+    font-family: 'Segoe UI', Arial, sans-serif !important;
+}
+
+/* Ensure the header and navbar are solid white and have correct z-index so content doesn't show through or overlap when scrolling */
+.main-header {
+    height: 60px !important;
+    background-color: #ffffff !important;
+    z-index: 1030 !important;
+}
+
+.main-header .navbar {
+    height: 60px !important;
+    background-color: #ffffff !important;
+}
+
+/* Ensure sidebar stays on top of header and content wrapper */
+.main-sidebar {
+    z-index: 1040 !important;
+}
+
+/* Align the logo box with the expanded sidebar width on desktop only when it's not collapsed OR expanded on hover */
+@media (min-width: 768px) {
+    body:not(.sidebar-collapse) .main-header .logo-box,
+    body.sidebar-expanded-on-hover .main-header .logo-box {
+        width: 260.12px !important;
+    }
+}
+
+/* Style top bar icons, search button, hamburger icon and feather-icons to be dark grey */
+.main-header .push-btn, 
+.main-header .full-screen, 
+.main-header .svg-bt-icon, 
+.main-header .skin-toggle,
+.main-header .nav-link,
+.main-header i,
+.main-header svg,
+.main-header [data-feather],
+.main-header .input-group-text {
+    color: #5a6a85 !important;
+    stroke: #5a6a85 !important;
+}
+
+/* Shift the content wrapper and footer to the right when the sidebar expands on hover to prevent overlap */
+@media (min-width: 768px) {
+    .sidebar-mini.sidebar-expanded-on-hover .content-wrapper,
+    .sidebar-mini.sidebar-expanded-on-hover .main-footer {
+        margin-left: 18.58rem !important;
+        transition: margin-left 0.3s ease-in-out;
+    }
+}

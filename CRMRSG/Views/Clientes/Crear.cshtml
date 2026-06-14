@@ -1,4 +1,4 @@
-@model CRMRSG.EntityFramework.clientes
+﻿@model CRMRSG.EntityFramework.clientes
 
 @{
     ViewBag.Title = "Nuevo Cliente";
@@ -36,21 +36,15 @@
                 <div class="box-body">
                     <h4 class="box-title text-info mb-0"><i class="ti-user me-15"></i> Perfil Principal</h4>
                     <hr class="my-15">
-
+                    
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Nombre de la Empresa</label>
                                 @Html.TextBoxFor(m => m.empresa, new { @class = "form-control", placeholder = "Ej: Acme Corp", required = "required" })
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label">Nombre del Contacto</label>
-                                @Html.TextBoxFor(m => m.nombre, new { @class = "form-control", placeholder = "Nombre completo", required = "required" })
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Estado</label>
                                 <select name="estado" class="form-control">
@@ -62,23 +56,65 @@
                         </div>
                     </div>
 
-                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-envelope me-15"></i> Contacto y Ubicaci&oacute;n</h4>
+                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-briefcase me-15"></i> Detalles del Trabajo (Visual)</h4>
                     <hr class="my-15">
-
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
-                                <label class="form-label">Email</label>
-                                @Html.TextBoxFor(m => m.correo, new { @class = "form-control", placeholder = "email@empresa.com", type = "email" })
+                                <label class="form-label">Tipo de Trabajo (Eventos/Tareas)</label>
+                                <input type="text" class="form-control" placeholder="Ej: Implementaci&oacute;n de ERP">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Ganancia Estimada</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Periodo de Tiempo</label>
+                                <input type="text" class="form-control" placeholder="Ej: 3 meses">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="form-label">Tel&eacute;fono</label>
-                                @Html.TextBoxFor(m => m.telefono, new { @class = "form-control", placeholder = "+1 234 567 89" })
+                                <label class="form-label">Descripci&oacute;n</label>
+                                <textarea class="form-control" rows="2" placeholder="Detalles del trabajo..."></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Logo de la Empresa</label>
+                                <input type="file" class="form-control">
                             </div>
                         </div>
                     </div>
+
+                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-user me-15"></i> Contactos M&uacute;ltiples (Visual)</h4>
+                    <hr class="my-15">
+                    <div id="contactos-container">
+                        <div class="row mb-10">
+                            <div class="col-md-3"><label class="form-label">Nombres</label>@Html.TextBoxFor(m => m.nombre, new { @class = "form-control", placeholder = "Ej: Juan" })</div>
+                            <div class="col-md-2"><label class="form-label">Apellidos</label><input type="text" class="form-control" placeholder="Ej: P&eacute;rez" /></div>
+                            <div class="col-md-2"><label class="form-label">Tel&eacute;fono</label>@Html.TextBoxFor(m => m.telefono, new { @class = "form-control", placeholder = "+1 234 567" })</div>
+                            <div class="col-md-3"><label class="form-label">Correo</label>@Html.TextBoxFor(m => m.correo, new { @class = "form-control", placeholder = "email@empresa.com", type = "email" })</div>
+                            <div class="col-md-2"><label class="form-label">Tipo Contacto</label>
+                                <select class="form-control">
+                                    <option>Contacto principal</option>
+                                    <option>Contacto inicial</option>
+                                    <option>Contacto de tarea</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-10" onclick="alert('Funcionalidad visual de agregar m&aacute;s contactos en demo')">+ A&ntilde;adir otro contacto</button>
+
+                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-location-pin me-15"></i> Ubicaci&oacute;n</h4>
+                    <hr class="my-15">
 
                     <div class="row">
                         <div class="col-12">
@@ -102,3 +138,8 @@
         </div>
     </div>
 </div>
+
+
+
+
+
