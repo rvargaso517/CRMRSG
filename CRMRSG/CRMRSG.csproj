@@ -136,10 +136,10 @@
     <Compile Include="EntityFramework\bitacora.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\citas.cs">
+    <Compile Include="EntityFramework\cita.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\clientes.cs">
+    <Compile Include="EntityFramework\cliente.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Model1.Context.cs">
@@ -157,30 +157,28 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Model1.edmx</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\notificaciones.cs">
+    <Compile Include="EntityFramework\notificacione.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\oportunidades.cs">
+    <Compile Include="EntityFramework\oportunidade.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\reportes.cs">
+    <Compile Include="EntityFramework\reporte.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\roles.cs">
+    <Compile Include="EntityFramework\role.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\sysdiagrams.cs">
+    <Compile Include="EntityFramework\tarea.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\tareas.cs">
-      <DependentUpon>Model1.tt</DependentUpon>
-    </Compile>
-    <Compile Include="EntityFramework\usuarios.cs">
+    <Compile Include="EntityFramework\usuario.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\EstadoEventoViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -2275,12 +2273,17 @@
     <Content Include="Views\Autenticacion\RecuperacionEnviada.cshtml" />
     <Content Include="Views\Autenticacion\CambiarContrasena.cshtml" />
     <Content Include="Views\Clientes\Editar.cshtml" />
+    <Content Include="Views\Actividades\Crear.cshtml" />
+    <Content Include="Views\Actividades\Index.cshtml" />
+    <Content Include="Views\Dashboard\Calendar.cshtml" />
+    <Content Include="Views\Home\Login.cshtml" />
+    <Content Include="Views\Home\RecoverPassword.cshtml" />
+    <Content Include="Views\Home\Register.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\images\front-end-img\pagebanner\" />
     <Folder Include="Content\images\front-end-img\promo\" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />

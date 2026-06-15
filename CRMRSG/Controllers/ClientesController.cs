@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
-// Asegurate de que este usando apunte a tu carpeta de EntityFramework
 using CRMRSG.EntityFramework;
 
 namespace CRMRSG.Controllers
@@ -11,97 +10,108 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
-        // GET: clientes
+        // GET: Clientes
         public ActionResult Index()
         {
-            // Trae todos los clientes de la base de datos
-            var listaclientes = db.clientes.ToList();
-            return View(listaclientes);
+            var listaClientes = db.clientes.ToList();
+            return View(listaClientes);
         }
 
-        // GET: clientes/Crear
+        // GET: Clientes/Crear
         public ActionResult Crear()
         {
             return View();
         }
 
-        // POST: clientes/Crear
+        // POST: Clientes/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Crear(clientes nuevoclientes)
+        public ActionResult Crear(cliente nuevoCliente)
         {
             if (ModelState.IsValid)
             {
-                nuevoclientes.fecha_registro = DateTime.Now;
-                // Asignamos el id del usuario logueado usando la sesión que hackeamos
-                nuevoclientes.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                nuevoCliente.fecha_registro = DateTime.Now;
+                nuevoCliente.id_usuario = Session["UsuarioId"] != null
+                    ? (int)Session["UsuarioId"]
+                    : 1;
 
-                db.clientes.Add(nuevoclientes);
+                db.clientes.Add(nuevoCliente);
                 db.SaveChanges();
+
                 return RedirectToAction("Index");
             }
-            return View(nuevoclientes);
+
+            return View(nuevoCliente);
         }
 
-        // GET: clientes/Editar/5
+        // GET: Clientes/Editar/5
         public ActionResult Editar(int? id)
         {
-            // 1. Validamos que el ID no venga vacío para evitar la pantalla roja
             if (id == null)
             {
                 return RedirectToAction("Index");
             }
 
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            var clienteEditar = db.clientes.Find(id);
+
+            if (clienteEditar == null)
             {
-                // 2. Corregido a "db.clientes" en singular para que calce con tu Entity Framework
-                var clientesEditar = db.clientes.Find(id);
-
-                if (clientesEditar == null)
-                {
-                    return HttpNotFound();
-                }
-
-                return View(clientesEditar);
+                return HttpNotFound();
             }
+
+            return View(clienteEditar);
         }
 
-        // POST: clientes/Editar/5
+        // POST: Clientes/Editar/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Editar(clientes clientesModificado)
+        public ActionResult Editar(cliente clienteModificado)
         {
             if (ModelState.IsValid)
             {
-                var clientesDb = db.clientes.Find(clientesModificado.id_cliente);
-                if (clientesDb != null)
+                var clienteDb = db.clientes.Find(clienteModificado.id_cliente);
+
+                if (clienteDb != null)
                 {
-                    clientesDb.nombre = clientesModificado.nombre;
-                    clientesDb.empresa = clientesModificado.empresa;
-                    clientesDb.telefono = clientesModificado.telefono;
-                    clientesDb.correo = clientesModificado.correo;
-                    clientesDb.direccion = clientesModificado.direccion;
-                    clientesDb.estado = clientesModificado.estado;
+                    clienteDb.nombre = clienteModificado.nombre;
+                    clienteDb.empresa = clienteModificado.empresa;
+                    clienteDb.telefono = clienteModificado.telefono;
+                    clienteDb.correo = clienteModificado.correo;
+                    clienteDb.direccion = clienteModificado.direccion;
+                    clienteDb.estado = clienteModificado.estado;
 
                     db.SaveChanges();
+
                     return RedirectToAction("Index");
                 }
             }
-            return View(clientesModificado);
+
+            return View(clienteModificado);
         }
 
-        // POST: clientes/Eliminar/5
+        // POST: Clientes/Eliminar/5
         [HttpPost]
         public ActionResult Eliminar(int id)
         {
-            var clientesEliminar = db.clientes.Find(id);
-            if (clientesEliminar != null)
+            var clienteEliminar = db.clientes.Find(id);
+
+            if (clienteEliminar != null)
             {
-                db.clientes.Remove(clientesEliminar);
+                db.clientes.Remove(clienteEliminar);
                 db.SaveChanges();
-                return Json(new { success = true, message = "clientes eliminado correctamente." });
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Cliente eliminado correctamente."
+                });
             }
-            return Json(new { success = false, message = "No se pudo encontrar el clientes." });
+
+            return Json(new
+            {
+                success = false,
+                message = "No se pudo encontrar el cliente."
+            });
         }
 
         protected override void Dispose(bool disposing)
@@ -110,7 +120,9 @@ namespace CRMRSG.Controllers
             {
                 db.Dispose();
             }
+
             base.Dispose(disposing);
         }
     }
+
 }

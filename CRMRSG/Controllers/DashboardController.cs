@@ -9,7 +9,7 @@ namespace CRMRSG.Controllers
 {
     public class DashboardController : Controller
     {
-        private crm_rsgEntities db = new crm_rsgEntities();
+        private CRM_RSGEntities db = new CRM_RSGEntities();
 
         // GET: Dashboard
         public ActionResult Index()
