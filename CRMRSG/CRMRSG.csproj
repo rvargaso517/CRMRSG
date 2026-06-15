@@ -2279,6 +2279,7 @@
     <Content Include="Views\Home\Login.cshtml" />
     <Content Include="Views\Home\RecoverPassword.cshtml" />
     <Content Include="Views\Home\Register.cshtml" />
+    <Content Include="Views\Tareas\Prioridades.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
