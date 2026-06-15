@@ -17,4 +17,5 @@ namespace CRMRSG.Controllers
             return View(historial);
         }
     }
+
 }

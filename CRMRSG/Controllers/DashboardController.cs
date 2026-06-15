@@ -19,12 +19,33 @@ namespace CRMRSG.Controllers
             ViewBag.TotalTareas = db.tareas.Count();
             ViewBag.TotalUsuarios = db.usuarios.Count();
 
+            // HU-035 - Rendimiento de vendedores
+            var vendedores = db.usuarios.Select(u => new
+            {
+                Nombre = u.nombre + " " + u.apellido,
+                Clientes = u.clientes.Count(),
+                Oportunidades = u.oportunidades.Count(),
+                Tareas = u.tareas.Count()
+            }).ToList();
+
+            ViewBag.Vendedores = vendedores;
+
             return View();
         }
 
         public ActionResult Calendar()
         {
             return View();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

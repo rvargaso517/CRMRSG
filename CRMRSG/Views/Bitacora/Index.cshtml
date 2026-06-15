@@ -1,7 +1,103 @@
-﻿
+﻿@model List<CRMRSG.EntityFramework.bitacora>
+
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Historial de Acciones";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Historial de Acciones</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="~/Dashboard">
+                                <i class="mdi mdi-home-outline"></i>
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            Historial
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+
+            ```
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h3 class="box-title">Registro de Actividades del Sistema</h3>
+            </div>
+
+            <div class="box-body">
+                <div class="table-responsive">
+
+                    <table class="table table-hover mb-0">
+
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                                <th>Tabla</th>
+                                <th>Registro</th>
+                                <th>IP</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+
+                                    <td>
+                                        @(item.fecha_hora.HasValue
+                                        ? item.fecha_hora.Value.ToString("dd/MM/yyyy HH:mm")
+                                        : "")
+                                    </td>
+
+                                    <td>
+                                        @item.accion
+                                    </td>
+
+                                    <td>
+                                        @item.tabla_afectada
+                                    </td>
+
+                                    <td>
+                                        @item.id_registro_afectado
+                                    </td>
+
+                                    <td>
+                                        @item.direccion_ip
+                                    </td>
+
+                                    <td>
+                                        @(item.usuario != null
+                                        ? item.usuario.nombre
+                                        : "N/A")
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+    ```
+
+</div>

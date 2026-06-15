@@ -254,16 +254,62 @@
         </div>
     </div>
 </div>
+<!-- HU-035 - Rendimiento de Vendedores -->
+<div class="row">
+    <div class="col-12">
+        <div class="box">
 
+            <div class="box-header with-border">
+                <h4 class="box-title">Rendimiento de Vendedores</h4>
+            </div>
+
+            <div class="box-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover mb-0">
+
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Vendedor</th>
+                                <th>Clientes</th>
+                                <th>Oportunidades</th>
+                                <th>Tareas</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in ViewBag.Vendedores)
+                            {
+                                <tr>
+                                    <td>@item.Nombre</td>
+                                    <td>@item.Clientes</td>
+                                    <td>@item.Oportunidades</td>
+                                    <td>@item.Tareas</td>
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 @section scripts {
     <script src="~/Content/assets/vendor_components/c3/d3.min.js"></script>
     <script src="~/Content/assets/vendor_components/c3/c3.min.js"></script>
     <script src="~/Content/assets/vendor_components/echarts/dist/echarts-en.min.js"></script>
     <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Oportunidades por Etapa - ApexCharts Bar
-            if($('#oportunidades-chart').length > 0) {
+            if ($('#oportunidades-chart').length > 0) {
                 var options1 = {
                     series: [{ name: 'Valor ($)', data: [44000, 55000, 41000, 67000, 22000, 43000] }],
                     chart: { type: 'bar', height: 300, toolbar: { show: false } },
@@ -278,7 +324,7 @@
             }
 
             // Clientes por Región - ApexCharts Donut
-            if($('#clientes-region-chart').length > 0) {
+            if ($('#clientes-region-chart').length > 0) {
                 var options2 = {
                     series: [44, 55, 13, 43],
                     chart: { type: 'donut', height: 300 },
@@ -290,31 +336,31 @@
             }
 
             // Small Metrics Charts - C3
-            if($('#conversion-chart').length > 0) {
+            if ($('#conversion-chart').length > 0) {
                 c3.generate({
                     bindto: '#conversion-chart',
                     data: { columns: [['data', 28, 35, 30, 45, 55, 38]], type: 'line' },
-                    axis: { x: {show: false}, y: {show: false} },
+                    axis: { x: { show: false }, y: { show: false } },
                     size: { height: 50, width: 120 },
                     legend: { show: false },
                     color: { pattern: ['#10c469'] }
                 });
             }
-            if($('#new-clients-chart').length > 0) {
+            if ($('#new-clients-chart').length > 0) {
                 c3.generate({
                     bindto: '#new-clients-chart',
                     data: { columns: [['data', 12, 14, 18, 22, 19, 24]], type: 'bar' },
-                    axis: { x: {show: false}, y: {show: false} },
+                    axis: { x: { show: false }, y: { show: false } },
                     size: { height: 50, width: 120 },
                     legend: { show: false },
                     color: { pattern: ['#0052cc'] }
                 });
             }
-            if($('#avg-value-chart').length > 0) {
+            if ($('#avg-value-chart').length > 0) {
                 c3.generate({
                     bindto: '#avg-value-chart',
                     data: { columns: [['data', 10, 11, 10.5, 12, 13.3]], type: 'area-spline' },
-                    axis: { x: {show: false}, y: {show: false} },
+                    axis: { x: { show: false }, y: { show: false } },
                     size: { height: 50, width: 120 },
                     legend: { show: false },
                     color: { pattern: ['#ff9920'] }
