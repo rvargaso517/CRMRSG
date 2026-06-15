@@ -21,13 +21,23 @@ namespace CRMRSG.Controllers
             return View();
         }
 
-        
-        // Visualizar tareas agrupadas por prioridad
+        // Tareas agrupadas por prioridad
         public ActionResult Prioridades()
         {
             ViewBag.Alta = db.tareas.Count(x => x.prioridad == "Alta");
             ViewBag.Media = db.tareas.Count(x => x.prioridad == "Media");
             ViewBag.Baja = db.tareas.Count(x => x.prioridad == "Baja");
+
+            return View();
+        }
+
+        
+        // Tareas agrupadas por categorías (estados)
+        public ActionResult Categorias()
+        {
+            ViewBag.Pendientes = db.tareas.Count(x => x.estado == "Pendiente");
+            ViewBag.EnProceso = db.tareas.Count(x => x.estado == "En Proceso");
+            ViewBag.Completadas = db.tareas.Count(x => x.estado == "Completada");
 
             return View();
         }
