@@ -3,14 +3,18 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- Header -->
 <div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between">
     <h1>
         Dashboard CRM
         <small>Panel de Control</small>
     </h1>
     <div class="d-flex align-items-center">
-        <!-- Global Filter Readonly -->
+        <div class="me-3">
+            <a href="@Url.Action("ExportarClientesCSV", "Clientes")" class="btn btn-success d-flex align-items-center" style="background-color: #10c469; border-color: #10c469; color: white; font-weight: 500;">
+                <i class="fa fa-file-excel me-2"></i> Exportar Reporte (CSV)
+            </a>
+        </div>
+
         <div class="input-group me-3" style="width: 250px;">
             <span class="input-group-text bg-white"><i class="fa fa-filter"></i></span>
             <input type="text" class="form-control" readonly value="Filtro global activo (Todos)" title="Par&aacute;metro global aplicado a las tarjetas" style="background-color: #ededed; color: #000000; border-color: #040A2D;">
@@ -22,7 +26,6 @@
     </div>
 </div>
 
-<!-- KPI Cards -->
 <div class="row first-section">
     <div class="col-xxl-3 col-xl-6 col-12">
         <div class="box pull-up bg-primary">
@@ -64,7 +67,7 @@
                         <i class="ti-check-box fs-40"></i>
                     </div>
                     <div class="d-flex flex-column text-end">
-                        <h2 class="fs-30 mb-1 mt-0">18</h2>
+                        <h2 class="fs-30 mb-1 mt-0" id="card-tareas-conteo">18</h2>
                         <p class="m-0">Tareas Pendientes</p>
                     </div>
                 </div>
@@ -89,7 +92,6 @@
     </div>
 </div>
 
-<!-- Charts -->
 <div class="row">
     <div class="col-xxl-8 col-xl-8 col-lg-12 col-12">
         <div class="box">
@@ -123,7 +125,6 @@
     </div>
 </div>
 
-<!-- Metrics -->
 <div class="row">
     <div class="col-xxl-4 col-lg-4 col-md-6">
         <div class="card">
@@ -180,7 +181,6 @@
     </div>
 </div>
 
-<!-- Lists -->
 <div class="row">
     <div class="col-xxl-6 col-xl-6 col-lg-12">
         <div class="box">
@@ -276,62 +276,95 @@
     <script src="~/Content/assets/vendor_components/c3/c3.min.js"></script>
     <script src="~/Content/assets/vendor_components/echarts/dist/echarts-en.min.js"></script>
     <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
+
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+
     <script>
-        $(document).ready(function() {
-            // Area Chart: Cantidad de Eventos (Smooth Gradient)
-            if($('#eventos-line-chart').length > 0) {
-                var options1 = {
-                    series: [{ name: 'Eventos', data: [31, 42, 40, 61, 52, 74, 61] }],
-                    chart: { type: 'area', height: 350, toolbar: { show: false } },
-                    stroke: { curve: 'smooth', width: 2 },
-                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
-                    xaxis: { categories: ['Lun', 'Mar', 'Mi&eacute;', 'Jue', 'Vie', 'S&aacute;b', 'Dom'] },
-                    colors: ['#040A2D'], // Azul CRM
-                    dataLabels: { enabled: false },
-                    markers: { size: 4, colors: ['#FFFFFF'], strokeColors: '#040A2D', strokeWidth: 2 }
-                };
-                new ApexCharts(document.querySelector("#eventos-line-chart"), options1).render();
+        $(document).ready(function () {
+            var idUsuario = "@Session["IdUsuario"]";
+
+            if (idUsuario) {
+                var canalNotisHub = $.connection.notificationHub;
+
+                if(canalNotisHub) {
+                    canalNotisHub.client.notificarCambioSistema = function () {
+                        
+                        incrementarTareasCard();
+                    };
+
+                    $.connection.hub.start().done(function () {
+                        canalNotisHub.server.conectarUsuario(idUsuario);
+                    });
+                }
             }
 
-            // Donut Chart: Estados de Eventos
-            if($('#estados-donut-chart').length > 0) {
+            function incrementarTareasCard() {
+                var elem = $("#card-tareas-conteo");
+                var valor = parseInt(elem.text()) || 0;
+                elem.text(valor + 1);
+            }
+
+            if ($('#eventos-line-chart').length > 0) {
+                $.getJSON("/Dashboard/ObtenerEstadisticasEventos", function (response) {
+                    var conteoMensual = new Array(12).fill(0);
+                    if (response && !response.error) {
+                        response.forEach(function (item) {
+                            conteoMensual[item.Mes - 1] = item.Cantidad;
+                        });
+                    }
+
+                    var options1 = {
+                        series: [{ name: 'Eventos', data: conteoMensual }],
+                        chart: { type: 'area', height: 350, toolbar: { show: false } },
+                        stroke: { curve: 'smooth', width: 2 },
+                        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
+                        xaxis: { categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'] },
+                        colors: ['#040A2D'],
+                        dataLabels: { enabled: false },
+                        markers: { size: 4, colors: ['#FFFFFF'], strokeColors: '#040A2D', strokeWidth: 2 }
+                    };
+                    new ApexCharts(document.querySelector("#eventos-line-chart"), options1).render();
+                });
+            }
+
+            if ($('#estados-donut-chart').length > 0) {
                 var options2 = {
                     series: [45, 25, 30],
                     chart: { type: 'donut', height: 350 },
                     labels: ['Completados', 'Pendientes', 'Cancelados'],
-                    colors: ['#040A2D', '#ededed', '#970000'], // Azul, Gris, Rojo CRM
+                    colors: ['#040A2D', '#ededed', '#970000'],
                     legend: { position: 'bottom' },
-                    stroke: { colors: ['#000000'], width: 1 } // Negro CRM
+                    stroke: { colors: ['#000000'], width: 1 }
                 };
                 new ApexCharts(document.querySelector("#estados-donut-chart"), options2).render();
             }
 
-            // Small Metrics Charts - C3
-            if($('#conversion-chart').length > 0) {
+            if ($('#conversion-chart').length > 0) {
                 c3.generate({
                     bindto: '#conversion-chart',
                     data: { columns: [['data', 28, 35, 30, 45, 55, 38]], type: 'line' },
-                    axis: { x: {show: false}, y: {show: false} },
+                    axis: { x: { show: false }, y: { show: false } },
                     size: { height: null, width: null },
                     legend: { show: false },
                     color: { pattern: ['#10c469'] }
                 });
             }
-            if($('#new-clients-chart').length > 0) {
+            if ($('#new-clients-chart').length > 0) {
                 c3.generate({
                     bindto: '#new-clients-chart',
                     data: { columns: [['data', 12, 14, 18, 22, 19, 24]], type: 'bar' },
-                    axis: { x: {show: false}, y: {show: false} },
+                    axis: { x: { show: false }, y: { show: false } },
                     size: { height: null, width: null },
                     legend: { show: false },
                     color: { pattern: ['#040A2D'] }
                 });
             }
-            if($('#avg-value-chart').length > 0) {
+            if ($('#avg-value-chart').length > 0) {
                 c3.generate({
                     bindto: '#avg-value-chart',
                     data: { columns: [['data', 10, 11, 10.5, 12, 13.3]], type: 'area-spline' },
-                    axis: { x: {show: false}, y: {show: false} },
+                    axis: { x: { show: false }, y: { show: false } },
                     size: { height: null, width: null },
                     legend: { show: false },
                     color: { pattern: ['#970000'] }
@@ -340,7 +373,3 @@
         });
     </script>
 }
-
-
-
-
