@@ -112,5 +112,40 @@ namespace CRMRSG.Controllers
             }
             base.Dispose(disposing);
         }
+        // POST: Clientes/AgregarContacto
+        [HttpPost]
+        public JsonResult AgregarContacto(int id_cliente, string nombre, string telefono, string correo, string puesto)
+        {
+            try
+            {
+                // Validar que el nombre no venga vacío
+                if (string.IsNullOrEmpty(nombre))
+                {
+                    return Json(new { success = false, message = "El nombre del contacto es obligatorio, mae." });
+                }
+
+                using (CRM_RSGEntities db = new CRM_RSGEntities())
+                {
+                    // Creamos el nuevo objeto de la tabla que creaste con el script
+                    var nuevoContacto = new contacto_cliente
+                    {
+                        id_cliente = id_cliente,
+                        nombre = nombre,
+                        telefono = telefono,
+                        correo = correo,
+                        puesto = puesto
+                    };
+
+                    db.contacto_cliente.Add(nuevoContacto);
+                    db.SaveChanges();
+
+                    return Json(new { success = true, message = "Contacto secundario agregado con éxito." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error en el servidor: " + ex.Message });
+            }
+        }
     }
 }

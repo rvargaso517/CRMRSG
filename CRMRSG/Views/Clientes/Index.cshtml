@@ -1,4 +1,5 @@
-﻿@model IEnumerable<CRMRSG.EntityFramework.clientes>
+﻿@model IEnumerable<CRMRSG.EntityFramework.cliente>
+
 @{
     ViewBag.Title = "Clientes";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -48,7 +49,12 @@
                                 {
                                     <tr>
                                         <td>#C-@item.id_cliente.ToString("D3")</td>
-                                        <td><a href="~/Clientes/Detalle/@item.id_cliente" class="fw-bold">@item.empresa</a></td>
+                                        <td>
+                                            <!-- PASO 3: Redirección profesional usando el Helper de ASP.NET a la vista Detalle -->
+                                            <a href="@Url.Action("Detalle", "Clientes", new { id = item.id_cliente })" class="fw-bold text-info" title="Ver ficha y contactos">
+                                                @item.empresa
+                                            </a>
+                                        </td>
                                         <td>@item.nombre</td>
                                         <td>@item.correo</td>
                                         <td>@item.telefono</td>
@@ -93,12 +99,11 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-
-function confirmarEliminar(id, empresa) {
+    function confirmarEliminar(id, empresa) {
         var urlEliminar = '@Url.Action("Eliminar", "Clientes")';
 
-        // Cambiado para que mencione el sistema CRM-RSG y mantenga el formato limpio sin tildes raras
-        if (confirm("Sistema CRM-RSG: Â¿Est&aacute; seguro de que desea eliminar permanentemente a la empresa '" + empresa + "'?")) {
+        // Mensaje limpio sin caracteres raros para la confirmación
+        if (confirm("Sistema CRM-RSG: ¿Está seguro de que desea eliminar permanentemente a la empresa '" + empresa + "'?")) {
             $.ajax({
                 url: urlEliminar,
                 type: 'POST',
@@ -106,19 +111,15 @@ function confirmarEliminar(id, empresa) {
                 success: function (response) {
                     if (response.success) {
                         alert(response.message);
-                        location.reload(); // Recarga la tabla en limpio
+                        location.reload();
                     } else {
                         alert(response.message);
                     }
                 },
                 error: function () {
-                    alert("Ocurri&oacute; un error en el servidor al intentar eliminar.");
+                    alert("Ocurrió un error en el servidor al intentar eliminar.");
                 }
             });
         }
     }
 </script>
-   
-
-
-

@@ -1,0 +1,52 @@
+@model IEnumerable<CRMRSG.EntityFramework.citas>
+
+@{
+    ViewBag.Title = "Agenda de Citas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <h4 class="page-title">Agenda Comercial</h4>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">Próximas Reuniones y Seguimientos</h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Cliente / Empresa</th>
+                                <th>Asunto de la Reunión</th>
+                                <th>Fecha y Hora Programada</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@(item.cliente != null ? item.cliente.empresa : "No especificado")</td>
+                                        <td>@item.asunto</td>
+                                        <td><i class="ti-time me-5 text-info"></i> @item.fecha_cita.ToString("dd/MM/yyyy hh:mm tt")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-20">No hay reuniones agendadas en el calendario comercial.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
