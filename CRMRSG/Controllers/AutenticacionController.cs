@@ -142,7 +142,7 @@ namespace CRMRSG.Controllers
             }
 
             // Crear el nuevo usuario
-            var nuevoUsuario = new usuarios
+            var nuevoUsuario = new usuario
             {
                 nombre = nombre,
                 apellido = apellido,

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
-// Asegurate de que este usando apunte a tu carpeta de EntityFramework
+// Usamos el namespace correcto para la entidad en singular
 using CRMRSG.EntityFramework;
 
 namespace CRMRSG.Controllers
@@ -14,7 +14,7 @@ namespace CRMRSG.Controllers
         // GET: clientes
         public ActionResult Index()
         {
-            // Trae todos los clientes de la base de datos
+            // Trae todos los clientes de la base de datos (Colección db.clientes)
             var listaclientes = db.clientes.ToList();
             return View(listaclientes);
         }
@@ -28,12 +28,12 @@ namespace CRMRSG.Controllers
         // POST: clientes/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Crear(clientes nuevoclientes)
+        public ActionResult Crear(cliente nuevoclientes)
         {
             if (ModelState.IsValid)
             {
                 nuevoclientes.fecha_registro = DateTime.Now;
-                // Asignamos el id del usuario logueado usando la sesión que hackeamos
+                // Asignamos el id del usuario logueado usando la sesión
                 nuevoclientes.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
 
                 db.clientes.Add(nuevoclientes);
@@ -46,30 +46,26 @@ namespace CRMRSG.Controllers
         // GET: clientes/Editar/5
         public ActionResult Editar(int? id)
         {
-            // 1. Validamos que el ID no venga vacío para evitar la pantalla roja
+            // Validamos que el ID no venga vacío para evitar la pantalla roja
             if (id == null)
             {
                 return RedirectToAction("Index");
             }
 
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            var clientesEditar = db.clientes.Find(id);
+
+            if (clientesEditar == null)
             {
-                // 2. Corregido a "db.clientes" en singular para que calce con tu Entity Framework
-                var clientesEditar = db.clientes.Find(id);
-
-                if (clientesEditar == null)
-                {
-                    return HttpNotFound();
-                }
-
-                return View(clientesEditar);
+                return HttpNotFound();
             }
+
+            return View(clientesEditar);
         }
 
         // POST: clientes/Editar/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Editar(clientes clientesModificado)
+        public ActionResult Editar(cliente clientesModificado)
         {
             if (ModelState.IsValid)
             {
@@ -104,6 +100,41 @@ namespace CRMRSG.Controllers
             return Json(new { success = false, message = "No se pudo encontrar el clientes." });
         }
 
+        // GET: clientes/ExportarClientesCSV (HU-034)
+        public void ExportarClientesCSV()
+        {
+            var listaClientes = db.clientes.ToList();
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendLine("ID Cliente;Nombre Completo;Empresa;Telefono;Correo;Direccion;Estado;Fecha Registro");
+
+            foreach (var c in listaClientes)
+            {
+                sb.AppendLine(string.Format("{0};{1};{2};{3};{4};{5};{6};{7}",
+                    c.id_cliente,
+                    c.nombre ?? "N/A",
+                    c.empresa ?? "N/A",
+                    c.telefono ?? "N/A",
+                    c.correo ?? "N/A",
+                    c.direccion ?? "N/A",
+                    c.estado ?? "Activo",
+                    c.fecha_registro.HasValue ? c.fecha_registro.Value.ToString("dd/MM/yyyy") : "N/A"
+                ));
+            }
+
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            byte[] bom = new byte[] { 0xEF, 0xBB, 0xBF };
+            byte[] archivoFinal = bom.Concat(buffer).ToArray();
+
+            Response.Clear();
+            Response.Buffer = true;
+            Response.AddHeader("content-disposition", "attachment;filename=Reporte_Clientes_CRM.csv");
+            Response.Charset = "UTF-8";
+            Response.ContentType = "text/csv";
+            Response.BinaryWrite(archivoFinal);
+            Response.End();
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -112,6 +143,8 @@ namespace CRMRSG.Controllers
             }
             base.Dispose(disposing);
         }
+    } // Cierre de la clase ClientesController
+} // Cierre del namespace CRMRSG.Controllers
         // POST: Clientes/AgregarContacto
         [HttpPost]
         public JsonResult AgregarContacto(int id_cliente, string nombre, string telefono, string correo, string puesto)
