@@ -108,13 +108,13 @@ namespace CRMRSG.Controllers
                 ViewBag.Error = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.";
                 return View();
             }
-
+            
             if (!correo.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase))
             {
                 ViewBag.Error = "Debe registrarse utilizando un correo @gmail.com válido.";
                 return View();
             }
-
+            
             if (password != confirmPassword)
             {
                 ViewBag.Error = "Las contraseñas no coinciden.";

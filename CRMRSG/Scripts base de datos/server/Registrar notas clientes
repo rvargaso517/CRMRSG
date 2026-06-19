@@ -1,0 +1,9 @@
+Cambios para guardar notas para el cliente
+
+CREATE TABLE nota_cliente (
+    id_note INT IDENTITY(1,1) PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    comentario TEXT NOT NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE CASCADE
+);

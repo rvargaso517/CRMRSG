@@ -1,0 +1,73 @@
+﻿@model CRMRSG.EntityFramework.usuarios
+
+@{
+    ViewBag.Title = "Mi Perfil";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <h4 class="page-title">Configuraci&oacute;n de Cuenta</h4>
+</div>
+
+<div class="row">
+    <!-- Tarjeta Visual del Perfil -->
+    <div class="col-lg-4 col-12">
+        <div class="box bg-neutral">
+            <div class="box-body text-center">
+                <div class="mb-20">
+                    <!-- Icono o avatar por defecto con Bootstrap -->
+                    <i class="ti-user text-primary bg-primary-light rounded-circle p-20 fs-40"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-5">@Model.nombre</h3>
+                <p class="text-fade">@Model.correo</p>
+                <span class="badge badge-lg badge-primary-light">Usuario CRM</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de Edición Directa -->
+    <div class="col-lg-8 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Informaci&oacute;n Personal</h4>
+            </div>
+
+            @if (TempData["MensajeExito"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show m-20" role="alert">
+                    <i class="ti-check me-10"></i> @TempData["MensajeExito"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @using (Html.BeginForm("Actualizar", "Perfil", FormMethod.Post, new { @class = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                <!-- Input oculto para conservar la llave primaria -->
+                @Html.HiddenFor(m => m.id_usuario)
+
+                <div class="box-body">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Nombre Completo</label>
+                        @Html.TextBoxFor(m => m.nombre, new { @class = "form-control", required = "required" })
+                        @Html.ValidationMessageFor(m => m.nombre, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Correo Electr&oacute;nico</label>
+                        @Html.TextBoxFor(m => m.correo, new { @class = "form-control", type = "email", required = "required" })
+                        @Html.ValidationMessageFor(m => m.correo, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="box-footer text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti-save-alt me-5"></i> Guardar Cambios
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
