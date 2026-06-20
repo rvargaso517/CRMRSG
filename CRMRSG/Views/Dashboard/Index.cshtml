@@ -1,23 +1,33 @@
-@{
+﻿@{
     ViewBag.Title = "Dashboard - CRM";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- Header -->
 <div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between">
     <h1>
         Dashboard CRM
         <small>Panel de Control</small>
     </h1>
-    <ol class="breadcrumb p-0">
-        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="fa fa-dashboard"></i> Inicio</a></li>
-        <li class="breadcrumb-item active">Dashboard</li>
-    </ol>
+    <div class="d-flex align-items-center">
+        <div class="me-3">
+            <a href="@Url.Action("ExportarClientesCSV", "Clientes")" class="btn btn-success d-flex align-items-center" style="background-color: #10c469; border-color: #10c469; color: white; font-weight: 500;">
+                <i class="fa fa-file-excel me-2"></i> Exportar Reporte (CSV)
+            </a>
+        </div>
+
+        <div class="input-group me-3" style="width: 250px;">
+            <span class="input-group-text bg-white"><i class="fa fa-filter"></i></span>
+            <input type="text" class="form-control" readonly value="Filtro global activo (Todos)" title="Par&aacute;metro global aplicado a las tarjetas" style="background-color: #ededed; color: #000000; border-color: #040A2D;">
+        </div>
+        <ol class="breadcrumb p-0 m-0">
+            <li class="breadcrumb-item"><a href="~/Dashboard"><i class="fa fa-dashboard"></i> Inicio</a></li>
+            <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+    </div>
 </div>
 
-<!-- KPI Cards -->
 <div class="row first-section">
-    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+    <div class="col-xxl-3 col-xl-6 col-12">
         <div class="box pull-up bg-primary">
             <div class="box-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -33,7 +43,7 @@
         </div>
     </div>
 
-    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+    <div class="col-xxl-3 col-xl-6 col-12">
         <div class="box pull-up bg-success">
             <div class="box-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -49,7 +59,7 @@
         </div>
     </div>
 
-    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+    <div class="col-xxl-3 col-xl-6 col-12">
         <div class="box pull-up bg-warning">
             <div class="box-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -65,7 +75,7 @@
         </div>
     </div>
 
-    <div class="col-xxl-3 col-xl-6 col-lg-6 col-12">
+    <div class="col-xxl-3 col-xl-6 col-12">
         <div class="box pull-up bg-danger">
             <div class="box-body">
                 <div class="d-flex align-items-center justify-content-between">
@@ -82,39 +92,46 @@
     </div>
 </div>
 
-<!-- Charts -->
 <div class="row">
     <div class="col-xxl-8 col-xl-8 col-lg-12 col-12">
         <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title">Oportunidades por Etapa</h4>
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h4 class="box-title" style="color: #040A2D;">Cantidad de Eventos</h4>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active">D&iacute;a</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary">Semana</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary">Mes</button>
+                </div>
             </div>
             <div class="box-body">
-                <div id="oportunidades-chart" style="height:300px;"></div>
+                <div id="eventos-line-chart" class="chart-responsive"></div>
             </div>
         </div>
     </div>
 
     <div class="col-xxl-4 col-xl-4 col-lg-12 col-12">
         <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title">Clientes por Región</h4>
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h4 class="box-title" style="color: #040A2D;">Estados de Eventos</h4>
+                <select class="form-select form-select-sm w-auto">
+                    <option value="mes">Por Mes</option>
+                    <option value="dia">Por D&iacute;a</option>
+                </select>
             </div>
             <div class="box-body">
-                <div id="clientes-region-chart" style="height:300px;"></div>
+                <div id="estados-donut-chart" class="chart-responsive"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Metrics -->
 <div class="row">
     <div class="col-xxl-4 col-lg-4 col-md-6">
         <div class="card">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-6">
-                        <h5 class="text-muted fw-normal mt-0">Tasa de Conversión</h5>
+                        <h5 class="text-muted fw-normal mt-0">Tasa de Conversi&oacute;n</h5>
                         <h3 class="m-0">28%</h3>
                     </div>
                     <div class="col-6">
@@ -164,18 +181,17 @@
     </div>
 </div>
 
-<!-- Lists -->
 <div class="row">
     <div class="col-xxl-6 col-xl-6 col-lg-12">
         <div class="box">
             <div class="box-header with-border">
-                <h4 class="box-title">Últimas Actividades</h4>
+                <h4 class="box-title">&Uacute;ltimas Actividades</h4>
             </div>
             <div class="box-body p-0">
                 <div class="media-list media-list-hover media-list-divided">
                     <a class="media media-single" href="~/Clientes/Detalle/1">
                         <div class="me-15">
-                            <img class="avatar avatar-md" src="~/Content/images/avatar/avatar-1.png" alt="Cliente">
+                            <img class="avatar avatar-md img-fluid" src="~/Content/images/avatar/avatar-1.png" alt="Cliente">
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-0">Acme Corporation</h6>
@@ -186,7 +202,7 @@
 
                     <a class="media media-single" href="~/Clientes/Detalle/2">
                         <div class="me-15">
-                            <img class="avatar avatar-md" src="~/Content/images/avatar/avatar-2.png" alt="Cliente">
+                            <img class="avatar avatar-md img-fluid" src="~/Content/images/avatar/avatar-2.png" alt="Cliente">
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-0">Tech Solutions Inc</h6>
@@ -197,13 +213,13 @@
 
                     <a class="media media-single" href="~/Clientes/Detalle/3">
                         <div class="me-15">
-                            <img class="avatar avatar-md" src="~/Content/images/avatar/avatar-3.png" alt="Cliente">
+                            <img class="avatar avatar-md img-fluid" src="~/Content/images/avatar/avatar-3.png" alt="Cliente">
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-0">Global Enterprises</h6>
-                            <p class="text-muted fs-12 mb-0">Reunión agendada</p>
+                            <p class="text-muted fs-12 mb-0">Reuni&oacute;n agendada</p>
                         </div>
-                        <span class="badge badge-info-light">Hace 1 día</span>
+                        <span class="badge badge-info-light">Hace 1 d&iacute;a</span>
                     </a>
                 </div>
             </div>
@@ -213,7 +229,7 @@
     <div class="col-xxl-6 col-xl-6 col-lg-12">
         <div class="box">
             <div class="box-header with-border">
-                <h4 class="box-title">Tareas Próximas</h4>
+                <h4 class="box-title">Tareas Pr&oacute;ximas</h4>
             </div>
             <div class="box-body p-0">
                 <div class="media-list media-list-hover media-list-divided">
@@ -234,7 +250,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-0">Enviar propuesta a Tech Solutions</h6>
-                            <p class="text-muted fs-12 mb-0">Mañana - 10:00</p>
+                            <p class="text-muted fs-12 mb-0">Ma&ntilde;ana - 10:00</p>
                         </div>
                         <span class="badge badge-warning-light">Normal</span>
                     </a>
@@ -306,6 +322,10 @@
     <script src="~/Content/assets/vendor_components/c3/c3.min.js"></script>
     <script src="~/Content/assets/vendor_components/echarts/dist/echarts-en.min.js"></script>
     <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
+
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+
     <script>
         $(document).ready(function () {
             // Oportunidades por Etapa - ApexCharts Bar
@@ -326,13 +346,14 @@
             // Clientes por Región - ApexCharts Donut
             if ($('#clientes-region-chart').length > 0) {
                 var options2 = {
-                    series: [44, 55, 13, 43],
-                    chart: { type: 'donut', height: 300 },
-                    labels: ['Norteamérica', 'Europa', 'Latam', 'Asia'],
-                    colors: ['#0052cc', '#ff9920', '#10c469', '#ff5b5b'],
-                    legend: { position: 'bottom' }
+                    series: [45, 25, 30],
+                    chart: { type: 'donut', height: 350 },
+                    labels: ['Completados', 'Pendientes', 'Cancelados'],
+                    colors: ['#040A2D', '#ededed', '#970000'],
+                    legend: { position: 'bottom' },
+                    stroke: { colors: ['#000000'], width: 1 }
                 };
-                new ApexCharts(document.querySelector("#clientes-region-chart"), options2).render();
+                new ApexCharts(document.querySelector("#estados-donut-chart"), options2).render();
             }
 
             // Small Metrics Charts - C3
@@ -353,7 +374,7 @@
                     axis: { x: { show: false }, y: { show: false } },
                     size: { height: 50, width: 120 },
                     legend: { show: false },
-                    color: { pattern: ['#0052cc'] }
+                    color: { pattern: ['#040A2D'] }
                 });
             }
             if ($('#avg-value-chart').length > 0) {
@@ -363,7 +384,7 @@
                     axis: { x: { show: false }, y: { show: false } },
                     size: { height: 50, width: 120 },
                     legend: { show: false },
-                    color: { pattern: ['#ff9920'] }
+                    color: { pattern: ['#970000'] }
                 });
             }
         });

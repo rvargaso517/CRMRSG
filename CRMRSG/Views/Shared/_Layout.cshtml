@@ -5,221 +5,296 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@ViewBag.Title - CRM</title>
-    
-    <link rel="stylesheet" href="~/Content/css/vendors_css.css">
-    <link rel="stylesheet" href="~/Content/css/style.css">
-    <link rel="stylesheet" href="~/Content/css/skin_color.css">
-    <link rel="stylesheet" href="~/Content/css/custom.css">
+
     @Styles.Render("~/Content/css")
+    <link rel="stylesheet" href="@Url.Content("~/Content/bootstrap.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/vendors_css.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/style.css")?v=@DateTime.Now.Ticks">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/skin_color.css")?v=@DateTime.Now.Ticks">
+    <link rel="stylesheet" href="@Url.Content("~/Content/css/custom.css")?v=@DateTime.Now.Ticks">
     @Scripts.Render("~/bundles/modernizr")
 </head>
 
 <body class="hold-transition light-skin sidebar-mini theme-primary fixed">
-<div class="wrapper">
-    <div id="loader"></div>
-    
-    <!-- Header -->
-    <header class="main-header">
-        <div class="d-flex align-items-center logo-box justify-content-start">
-            <a href="@Url.Action("Index", "Dashboard")" class="logo">
-                <div class="logo-mini w-40">
-                    <span class="light-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
+    <div class="wrapper">
+        <div id="loader"></div>
 
-                    <span class="dark-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
-                </div>
-                <div class="logo-lg">
-                    <span class="light-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
-                    <span class="dark-logo"><img src="~/Content/images/logo/rsg_logo.jpg" alt="logo"></span>
-                </div>
-            </a>
-        </div>
-
-        <nav class="navbar navbar-static-top">
-            <div class="app-menu">
-                <ul class="header-megamenu nav">
-                    <li class="btn-group nav-item">
-                        <a href="#" class="waves-effect waves-light nav-link push-btn btn-primary-light" data-toggle="push-menu" role="button">
-                            <i data-feather="menu"></i>
-                        </a>
-                    </li>
-                </ul>
+        <header class="main-header">
+            <div class="d-flex align-items-center logo-box justify-content-start">
+                <a href="@Url.Action("Index", "Dashboard")" class="logo">
+                    <div class="logo-mini">
+                        <span class="light-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-mini-img"></span>
+                        <span class="dark-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-mini-img"></span>
+                    </div>
+                    <div class="logo-lg d-none d-sm-block">
+                        <span class="light-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-lg-img"></span>
+                        <span class="dark-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-lg-img"></span>
+                    </div>
+                </a>
             </div>
 
-            <div class="navbar-custom-menu r-side">
-                <ul class="nav navbar-nav">
-                    <li class="dropdown notifications-menu btn-group">
-                        <label class="switch">
-                            <a class="waves-effect waves-light btn-primary-light svg-bt-icon">
-                                <input type="checkbox" data-mainsidebarskin="toggle" id="toggle_left_sidebar_skin">
-                                <span class="switch-on"><i data-feather="moon"></i></span>
-                                <span class="switch-off"><i data-feather="sun"></i></span>
-                            </a>
-                        </label>
-                    </li>
-                    <li class="btn-group nav-item d-xl-inline-flex d-none">
-                        <a href="#" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon" title="Full Screen">
-                            <i data-feather="maximize"></i>
-                        </a>
-                    </li>
-                    <li class="dropdown user user-menu">
-                        <a href="#" class="waves-effect waves-light dropdown-toggle w-auto l-h-12 bg-transparent p-0 no-shadow" title="Usuario" data-bs-toggle="modal" data-bs-target="#quick_user_toggle">
-                            <img src="~/Content/images/avatar/avatar-13.png" class="avatar rounded-circle bg-primary-light h-40 w-40" alt="" />
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </header>
+            <nav class="navbar navbar-static-top">
 
-    <!-- Sidebar -->
-    <aside class="main-sidebar">
-        <section class="sidebar position-relative">
-            <div class="multinav">
-                <div class="multinav-scroll" style="height: 97%;">
-                    <ul class="sidebar-menu" data-widget="tree">
-                        <li><a href="@Url.Action("Index", "Dashboard")"><i data-feather="home"></i><span>Dashboard</span></a></li>
-                        <li><a href="@Url.Action("Calendar", "Dashboard")"><i data-feather="calendar"></i><span>Calendario</span></a></li>
-                        
-                        <li class="treeview">
-                            <a href="#">
-                                <i data-feather="users"></i>
-                                <span>Clientes</span>
-                                <span class="pull-right-container">
-                                    <i class="fa fa-angle-right pull-right"></i>
-                                </span>
+                <div class="app-menu d-flex align-items-center">
+                    <ul class="header-megamenu nav">
+                        <li class="btn-group nav-item">
+                            <button class="btn btn-primary-light d-inline d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Toggle navigation">
+                                <i data-feather="menu"></i>
+                            </button>
+                            <a href="#" class="waves-effect waves-light nav-link push-btn btn-primary-light d-none d-xl-inline" data-toggle="push-menu" role="button">
+                                <i data-feather="menu"></i>
                             </a>
-                            <ul class="treeview-menu">
-                                <li><a href="@Url.Action("Index", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todos los Clientes</a></li>
-                                <li><a href="@Url.Action("Crear", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nuevo Cliente</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="treeview">
-                            <a href="#">
-                                <i data-feather="briefcase"></i>
-                                <span>Oportunidades</span>
-                                <span class="pull-right-container">
-                                    <i class="fa fa-angle-right pull-right"></i>
-                                </span>
-                            </a>
-                            <ul class="treeview-menu">
-                                <li><a href="@Url.Action("Index", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Oportunidades</a></li>
-                                <li><a href="@Url.Action("Crear", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Oportunidad</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="treeview">
-                            <a href="#">
-                                <i data-feather="check-circle"></i>
-                                <span>Tareas</span>
-                                <span class="pull-right-container">
-                                    <i class="fa fa-angle-right pull-right"></i>
-                                </span>
-                            </a>
-                            <ul class="treeview-menu">
-                                <li><a href="@Url.Action("Index", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Mis Tareas</a></li>
-                                <li><a href="@Url.Action("Crear", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Tarea</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="treeview">
-                            <a href="#">
-                                <i data-feather="activity"></i>
-                                <span>Actividades</span>
-                                <span class="pull-right-container">
-                                    <i class="fa fa-angle-right pull-right"></i>
-                                </span>
-                            </a>
-                            <ul class="treeview-menu">
-                                <li><a href="@Url.Action("Index", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Actividades</a></li>
-                                <li><a href="@Url.Action("Crear", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Actividad</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="treeview">
-                            <a href="#">
-                                <i data-feather="headphones"></i>
-                                <span>Soporte</span>
-                                <span class="pull-right-container">
-                                    <i class="fa fa-angle-right pull-right"></i>
-                                </span>
-                            </a>
-                            <ul class="treeview-menu">
-                                <li><a href="#"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Tickets</a></li>
-                                <li><a href="#"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Chat</a></li>
-                            </ul>
                         </li>
                     </ul>
 
-                    <div class="sidebar-widgets">
-                        <div class="mx-25 mb-30 pb-20 bg-primary-light rounded20">
-                            <div class="text-center">
-                                <img src="~/Content/images/trophy.png" class="sideimg p-5" alt="">
-                            </div>
+                    <div class="search-bx mx-3 d-none d-md-block">
+                        <div class="input-group flex-nowrap align-items-center" style="background-color: #f0f4f9; border-radius: 8px;">
+                            <input type="text" class="form-control border-0 bg-transparent shadow-none" placeholder="Search" style="width: 200px;">
+                            <span class="input-group-text bg-transparent border-0 text-muted px-2"><i data-feather="search" style="width: 18px; height: 18px;"></i></span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
-    </aside>
 
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
-        <div class="container-full">
-            <section class="content">
-                @RenderBody()
-            </section>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="main-footer bt-1">
-        <div class="pull-right d-none d-sm-inline-block">
-            <ul class="nav nav-primary nav-dotted nav-dot-separated justify-content-center justify-content-md-end">
-                <li class="nav-item">
-                    <a class="nav-link" href="#" target="_blank">Sistema CRM</a>
-                </li>
-            </ul>
-        </div>
-        &copy; <script>document.write(new Date().getFullYear())</script> CRM Management System. All Rights Reserved.
-    </footer>
-
-    <!-- User Profile Modal -->
-    <div class="modal modal-right fade" id="quick_user_toggle" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content slim-scroll3">
-                <div class="modal-body p-30 bg-white">
-                    <div class="d-flex align-items-center mb-15 justify-content-between pb-30">
-                        <h4 class="m-0">Perfil de Usuario</h4>
-                        <a href="#" class="btn btn-icon btn-danger-light btn-sm no-shadow" data-bs-dismiss="modal">
-                            <span class="fa fa-close"></span>
+                    <div class="dropdown user user-menu">
+                        <a href="#" class="waves-effect waves-light dropdown-toggle w-auto bg-transparent p-0 no-shadow" title="Usuario" data-bs-toggle="modal" data-bs-target="#quick_user_toggle">
+                            <div class="bg-primary-light rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; overflow: hidden;">
+                                <i data-feather="user" class="text-primary"></i>
+                            </div>
                         </a>
                     </div>
-                    <div>
-                        <div class="d-flex flex-row">
-                            <div><img src="~/Content/images/avatar/avatar-13.png" alt="user" class="rounded bg-danger-light w-150" width="100"></div>
-                            <div class="ps-20">
-                                <h5 class="mb-0">Juan García</h5>
-                                <p class="my-5 text-fade">Gestor de Ventas</p>
-                                <a href="mailto:juan.garcia@crm.com"><span class="icon-Mail-notification me-5 text-success"><span class="path1"></span><span class="path2"></span></span> juan.garcia@crm.com</a>
+                </div>
+
+                <div class="navbar-custom-menu r-side">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown notifications-menu btn-group">
+                            <label class="switch mb-0">
+                                <a class="waves-effect waves-light btn-primary-light svg-bt-icon">
+                                    <input type="checkbox" data-mainsidebarskin="toggle" id="toggle_left_sidebar_skin">
+                                    <span class="switch-on"><i data-feather="moon"></i></span>
+                                    <span class="switch-off"><i data-feather="sun"></i></span>
+                                </a>
+                            </label>
+                        </li>
+
+                        <li class="dropdown btn-group nav-item">
+                            <a href="#" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Notificaciones" id="notificationDropdown">
+                                <i data-feather="bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notification-badge" style="display: none; font-size: 0.65rem; padding: 0.35em 0.5em;">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end p-0 m-0 shadow-lg border-0 rounded" aria-labelledby="notificationDropdown" style="width: 320px; max-height: 420px; overflow: hidden;">
+                                <li class="bg-primary p-3 rounded-top d-flex justify-content-between align-items-center">
+                                    <h6 class="text-white mb-0 fw-bold"><i class="fa fa-bell me-2"></i>Notificaciones</h6>
+                                    <span class="badge bg-white text-primary" id="notification-count-text">0 Nuevas</span>
+                                </li>
+                                <li>
+                                    <div class="list-group list-group-flush" id="notification-list" style="max-height: 300px; overflow-y: auto;">
+                                        <div class="text-center p-4 text-muted text-fade" id="no-notifications-msg">
+                                            <i data-feather="check-circle" class="mb-2" style="width: 30px; height: 30px; stroke-width: 1.5;"></i>
+                                            <p class="mb-0 small">No tienes notificaciones pendientes</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="bg-light text-center p-2 rounded-bottom border-top">
+                                    <a href="javascript:void(0);" class="text-primary small fw-semibold" id="mark-all-read">Marcar todas como leídas</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="btn-group nav-item d-xl-inline-flex d-none">
+                            <a href="javascript:void(0);" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon" title="Full Screen">
+                                <i data-feather="maximize"></i>
+                            </a>
+                        </li>
+                        <li class="btn-group nav-item">
+                            <a href="javascript:void(0);" class="waves-effect waves-light nav-link btn-primary-light svg-bt-icon">
+                                <i data-feather="sliders"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <aside class="main-sidebar d-none d-xl-block">
+            <section class="sidebar position-relative">
+                <div class="multinav">
+                    <div class="multinav-scroll">
+                        <ul class="sidebar-menu" data-widget="tree">
+                            <li><a href="@Url.Action("Index", "Dashboard")"><i data-feather="home"></i><span>Dashboard</span></a></li>
+                            <li><a href="@Url.Action("Calendar", "Dashboard")"><i data-feather="calendar"></i><span>Calendario</span></a></li>
+
+                            <li class="treeview">
+                                <a href="#">
+                                    <i data-feather="users"></i>
+                                    <span>Clientes</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu">
+                                    <li><a href="@Url.Action("Index", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todos los Clientes</a></li>
+                                    <li><a href="@Url.Action("Crear", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nuevo Cliente</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="treeview">
+                                <a href="#">
+                                    <i data-feather="briefcase"></i>
+                                    <span>Oportunidades</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu">
+                                    <li><a href="@Url.Action("Index", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Oportunidades</a></li>
+                                    <li><a href="@Url.Action("Crear", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Oportunidad</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="treeview">
+                                <a href="#">
+                                    <i data-feather="check-circle"></i>
+                                    <span>Tareas</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu">
+                                    <li><a href="@Url.Action("Index", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Mis Tareas</a></li>
+                                    <li><a href="@Url.Action("Crear", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Tarea</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="treeview">
+                                <a href="#">
+                                    <i data-feather="activity"></i>
+                                    <span>Actividades</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu">
+                                    <li><a href="@Url.Action("Index", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Actividades</a></li>
+                                    <li><a href="@Url.Action("Crear", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Actividad</a></li>
+                                </ul>
+                            </li>
+
+                            <li class="treeview">
+                                <a href="#">
+                                    <i data-feather="bell"></i>
+                                    <span>Notificaciones</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu">
+                                    <li><a href="@Url.Action("Index", "Notificaciones")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Notificaciones</a></li>
+                                    
+                                </ul>
+                            </li>
+
+                            <li class="treeview">
+                                <a href="#">
+                                    <i data-feather="headphones"></i>
+                                    <span>Soporte</span>
+                                    <span class="pull-right-container">
+                                        <i class="fa fa-angle-right pull-right"></i>
+                                    </span>
+                                </a>
+                                <ul class="treeview-menu">
+                                    <li><a href="#"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Tickets</a></li>
+                                    <li><a href="#"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Chat</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                        <div class="sidebar-widgets">
+                            <div class="mx-25 mb-30 pb-20 bg-primary-light rounded20">
+                                <div class="text-center">
+                                    <img src="@Url.Content("~/Content/images/trophy.png")" class="sideimg p-5" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menú</h5>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <nav class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Dashboard")">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Calendar", "Dashboard")">Calendario</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Clientes")">Clientes</a></li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Oportunidades")">Oportunidades</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="container-fluid" style="width: 100% !important; max-width: 100% !important;">
+                <section class="content" style="width: 100% !important; max-width: 100% !important;">
+                    @RenderBody()
+                </section>
+            </div>
+        </div>
+
+        <footer class="main-footer bt-1">
+            <div class="pull-right d-none d-sm-inline-block">
+                <ul class="nav nav-primary nav-dotted nav-dot-separated justify-content-center justify-content-md-end">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" target="_blank">Sistema CRM</a>
+                    </li>
+                </ul>
+            </div>
+            &copy;
+            <script>document.write(new Date().getFullYear())</script> CRM Management System. All Rights Reserved.
+        </footer>
+
+        <div class="modal modal-right fade" id="quick_user_toggle" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content slim-scroll3">
+                    <div class="modal-body p-30 bg-white">
+                        <div class="d-flex align-items-center mb-15 justify-content-between pb-30">
+                            <h4 class="m-0">Perfil de Usuario</h4>
+                            <a href="#" class="btn btn-icon btn-danger-light btn-sm no-shadow" data-bs-dismiss="modal">
+                                <span class="fa fa-close"></span>
+                            </a>
+                        </div>
+                        <div>
+                            <div class="d-flex flex-row align-items-center">
+                                <div>
+                                    <div class="bg-primary-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                        <i data-feather="user" class="text-primary fs-30"></i>
+                                    </div>
+                                </div>
+                                <div class="ps-3">
+                                    <h5 class="mb-0">@(Session["NombreCompleto"] ?? "Usuario CRM")</h5>
+                                    <p class="my-5 text-fade">Rol: @(Session["RolId"] != null ? (Session["RolId"].ToString() == "1" ? "Admin" : "Usuario") : "Gestor")</p>
+                                    <a href="mailto:@(Session["Correo"])"><span class="icon-Mail-notification me-5 text-success"><span class="path1"></span><span class="path2"></span></span> @(Session["Correo"] ?? "correo@crm.com")</a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-</div>
-
-<!-- Scripts -->
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
-<script src="~/Content/js/vendors.min.js"></script>
-<script src="~/Content/js/pages/chat-popup.js"></script>
-<script src="~/Content/assets/icons/feather-icons/feather.min.js"></script>
-<script src="~/Content/js/demo.js"></script>
-<script src="~/Content/js/template.js"></script>
-@RenderSection("scripts", required: false)
+    <script src="@Url.Content("~/Content/js/vendors.min.js")"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
+    <script src="@Url.Content("~/Content/js/pages/chat-popup.js")"></script>
+    <script src="@Url.Content("~/Content/assets/icons/feather-icons/feather.min.js")"></script>
+    <script src="@Url.Content("~/Content/js/demo.js")"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="@Url.Content("~/Content/js/template.js")"></script>
+    @RenderSection("scripts", required: false)
 
 </body>
 </html>

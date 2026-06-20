@@ -18,7 +18,12 @@ namespace CRMRSG.Controllers
         // GET: Tareas/Crear
         public ActionResult Crear()
         {
-            return View();
+            using (crm_rsgEntities db = new crm_rsgEntities())
+            {
+               
+                ViewBag.ClientesList = new SelectList(db.cliente.Where(c => c.estado == "Activo").ToList(), "id_cliente", "empresa");
+                return View();
+            }
         }
 
         // Tareas agrupadas por prioridad
@@ -32,7 +37,7 @@ namespace CRMRSG.Controllers
         }
 
         
-        // Tareas agrupadas por categorías (estados)
+        // Tareas agrupadas por categorï¿½as (estados)
         public ActionResult Categorias()
         {
             ViewBag.Pendientes = db.tareas.Count(x => x.estado == "Pendiente");

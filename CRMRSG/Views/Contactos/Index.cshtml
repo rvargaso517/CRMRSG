@@ -1,0 +1,103 @@
+﻿@model IEnumerable<CRMRSG.EntityFramework.contacto_cliente>
+
+@{
+    ViewBag.Title = "Contactos Corporativos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Contactos</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Contactos Secundarios</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">Lista General de Contactos por Empresa</h3>
+                <p class="text-muted mb-0">Para agregar un nuevo contacto, vaya a la ficha de <strong>Detalle</strong> de cualquier cliente.</p>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Empresa / Cliente</th>
+                                <th>Puesto</th>
+                                <th>Tel&eacute;fono</th>
+                                <th>Correo Electr&oacute;nico</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-dark">@item.nombre</td>
+                                        <td>
+                                            <span class="badge badge-info-light">
+                                                @(item.cliente != null ? item.cliente.empresa : "Sin Empresa")
+                                            </span>
+                                        </td>
+                                        <td>@(item.puesto ?? "No asignado")</td>
+                                        <td>@item.telefono</td>
+                                        <td>@item.correo</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-danger-light" onclick="eliminarContacto(@item.id_contacto)" title="Eliminar">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-20">No hay contactos secundarios registrados.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function eliminarContacto(id) {
+        if (confirm("¿Está seguro de eliminar este contacto secundario?")) {
+            $.ajax({
+                url: '@Url.Action("Eliminar", "Contactos")',
+                type: 'POST',
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Error en el servidor al intentar eliminar.");
+                }
+            });
+        }
+    }
+</script>

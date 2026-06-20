@@ -1,0 +1,262 @@
+﻿@model CRMRSG.EntityFramework.cliente
+
+@{
+    ViewBag.Title = "Detalle del Cliente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Ficha del Cliente</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item"><a href="~/Clientes">Clientes</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.empresa</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Panel Izquierdo: Información General de la Empresa -->
+    <div class="col-lg-4 col-12">
+        <div class="box">
+            <div class="box-body box-profile">
+                <div class="row">
+                    <div class="col-12">
+                        <div>
+                            <p class="text-muted text-center">Empresa</p>
+                            <h3 class="profile-username text-center my-5 fw-bold">@Model.empresa</h3>
+                            <p class="text-muted text-center">
+                                @if (Model.estado == "Activo" || Model.estado == "1")
+                                {
+                                    <span class="badge badge-success-light">Activo</span>
+                                }
+                                else if (Model.estado != null && Model.estado.Contains("Negociac"))
+                                {
+                                    <span class="badge badge-warning-light">En Negociaci&oacute;n</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-danger-light">Inactivo</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-20">
+                    <div class="col-12">
+                        <div class="media-list media-list-hover media-list-divided">
+                            <div class="media text-muted">
+                                <strong><i class="ti-user me-5"></i> Contacto Principal:</strong>
+                                <span class="ms-auto text-dark">@Model.nombre</span>
+                            </div>
+                            <div class="media text-muted">
+                                <strong><i class="ti-email me-5"></i> Email:</strong>
+                                <span class="ms-auto text-dark">@Model.correo</span>
+                            </div>
+                            <div class="media text-muted">
+                                <strong><i class="ti-mobile me-5"></i> Tel&eacute;fono:</strong>
+                                <span class="ms-auto text-dark">@Model.telefono</span>
+                            </div>
+                            <div class="media text-muted">
+                                <strong><i class="ti-location-pin me-5"></i> Direcci&oacute;n:</strong>
+                                <span class="ms-auto text-dark text-end">@Model.direccion</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-footer text-center gap-2 mt-10">
+                    <a href="@Url.Action("Editar", "Clientes", new { id = Model.id_cliente })" class="btn btn-sm btn-info w-45">
+                        <i class="fa fa-pencil"></i> Editar
+                    </a>
+                    <a href="@Url.Action("Index", "Clientes")" class="btn btn-sm btn-secondary w-45">
+                        Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Derecho: Múltiples Contactos y Notas -->
+    <div class="col-lg-8 col-12">
+        <!-- Bloque de Contactos Secundarios -->
+        <div class="box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h4 class="box-title"><i class="ti-id-badge text-info me-10"></i> Contactos Secundarios de la Empresa</h4>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal-contacto">
+                    <i class="fa fa-plus"></i> Agregar Contacto
+                </button>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Puesto / Rol</th>
+                                <th>Tel&eacute;fono</th>
+                                <th>Correo El&eacute;ctronico</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.contacto_cliente != null && Model.contacto_cliente.Any())
+                            {
+                                foreach (var contacto in Model.contacto_cliente)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-fade">@contacto.nombre</td>
+                                        <td><span class="badge badge-ring badge-primary me-5"></span> @(contacto.puesto ?? "No asignado")</td>
+                                        <td>@contacto.telefono</td>
+                                        <td>@contacto.correo</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-30">
+                                        <i class="ti-info-alt d-block fs-30 mb-10 text-warning"></i>
+                                        Esta empresa no tiene contactos secundarios registrados todav&iacute;a.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloque de Historial de Notas del Cliente (HU-018) -->
+        <div class="box mt-20">
+            <div class="box-header with-border">
+                <h4 class="box-title"><i class="ti-comment-alt text-warning me-10"></i> Notas y Comentarios Históricos</h4>
+            </div>
+            <div class="box-body">
+                @if (TempData["ExitoNota"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-15" role="alert">
+                        @TempData["ExitoNota"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["ErrorNota"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mb-15" role="alert">
+                        @TempData["ErrorNota"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @using (Html.BeginForm("Guardar", "Notas", FormMethod.Post, new { @class = "mb-20" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id_cliente" value="@Model.id_cliente" />
+
+                    <div class="form-group mb-2">
+                        <textarea name="comentario" class="form-control" rows="3" placeholder="Escriba una nueva anotación sobre este cliente aquí..." required></textarea>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-sm btn-warning">Guardar Nota</button>
+                    </div>
+                }
+
+                <hr />
+
+                <div class="media-list media-list-hover">
+                    @if (Model.nota_cliente != null && Model.nota_cliente.Any())
+                    {
+                        foreach (var nota in Model.nota_cliente.OrderByDescending(n => n.fecha_creacion))
+                        {
+                            <div class="media p-10 bg-light mb-10 rounded" style="background-color: #f9f9f9; border-left: 4px solid #fec107;">
+                                <div class="media-body">
+                                    <p class="fs-14 text-dark mb-5">@nota.comentario</p>
+                                    <span class="text-fade fs-11 d-block text-end">
+                                        <i class="ti-calendar me-5"></i> @nota.fecha_creacion.ToString("dd/MM/yyyy hh:mm tt")
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-10">No hay notas registradas para este cliente.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =================================================== -->
+<!-- MODAL DE BOOTSTRAP PARA AGREGAR CONTACTO (AJAX) -->
+<!-- =================================================== -->
+<div class="modal fade" id="modal-contacto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Nuevo Contacto Corporativo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formNuevoContacto">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id_cliente" value="@Model.id_cliente" />
+
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Nombre Completo</label>
+                        <input type="text" name="nombre" class="form-control" placeholder="Ej: Juan Perez" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Puesto en la Empresa</label>
+                        <input type="text" name="puesto" class="form-control" placeholder="Ej: Gerente de TI, Proveedur&iacute;a..." />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Tel&eacute;fono</label>
+                        <input type="text" name="telefono" class="form-control" placeholder="Ej: 8888-8888" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Correo Electr&oacute;nico</label>
+                        <input type="email" name="correo" class="form-control" placeholder="juan@empresa.com" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Contacto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts de procesamiento AJAX -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#formNuevoContacto").on("submit", function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("AgregarContacto", "Clientes")',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Ocurrio un error en el servidor al asociar el contacto.");
+                }
+            });
+        });
+    });
+</script>

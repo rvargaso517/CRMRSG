@@ -103,6 +103,18 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
+            if (password.Length < 8 || !System.Text.RegularExpressions.Regex.IsMatch(password, @"[A-Z]") || !System.Text.RegularExpressions.Regex.IsMatch(password, @"[0-9]") || !System.Text.RegularExpressions.Regex.IsMatch(password, @"[\W_]"))
+            {
+                ViewBag.Error = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.";
+                return View();
+            }
+            
+            if (!correo.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase))
+            {
+                ViewBag.Error = "Debe registrarse utilizando un correo @gmail.com válido.";
+                return View();
+            }
+            
             if (password != confirmPassword)
             {
                 ViewBag.Error = "Las contraseñas no coinciden.";
@@ -252,6 +264,13 @@ namespace CRMRSG.Controllers
             if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword))
             {
                 ViewBag.Error = "Por favor ingrese la nueva contraseña y su confirmación.";
+                ViewBag.Token = token;
+                return View();
+            }
+
+            if (password.Length < 8 || !System.Text.RegularExpressions.Regex.IsMatch(password, @"[A-Z]") || !System.Text.RegularExpressions.Regex.IsMatch(password, @"[0-9]") || !System.Text.RegularExpressions.Regex.IsMatch(password, @"[\W_]"))
+            {
+                ViewBag.Error = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.";
                 ViewBag.Token = token;
                 return View();
             }

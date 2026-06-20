@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewBag.Title = "Calendario";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -43,13 +43,13 @@
                             <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Almuerzo de Negocios
                         </div>
                         <div class="external-event bg-primary" data-class="bg-primary">
-                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Reunión de Equipo
+                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Reuni&oacute;n de Equipo
                         </div>
                         <div class="external-event bg-warning" data-class="bg-warning">
                             <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Llamada de Seguimiento
                         </div>
                         <div class="external-event bg-info" data-class="bg-info">
-                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Presentación de Propuesta
+                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Presentaci&oacute;n de Propuesta
                         </div>
                     </div>
                 </div>
@@ -80,17 +80,17 @@
                     today: 'Hoy',
                     month: 'Mes',
                     week : 'Semana',
-                    day  : 'Día'
+                    day  : 'D&iacute;a'
                 },
                 events: [
                     {
-                        title          : 'Reunión Mensual',
+                        title          : 'Reuni&oacute;n Mensual',
                         start          : new Date(y, m, 1),
                         backgroundColor: '#0052cc', // primary
                         borderColor    : '#0052cc'
                     },
                     {
-                        title          : 'Presentación Tech Solutions',
+                        title          : 'Presentaci&oacute;n Tech Solutions',
                         start          : new Date(y, m, d - 5),
                         end            : new Date(y, m, d - 2),
                         backgroundColor: '#ff9920', // warning
@@ -120,7 +120,7 @@
                         borderColor    : '#ff5b5b'
                     },
                     {
-                        title          : 'Renovación de Licencias',
+                        title          : 'Renovaci&oacute;n de Licencias',
                         start          : new Date(y, m, 28),
                         end            : new Date(y, m, 29),
                         url            : '#',
@@ -159,3 +159,7 @@
         });
     </script>
 }
+
+
+
+

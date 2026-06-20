@@ -12,9 +12,89 @@
     white-space: normal;
 }
 
-/* Set width on the form input elements since they're 100% wide by default */
+/* Make form controls responsive inside grid columns */
 input,
 select,
 textarea {
-    max-width: 280px;
+    max-width: 100%;
+    width: 100%;
 }
+
+/* Sidebar scroll container: use viewport-relative height and enable scrolling */
+.multinav .multinav-scroll {
+    height: calc(100vh - 140px);
+    overflow: auto;
+}
+
+/* Responsive user avatar in modal */
+.user-avatar {
+    max-width: 120px;
+    height: auto;
+}
+
+/* Logo responsiveness */
+.logo img {
+    max-width: 100%;
+    height: auto;
+}
+
+.logo-mini-img {
+    max-width: 48px;
+    height: auto;
+}
+
+.logo-lg-img {
+    max-width: 160px;
+    height: auto;
+}
+
+/* Responsive chart containers */
+.chart-responsive {
+    width: 100%;
+    height: min(40vh, 400px);
+}
+
+/* Header avatar responsive */
+.header-user-avatar {
+    max-width: 40px;
+    height: auto;
+}
+
+/* Utility: small avatar sizes */
+.avatar-md {
+    max-width: 48px;
+    height: auto;
+}
+
+/* ----- Project overrides to fix layout issues ----- */
+/* Ensure content can flow full width on smaller screens or when sidebar collapsed */
+.content-wrapper {
+    transition: margin .3s ease-in-out; /* keep theme transition */
+}
+@media (max-width: 1199.98px) {
+    .content-wrapper { margin-left: 0 !important; }
+}
+/* class to toggle when sidebar collapsed (JS can add/remove .sidebar-collapsed on body) */
+.sidebar-collapsed .content-wrapper, .main-sidebar.collapsed + .content-wrapper { margin-left: 0 !important; }
+
+/* Allow calendar to expand and avoid parent clipping */
+#calendar { width: 100%; min-height: 60vh; }
+/* Be conservative with overriding fullcalendar table-layout only if needed */
+.fc table { table-layout: auto !important; }
+
+/* Prevent content wrapper from clipping modals when open */
+body.modal-open .content-wrapper { overflow: visible !important; }
+
+/* Ensure table responsiveness - allow horizontal scroll when necessary */
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; }
+
+/* Modal right adjustments for profile drawer */
+.modal.modal-right .modal-dialog { max-width: 420px; margin: 0; right: 0; }
+@media (max-width: 767.98px) { .modal.modal-right .modal-dialog { max-width: 100%; } }
+
+/* Chart container hint: use CSS-controlled height to allow responsive chart rendering */
+#oportunidades-chart, #clientes-region-chart { min-height: 300px; height: auto; }
+
+/* Keep legacy fixed utilities but scoped if needed (avoid global !important impacts) */
+.width-40, .height-40 { max-width: 100%; }

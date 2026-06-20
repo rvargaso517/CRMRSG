@@ -1,0 +1,110 @@
+﻿@{
+    ViewBag.Title = "Buzón de Notificaciones";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header px-4 py-4 mb-3" style="background-color: #f4f6f9; border-radius: 8px;">
+    <div class="d-lg-flex d-sm-block align-items-center justify-content-between">
+        <div>
+            <h1 class="h3 mb-0">Centro de Notificaciones</h1>
+            <small class="text-muted">Historial completo de actividades del operador</small>
+        </div>
+        <ol class="breadcrumb p-0 m-0 bg-transparent">
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fa fa-home"></i> Inicio</a></li>
+            <li class="breadcrumb-item active">Notificaciones</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box shadow-none border">
+            <div class="box-header with-border d-flex justify-content-between align-items-center py-3">
+                <h4 class="box-title mb-0" style="color: #040A2D; font-weight: 600;">
+                    <i class="fa fa-bell me-2" style="color: #970000;"></i> Notificaciones Recibidas
+                </h4>
+                <button id="btn-marcar-todas-global" class="btn btn-sm btn-outline-danger" style="display: none; border-radius: 20px;">
+                    <i class="fa fa-check-double me-1"></i> Marcar todas como leídas
+                </button>
+            </div>
+            <div class="box-body p-3">
+                <div id="loader-completas" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+                <div id="sin-notificaciones-panel" class="text-center py-5 text-muted" style="display: none;">
+                    <i class="fa fa-inbox fa-3x mb-3 opacity-50"></i>
+                    <h5>Tu bandeja está al día</h5>
+                </div>
+                <div id="lista-notificaciones-global" class="list-group"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            consultarNotificacionesHistorial();
+
+            $("#btn-marcar-todas-global").click(function () {
+                $.ajax({
+                    url: '@Url.Action("MarcarTodasComoLeidas", "Notificaciones")',
+                    type: 'POST',
+                    success: function (res) {
+                        if (res.success) { consultarNotificacionesHistorial(); }
+                    }
+                });
+            });
+        });
+
+        function consultarNotificacionesHistorial() {
+            $.ajax({
+                url: '@Url.Action("ObtenerListaCompletas", "Notificaciones")',
+                type: 'GET',
+                success: function (res) {
+                    $("#loader-completas").hide();
+                    var panel = $("#lista-notificaciones-global").empty();
+
+                    if (res.success && res.datos.length > 0) {
+                        $("#sin-notificaciones-panel").hide();
+                        var tienePendientes = res.datos.some(function (n) { return !n.leida; });
+                        $("#btn-marcar-todas-global").toggle(tienePendientes);
+
+                        $.each(res.datos, function (i, item) {
+                            var esLeida = item.leida;
+                            var estiloBorde = esLeida ? 'border-left: 4px solid #e9ecef;' : 'border-left: 4px solid #970000; background-color: #fffafa;';
+                            var boton = !esLeida
+                                ? `<button class="btn btn-sm btn-dark px-3" style="border-radius: 8px;" onclick="cambiarEstadoLeido(${item.id_notificacion}, this)">
+                                     <i class="fa fa-check me-1"></i> Revisar
+                                   </button>`
+                                : '<span class="text-muted small"><i class="fa fa-check-circle me-1"></i> Leída</span>';
+
+                            panel.append(`
+                                <div class="list-group-item d-flex justify-content-between align-items-center mb-3 shadow-sm border-0" style="${estiloBorde} border-radius: 0 8px 8px 0;">
+                                    <div class="pe-3">
+                                        <p class="mb-1 text-dark" style="font-weight: 500;">${item.mensaje}</p>
+                                        <small class="text-muted"><i class="fa fa-clock-o me-1"></i> ${item.FechaRegistro}</small>
+                                    </div>
+                                    <div class="flex-shrink-0">${boton}</div>
+                                </div>`);
+                        });
+                    } else {
+                        $("#sin-notificaciones-panel").show();
+                        $("#btn-marcar-todas-global").hide();
+                    }
+                }
+            });
+        }
+
+        function cambiarEstadoLeido(id, btn) {
+            $.ajax({
+                url: '@Url.Action("MarcarComoLeida", "Notificaciones")',
+                type: 'POST',
+                data: { id: id },
+                success: function (res) {
+                    if (res.success) { consultarNotificacionesHistorial(); }
+                }
+            });
+        }
+    </script>
+}
