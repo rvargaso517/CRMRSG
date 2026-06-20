@@ -24,15 +24,41 @@
         <div class="box">
             <div class="box-header with-border d-flex justify-content-between align-items-center">
                 <h3 class="box-title">Historial de Actividades</h3>
-                <a href="~/Actividades/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Registrar Actividad</a>
+                <a href="~/Actividades/Crear" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> Registrar Actividad
+                </a>
             </div>
+
             <div class="box-body">
+
+                <!-- HU-026 Distribución de Estados -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="alert alert-primary">
+                            <strong>Pendientes:</strong> @ViewBag.Pendientes
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="alert alert-success">
+                            <strong>Confirmadas:</strong> @ViewBag.Confirmadas
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="alert alert-danger">
+                            <strong>Canceladas:</strong> @ViewBag.Canceladas
+                        </div>
+                    </div>
+                </div>
+
                 <div class="timeline">
+
                     <!-- timeline time label -->
                     <span class="timeline-label">
                         <span class="badge badge-primary-light badge-pill">15 Abril 2024</span>
                     </span>
-                    <!-- /.timeline-label -->
+
                     <!-- timeline item -->
                     <div class="timeline-item">
                         <div class="timeline-point timeline-point-success">
@@ -40,15 +66,18 @@
                         </div>
                         <div class="timeline-event">
                             <div class="timeline-heading">
-                                <h4 class="timeline-title"><a href="#">Llamada con cliente</a></h4>
-                                <span class="timeline-time"><i class="fa fa-clock-o"></i> 10:30 AM</span>
+                                <h4 class="timeline-title">
+                                    <a href="#">Llamada con cliente</a>
+                                </h4>
+                                <span class="timeline-time">
+                                    <i class="fa fa-clock-o"></i> 10:30 AM
+                                </span>
                             </div>
                             <div class="timeline-body">
                                 Conversaci&oacute;n telef&oacute;nica con Ana Mart&iacute;nez (Tech Solutions LLC) sobre los requerimientos t&eacute;cnicos de la implementaci&oacute;n del ERP.
                             </div>
                         </div>
                     </div>
-                    <!-- END timeline item -->
 
                     <!-- timeline item -->
                     <div class="timeline-item">
@@ -57,21 +86,23 @@
                         </div>
                         <div class="timeline-event">
                             <div class="timeline-heading">
-                                <h4 class="timeline-title"><a href="#">Correo enviado</a></h4>
-                                <span class="timeline-time"><i class="fa fa-clock-o"></i> 02:15 PM</span>
+                                <h4 class="timeline-title">
+                                    <a href="#">Correo enviado</a>
+                                </h4>
+                                <span class="timeline-time">
+                                    <i class="fa fa-clock-o"></i> 02:15 PM
+                                </span>
                             </div>
                             <div class="timeline-body">
                                 Se envi&oacute; la propuesta comercial actualizada a Acme Corporation.
                             </div>
                         </div>
                     </div>
-                    <!-- END timeline item -->
 
                     <!-- timeline time label -->
                     <span class="timeline-label">
                         <span class="badge badge-info-light badge-pill">14 Abril 2024</span>
                     </span>
-                    <!-- /.timeline-label -->
 
                     <!-- timeline item -->
                     <div class="timeline-item">
@@ -80,21 +111,22 @@
                         </div>
                         <div class="timeline-event">
                             <div class="timeline-heading">
-                                <h4 class="timeline-title"><a href="#">Reuni&oacute;n presencial</a></h4>
-                                <span class="timeline-time"><i class="fa fa-clock-o"></i> 09:00 AM</span>
+                                <h4 class="timeline-title">
+                                    <a href="#">Reunión presencial</a>
+                                </h4>
+                                <span class="timeline-time">
+                                    <i class="fa fa-clock-o"></i> 09:00 AM
+                                </span>
                             </div>
                             <div class="timeline-body">
                                 Presentaci&oacute;n del portafolio de servicios en las oficinas de Global Enterprises.
                             </div>
                         </div>
                     </div>
-                    <!-- END timeline item -->
+
                 </div>
+
             </div>
         </div>
     </div>
 </div>
-
-
-
-

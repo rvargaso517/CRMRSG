@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
-// Usamos el namespace correcto para la entidad en singular
 using CRMRSG.EntityFramework;
 
 namespace CRMRSG.Controllers
@@ -11,93 +10,108 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
-        // GET: clientes
+        // GET: Clientes
         public ActionResult Index()
         {
-            // Trae todos los clientes de la base de datos (Colección db.clientes)
-            var listaclientes = db.clientes.ToList();
-            return View(listaclientes);
+            var listaClientes = db.clientes.ToList();
+            return View(listaClientes);
         }
 
-        // GET: clientes/Crear
+        // GET: Clientes/Crear
         public ActionResult Crear()
         {
             return View();
         }
 
-        // POST: clientes/Crear
+        // POST: Clientes/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Crear(cliente nuevoclientes)
+        public ActionResult Crear(cliente nuevoCliente)
         {
             if (ModelState.IsValid)
             {
-                nuevoclientes.fecha_registro = DateTime.Now;
-                // Asignamos el id del usuario logueado usando la sesión
-                nuevoclientes.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                nuevoCliente.fecha_registro = DateTime.Now;
+                nuevoCliente.id_usuario = Session["UsuarioId"] != null
+                    ? (int)Session["UsuarioId"]
+                    : 1;
 
-                db.clientes.Add(nuevoclientes);
+                db.clientes.Add(nuevoCliente);
                 db.SaveChanges();
+
                 return RedirectToAction("Index");
             }
-            return View(nuevoclientes);
+
+            return View(nuevoCliente);
         }
 
-        // GET: clientes/Editar/5
+        // GET: Clientes/Editar/5
         public ActionResult Editar(int? id)
         {
-            // Validamos que el ID no venga vacío para evitar la pantalla roja
             if (id == null)
             {
                 return RedirectToAction("Index");
             }
 
-            var clientesEditar = db.clientes.Find(id);
+            var clienteEditar = db.clientes.Find(id);
 
-            if (clientesEditar == null)
+            if (clienteEditar == null)
             {
                 return HttpNotFound();
             }
 
-            return View(clientesEditar);
+            return View(clienteEditar);
         }
 
-        // POST: clientes/Editar/5
+        // POST: Clientes/Editar/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Editar(cliente clientesModificado)
+        public ActionResult Editar(cliente clienteModificado)
         {
             if (ModelState.IsValid)
             {
-                var clientesDb = db.clientes.Find(clientesModificado.id_cliente);
-                if (clientesDb != null)
+                var clienteDb = db.clientes.Find(clienteModificado.id_cliente);
+
+                if (clienteDb != null)
                 {
-                    clientesDb.nombre = clientesModificado.nombre;
-                    clientesDb.empresa = clientesModificado.empresa;
-                    clientesDb.telefono = clientesModificado.telefono;
-                    clientesDb.correo = clientesModificado.correo;
-                    clientesDb.direccion = clientesModificado.direccion;
-                    clientesDb.estado = clientesModificado.estado;
+                    clienteDb.nombre = clienteModificado.nombre;
+                    clienteDb.empresa = clienteModificado.empresa;
+                    clienteDb.telefono = clienteModificado.telefono;
+                    clienteDb.correo = clienteModificado.correo;
+                    clienteDb.direccion = clienteModificado.direccion;
+                    clienteDb.estado = clienteModificado.estado;
 
                     db.SaveChanges();
+
                     return RedirectToAction("Index");
                 }
             }
-            return View(clientesModificado);
+
+            return View(clienteModificado);
         }
 
-        // POST: clientes/Eliminar/5
+        // POST: Clientes/Eliminar/5
         [HttpPost]
         public ActionResult Eliminar(int id)
         {
-            var clientesEliminar = db.clientes.Find(id);
-            if (clientesEliminar != null)
+            var clienteEliminar = db.clientes.Find(id);
+
+            if (clienteEliminar != null)
             {
-                db.clientes.Remove(clientesEliminar);
+                db.clientes.Remove(clienteEliminar);
                 db.SaveChanges();
-                return Json(new { success = true, message = "clientes eliminado correctamente." });
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Cliente eliminado correctamente."
+                });
             }
-            return Json(new { success = false, message = "No se pudo encontrar el clientes." });
+
+            return Json(new
+            {
+                success = false,
+                message = "No se pudo encontrar el cliente."
+            });
         }
 
         // GET: clientes/ExportarClientesCSV (HU-034)
@@ -141,6 +155,7 @@ namespace CRMRSG.Controllers
             {
                 db.Dispose();
             }
+
             base.Dispose(disposing);
         }
     } // Cierre de la clase ClientesController
@@ -181,4 +196,5 @@ namespace CRMRSG.Controllers
             }
         }
     }
+
 }
