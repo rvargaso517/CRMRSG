@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
@@ -20,16 +20,17 @@ namespace CRMRSG.Controllers
 
         // POST: Citas/Agendar
         [HttpPost]
-        [AntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public ActionResult Agendar(int id_cliente, string asunto, DateTime fecha_cita)
         {
             using (CRM_RSGEntities db = new CRM_RSGEntities())
             {
-                var nuevaCita = new citas
+                var nuevaCita = new cita
                 {
                     id_cliente = id_cliente,
-                    asunto = asunto,
-                    fecha_cita = fecha_cita
+                    descripcion = asunto,
+                    fecha = fecha_cita.Date,
+                    hora = fecha_cita.TimeOfDay
                 };
                 db.citas.Add(nuevaCita);
                 db.SaveChanges();

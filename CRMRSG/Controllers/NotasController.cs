@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
@@ -9,7 +9,7 @@ namespace CRMRSG.Controllers
     {
         // POST: Notas/Guardar
         [HttpPost]
-        [AntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public ActionResult Guardar(int id_cliente, string comentario)
         {
             if (string.IsNullOrEmpty(comentario))

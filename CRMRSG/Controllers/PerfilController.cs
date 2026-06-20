@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework; 
@@ -27,8 +27,8 @@ namespace CRMRSG.Controllers
 
         // POST: Perfil/Actualizar
         [HttpPost]
-        [AntiForgeryToken]
-        public ActionResult Actualizar(usuarios datosActualizados)
+        [ValidateAntiForgeryToken]
+        public ActionResult Actualizar(usuario datosActualizados)
         {
             using (CRM_RSGEntities db = new CRM_RSGEntities())
             {

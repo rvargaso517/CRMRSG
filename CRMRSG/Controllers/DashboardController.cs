@@ -7,6 +7,14 @@ using CRMRSG.EntityFramework;
 
 namespace CRMRSG.Controllers
 {
+    public class VendedorRendimiento
+    {
+        public string Nombre { get; set; }
+        public int Clientes { get; set; }
+        public int Oportunidades { get; set; }
+        public int Tareas { get; set; }
+    }
+
     public class DashboardController : Controller
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
@@ -20,7 +28,7 @@ namespace CRMRSG.Controllers
             ViewBag.TotalUsuarios = db.usuarios.Count();
 
             // HU-035 - Rendimiento de vendedores
-            var vendedores = db.usuarios.Select(u => new
+            var vendedores = db.usuarios.Select(u => new VendedorRendimiento
             {
                 Nombre = u.nombre + " " + u.apellido,
                 Clientes = u.clientes.Count(),

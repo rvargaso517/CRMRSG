@@ -1,4 +1,4 @@
-﻿using CRMRSG.EntityFramework;
+using CRMRSG.EntityFramework;
 using System;
 using System.Linq;
 using System.Web.Mvc;
@@ -20,14 +20,14 @@ namespace CRMRSG.Controllers
 
         // POST: Roles/Crear
         [HttpPost]
-        [AntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public ActionResult Crear(string nombre_rol)
         {
             if (string.IsNullOrEmpty(nombre_rol)) return RedirectToAction("Index");
 
             using (CRM_RSGEntities db = new CRM_RSGEntities())
             {
-                var nuevoRol = new roles { nombre_rol = nombre_rol };
+                var nuevoRol = new role { nombre = nombre_rol };
                 db.roles.Add(nuevoRol);
                 db.SaveChanges();
             }

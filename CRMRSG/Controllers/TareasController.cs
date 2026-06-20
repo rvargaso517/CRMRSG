@@ -18,12 +18,30 @@ namespace CRMRSG.Controllers
         // GET: Tareas/Crear
         public ActionResult Crear()
         {
-            using (crm_rsgEntities db = new crm_rsgEntities())
+            ViewBag.Clientes = db.clientes.ToList();
+            return View();
+        }
+
+        // POST: Tareas/Crear
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Crear(tarea nuevaTarea)
+        {
+            if (ModelState.IsValid)
             {
-               
-                ViewBag.ClientesList = new SelectList(db.cliente.Where(c => c.estado == "Activo").ToList(), "id_cliente", "empresa");
-                return View();
+                nuevaTarea.estado = "Pendiente";
+                nuevaTarea.id_usuario = Session["UsuarioId"] != null
+                    ? (int)Session["UsuarioId"]
+                    : 1;
+
+                db.tareas.Add(nuevaTarea);
+                db.SaveChanges();
+
+                return RedirectToAction("Index");
             }
+
+            ViewBag.Clientes = db.clientes.ToList();
+            return View(nuevaTarea);
         }
 
         // Tareas agrupadas por prioridad
@@ -36,8 +54,8 @@ namespace CRMRSG.Controllers
             return View();
         }
 
-        
-        // Tareas agrupadas por categor�as (estados)
+
+        // Tareas agrupadas por categorías (estados)
         public ActionResult Categorias()
         {
             ViewBag.Pendientes = db.tareas.Count(x => x.estado == "Pendiente");

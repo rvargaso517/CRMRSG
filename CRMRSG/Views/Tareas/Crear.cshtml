@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Nueva Tarea";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -26,47 +26,47 @@
             <div class="box-header with-border">
                 <h4 class="box-title">Detalles de la Tarea</h4>
             </div>
-            <form class="form">
+            <form class="form" method="post" action="@Url.Action("Crear", "Tareas")">
+                @Html.AntiForgeryToken()
                 <div class="box-body">
                     <div class="form-group">
                         <label class="form-label">Asunto</label>
-                        <input type="text" class="form-control" placeholder="Ej: Llamar para confirmar reuni&oacute;n">
+                        <input type="text" name="titulo" class="form-control" placeholder="Ej: Llamar para confirmar reunión" required>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Fecha de Vencimiento</label>
-                                <input type="date" class="form-control">
+                                <input type="date" name="fecha_limite" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Prioridad</label>
-                                <select class="form-select">
-                                    <option>Baja</option>
-                                    <option selected>Media</option>
-                                    <option>Alta</option>
+                                <select class="form-select" name="prioridad">
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media" selected>Media</option>
+                                    <option value="Alta">Alta</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Relacionado con</label>
-                        <select class="form-select">
-                            <option>Ninguno</option>
-                            <optgroup label="Clientes">
-                                <option>Acme Corporation</option>
-                                <option>Tech Solutions</option>
-                            </optgroup>
-                            <optgroup label="Oportunidades">
-                                <option>Venta Licencias Q3</option>
-                                <option>Implementaci&oacute;n ERP</option>
-                            </optgroup>
+                        <label class="form-label">Relacionado con (Cliente)</label>
+                        <select class="form-select" name="id_cliente">
+                            <option value="">Ninguno</option>
+                            @if (ViewBag.Clientes != null)
+                            {
+                                foreach (var c in (List<CRMRSG.EntityFramework.cliente>)ViewBag.Clientes)
+                                {
+                                    <option value="@c.id_cliente">@c.nombre</option>
+                                }
+                            }
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Notas Adicionales</label>
-                        <textarea rows="4" class="form-control" placeholder="Escribe aqu&iacute; los detalles..."></textarea>
+                        <textarea rows="4" name="descripcion" class="form-control" placeholder="Escribe aquí los detalles..."></textarea>
                     </div>
                 </div>
                 <div class="box-footer text-end">

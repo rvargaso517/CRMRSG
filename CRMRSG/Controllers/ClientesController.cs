@@ -158,8 +158,7 @@ namespace CRMRSG.Controllers
 
             base.Dispose(disposing);
         }
-    } // Cierre de la clase ClientesController
-} // Cierre del namespace CRMRSG.Controllers
+
         // POST: Clientes/AgregarContacto
         [HttpPost]
         public JsonResult AgregarContacto(int id_cliente, string nombre, string telefono, string correo, string puesto)

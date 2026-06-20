@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Dashboard - CRM";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -296,7 +296,7 @@
 
                         <tbody>
 
-                            @foreach (var item in ViewBag.Vendedores)
+                            @foreach (var item in (IEnumerable<CRMRSG.Controllers.VendedorRendimiento>)ViewBag.Vendedores)
                             {
                                 <tr>
                                     <td>@item.Nombre</td>
