@@ -1,23 +1,34 @@
 @{
     ViewBag.Title = "Dashboard - CRM";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    int rolId = Session["RolId"] != null ? (int)Session["RolId"] : 2;
+    bool isAdmin = rolId == 1;
+
+    var chartFechas = (string[])ViewBag.EventosFechas;
+    var chartCantidades = (int[])ViewBag.EventosCantidades;
 }
 
 <div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between">
     <h1>
         Dashboard CRM
-        <small>Panel de Control</small>
+        <small>@(isAdmin ? "Panel de Administrador" : "Panel de Empleado")</small>
     </h1>
     <div class="d-flex align-items-center">
+        <!-- Filtro global dinámico de tiempo -->
         <div class="me-3">
-            <a href="@Url.Action("ExportarClientesCSV", "Clientes")" class="btn btn-success d-flex align-items-center" style="background-color: #10c469; border-color: #10c469; color: white; font-weight: 500;">
-                <i class="fa fa-file-excel me-2"></i> Exportar Reporte (CSV)
-            </a>
+            <select id="filtro-global" class="form-select border-primary fw-bold" style="width: 220px;">
+                <option value="todos" @(ViewBag.FiltroActivo == "todos" ? "selected" : "")>⏰ Todos los tiempos</option>
+                <option value="dia" @(ViewBag.FiltroActivo == "dia" ? "selected" : "")>📅 Hoy</option>
+                <option value="semana" @(ViewBag.FiltroActivo == "semana" ? "selected" : "")>🗓️ Última Semana</option>
+                <option value="mes" @(ViewBag.FiltroActivo == "mes" ? "selected" : "")>📊 Último Mes</option>
+                <option value="anio" @(ViewBag.FiltroActivo == "anio" ? "selected" : "")>📈 Último Año</option>
+            </select>
         </div>
 
-        <div class="input-group me-3" style="width: 250px;">
-            <span class="input-group-text bg-white"><i class="fa fa-filter"></i></span>
-            <input type="text" class="form-control" readonly value="Filtro global activo (Todos)" title="Par&aacute;metro global aplicado a las tarjetas" style="background-color: #ededed; color: #000000; border-color: #040A2D;">
+        <div class="me-3">
+            <a href="@Url.Action("ExportarClientesCSV", "Clientes")" class="btn btn-success d-flex align-items-center" style="background-color: #10c469; border-color: #10c469; color: white; font-weight: 500;">
+                <i class="fa fa-file-excel me-2"></i> Exportar Clientes
+            </a>
         </div>
         <ol class="breadcrumb p-0 m-0">
             <li class="breadcrumb-item"><a href="~/Dashboard"><i class="fa fa-dashboard"></i> Inicio</a></li>
@@ -26,6 +37,7 @@
     </div>
 </div>
 
+<!-- Tarjetas de Métricas -->
 <div class="row first-section">
     <div class="col-xxl-3 col-xl-6 col-12">
         <div class="box pull-up bg-primary">
@@ -36,7 +48,7 @@
                     </div>
                     <div class="d-flex flex-column text-end">
                         <h2 class="fs-30 mb-1 mt-0">@ViewBag.TotalClientes</h2>
-                        <p class="m-0">Clientes Totales</p>
+                        <p class="m-0">Clientes @(isAdmin ? "Totales" : "Asignados")</p>
                     </div>
                 </div>
             </div>
@@ -52,7 +64,7 @@
                     </div>
                     <div class="d-flex flex-column text-end">
                         <h2 class="fs-30 mb-1 mt-0">@ViewBag.TotalOportunidades</h2>
-                        <p class="m-0">Oportunidades Activas</p>
+                        <p class="m-0">Oportunidades @(isAdmin ? "Activas" : "Mías")</p>
                     </div>
                 </div>
             </div>
@@ -84,7 +96,7 @@
                     </div>
                     <div class="d-flex flex-column text-end">
                         <h2 class="fs-30 mb-1 mt-0">@ViewBag.TotalUsuarios</h2>
-                        <p class="m-0">Usuarios Registrados</p>
+                        <p class="m-0">Usuarios en Sistema</p>
                     </div>
                 </div>
             </div>
@@ -92,16 +104,12 @@
     </div>
 </div>
 
+<!-- Gráficos de Eventos / Citas (HU-025) -->
 <div class="row">
     <div class="col-xxl-8 col-xl-8 col-lg-12 col-12">
         <div class="box">
-            <div class="box-header with-border d-flex justify-content-between align-items-center">
-                <h4 class="box-title" style="color: #040A2D;">Cantidad de Eventos</h4>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-outline-secondary active">D&iacute;a</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Semana</button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary">Mes</button>
-                </div>
+            <div class="box-header with-border">
+                <h4 class="box-title" style="color: #040A2D;">Cantidad de Citas Agendadas</h4>
             </div>
             <div class="box-body">
                 <div id="eventos-line-chart" class="chart-responsive"></div>
@@ -111,12 +119,8 @@
 
     <div class="col-xxl-4 col-xl-4 col-lg-12 col-12">
         <div class="box">
-            <div class="box-header with-border d-flex justify-content-between align-items-center">
-                <h4 class="box-title" style="color: #040A2D;">Estados de Eventos</h4>
-                <select class="form-select form-select-sm w-auto">
-                    <option value="mes">Por Mes</option>
-                    <option value="dia">Por D&iacute;a</option>
-                </select>
+            <div class="box-header with-border">
+                <h4 class="box-title" style="color: #040A2D;">Proporción por Estados de Citas</h4>
             </div>
             <div class="box-body">
                 <div id="estados-donut-chart" class="chart-responsive"></div>
@@ -126,266 +130,231 @@
 </div>
 
 <div class="row">
-    <div class="col-xxl-4 col-lg-4 col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <h5 class="text-muted fw-normal mt-0">Tasa de Conversi&oacute;n</h5>
-                        <h3 class="m-0">28%</h3>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-end">
-                            <div id="conversion-chart"></div>
-                        </div>
-                    </div>
+    <!-- Lista de Tareas Próximas -->
+    <div class="col-xxl-6 col-xl-6 col-lg-12 col-12">
+        <div class="box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h4 class="box-title">@(isAdmin ? "Todas las Tareas Pendientes" : "Mis Tareas Pendientes")</h4>
+                <a href="~/Tareas" class="btn btn-sm btn-primary-light">Ver todo</a>
+            </div>
+            <div class="box-body p-0">
+                <div class="media-list media-list-hover media-list-divided">
+                    @if (((List<CRMRSG.EntityFramework.tarea>)ViewBag.TareasProximas).Count == 0)
+                    {
+                        <div class="p-20 text-center text-muted">No hay tareas pendientes para este período.</div>
+                    }
+                    @foreach (var t in (List<CRMRSG.EntityFramework.tarea>)ViewBag.TareasProximas)
+                    {
+                        <a class="media media-single" href="~/Tareas">
+                            <div class="me-10 d-flex align-items-center">
+                                <i class="fa fa-circle text-@(t.prioridad == "Alta" ? "danger" : (t.prioridad == "Media" ? "warning" : "info")) fs-10"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">@t.titulo</h6>
+                                <small class="text-fade">Vence: @(t.fecha_limite.HasValue ? t.fecha_limite.Value.ToString("dd/MM/yyyy") : "Sin fecha")</small>
+                            </div>
+                            <span class="badge badge-@(t.prioridad == "Alta" ? "danger" : (t.prioridad == "Media" ? "warning" : "info"))-light">@t.prioridad</span>
+                        </a>
+                    }
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-xxl-4 col-lg-4 col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <h5 class="text-muted fw-normal mt-0">Nuevos Clientes</h5>
-                        <h3 class="m-0">24</h3>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-end">
-                            <div id="new-clients-chart"></div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Lista de Actividades Recientes (Bitácora) -->
+    <div class="col-xxl-6 col-xl-6 col-lg-12 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Últimas Acciones en el Sistema</h4>
             </div>
-        </div>
-    </div>
-
-    <div class="col-xxl-4 col-lg-4 col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <h5 class="text-muted fw-normal mt-0">Valor Promedio</h5>
-                        <h3 class="m-0">$13.3K</h3>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-end">
-                            <div id="avg-value-chart"></div>
+            <div class="box-body p-0">
+                <div class="media-list media-list-hover media-list-divided">
+                    @if (((List<CRMRSG.EntityFramework.bitacora>)ViewBag.ActividadesRecientes).Count == 0)
+                    {
+                        <div class="p-20 text-center text-muted">No se registran actividades recientes.</div>
+                    }
+                    @foreach (var act in (List<CRMRSG.EntityFramework.bitacora>)ViewBag.ActividadesRecientes)
+                    {
+                        <div class="media media-single">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0 fw-bold">@act.accion en @act.tabla_afectada</h6>
+                                <p class="text-muted fs-12 mb-0">Realizado por: @(act.usuario != null ? act.usuario.nombre + " " + act.usuario.apellido : "Sistema")</p>
+                            </div>
+                            <span class="badge badge-primary-light">
+                                @(act.fecha_hora.HasValue ? act.fecha_hora.Value.ToString("HH:mm") : "")
+                            </span>
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-xxl-6 col-xl-6 col-lg-12">
-        <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title">&Uacute;ltimas Actividades</h4>
-            </div>
-            <div class="box-body p-0">
-                <div class="media-list media-list-hover media-list-divided">
-                    <a class="media media-single" href="~/Clientes/Detalle/1">
-                        <div class="me-15">
-                            <img class="avatar avatar-md img-fluid" src="~/Content/images/avatar/avatar-1.png" alt="Cliente">
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Acme Corporation</h6>
-                            <p class="text-muted fs-12 mb-0">Contacto realizado</p>
-                        </div>
-                        <span class="badge badge-primary-light">Hace 2h</span>
-                    </a>
-
-                    <a class="media media-single" href="~/Clientes/Detalle/2">
-                        <div class="me-15">
-                            <img class="avatar avatar-md img-fluid" src="~/Content/images/avatar/avatar-2.png" alt="Cliente">
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Tech Solutions Inc</h6>
-                            <p class="text-muted fs-12 mb-0">Propuesta enviada</p>
-                        </div>
-                        <span class="badge badge-success-light">Hace 4h</span>
-                    </a>
-
-                    <a class="media media-single" href="~/Clientes/Detalle/3">
-                        <div class="me-15">
-                            <img class="avatar avatar-md img-fluid" src="~/Content/images/avatar/avatar-3.png" alt="Cliente">
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Global Enterprises</h6>
-                            <p class="text-muted fs-12 mb-0">Reuni&oacute;n agendada</p>
-                        </div>
-                        <span class="badge badge-info-light">Hace 1 d&iacute;a</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xxl-6 col-xl-6 col-lg-12">
-        <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title">Tareas Pr&oacute;ximas</h4>
-            </div>
-            <div class="box-body p-0">
-                <div class="media-list media-list-hover media-list-divided">
-                    <a class="media media-single" href="~/Tareas/Editar/1">
-                        <div class="me-10">
-                            <input type="checkbox" class="filled-in">
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Llamar a cliente de Acme Corp</h6>
-                            <p class="text-muted fs-12 mb-0">Hoy - 14:00</p>
-                        </div>
-                        <span class="badge badge-danger-light">Urgente</span>
-                    </a>
-
-                    <a class="media media-single" href="~/Tareas/Editar/2">
-                        <div class="me-10">
-                            <input type="checkbox" class="filled-in">
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Enviar propuesta a Tech Solutions</h6>
-                            <p class="text-muted fs-12 mb-0">Ma&ntilde;ana - 10:00</p>
-                        </div>
-                        <span class="badge badge-warning-light">Normal</span>
-                    </a>
-
-                    <a class="media media-single" href="~/Tareas/Editar/3">
-                        <div class="me-10">
-                            <input type="checkbox" class="filled-in">
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Seguimiento de Global Enterprises</h6>
-                            <p class="text-muted fs-12 mb-0">24 Mar 2024</p>
-                        </div>
-                        <span class="badge badge-info-light">Baja</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- HU-035 - Rendimiento de Vendedores -->
 <div class="row">
     <div class="col-12">
         <div class="box">
-
             <div class="box-header with-border">
-                <h4 class="box-title">Rendimiento de Vendedores</h4>
+                <h4 class="box-title" style="color: #040A2D;">Ganancias por Cliente (Oportunidades Ganadas)</h4>
             </div>
-
             <div class="box-body">
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover mb-0">
-
-                        <thead class="bg-light">
-                            <tr>
-                                <th>Vendedor</th>
-                                <th>Clientes</th>
-                                <th>Oportunidades</th>
-                                <th>Tareas</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            @foreach (var item in (IEnumerable<CRMRSG.Controllers.VendedorRendimiento>)ViewBag.Vendedores)
-                            {
-                                <tr>
-                                    <td>@item.Nombre</td>
-                                    <td>@item.Clientes</td>
-                                    <td>@item.Oportunidades</td>
-                                    <td>@item.Tareas</td>
-                                </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
+                <div id="ganancias-bar-chart" style="min-height: 350px;"></div>
             </div>
-
         </div>
     </div>
 </div>
-@section scripts {
-    <script src="~/Content/assets/vendor_components/c3/d3.min.js"></script>
-    <script src="~/Content/assets/vendor_components/c3/c3.min.js"></script>
-    <script src="~/Content/assets/vendor_components/echarts/dist/echarts-en.min.js"></script>
-    <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
 
-    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
-    <script src="~/signalr/hubs"></script>
+<!-- Rendimiento de Vendedores (HU-035) - Solo visible para Administradores -->
+@if (isAdmin)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h4 class="box-title">Rendimiento y Productividad de Vendedores</h4>
+                </div>
+                <div class="box-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Colaborador / Vendedor</th>
+                                    <th class="text-center">Clientes Asignados</th>
+                                    <th class="text-center">Oportunidades Registradas</th>
+                                    <th class="text-center">Tareas Asignadas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in (IEnumerable<CRMRSG.Controllers.VendedorRendimiento>)ViewBag.Vendedores)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@item.Nombre</td>
+                                        <td class="text-center">@item.Clientes</td>
+                                        <td class="text-center">@item.Oportunidades</td>
+                                        <td class="text-center">@item.Tareas</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
 
     <script>
         $(document).ready(function () {
-            // Oportunidades por Etapa - ApexCharts Bar
-            if ($('#oportunidades-chart').length > 0) {
-                var options1 = {
-                    series: [{ name: 'Valor ($)', data: [44000, 55000, 41000, 67000, 22000, 43000] }],
-                    chart: { type: 'bar', height: 300, toolbar: { show: false } },
-                    plotOptions: { bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded' } },
-                    dataLabels: { enabled: false },
-                    stroke: { show: true, width: 2, colors: ['transparent'] },
-                    xaxis: { categories: ['Prospección', 'Calificación', 'Propuesta', 'Negociación', 'Ganada', 'Perdida'] },
-                    fill: { opacity: 1 },
-                    colors: ['#0052cc']
+            // Manejador del filtro global de tiempo
+            $('#filtro-global').on('change', function() {
+                window.location.href = '@Url.Action("Index", "Dashboard")?filtro=' + $(this).val();
+            });
+
+            // Gráfico de Citas por Fecha - ApexCharts
+            if ($('#eventos-line-chart').length > 0) {
+                var fechas = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartFechas));
+                var cantidades = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartCantidades));
+
+                var optionsLine = {
+                    series: [{ name: 'Citas', data: cantidades }],
+                    chart: { type: 'area', height: 300, toolbar: { show: false } },
+                    stroke: { curve: 'smooth', width: 2 },
+                    xaxis: { categories: fechas },
+                    colors: ['#040A2D'],
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.3,
+                            opacityTo: 0.05,
+                            stops: [0, 90, 100]
+                        }
+                    },
+                    dataLabels: { enabled: false }
                 };
-                new ApexCharts(document.querySelector("#oportunidades-chart"), options1).render();
+                new ApexCharts(document.querySelector("#eventos-line-chart"), optionsLine).render();
             }
 
-            // Clientes por Región - ApexCharts Donut
-            if ($('#clientes-region-chart').length > 0) {
-                var options2 = {
-                    series: [45, 25, 30],
-                    chart: { type: 'donut', height: 350 },
-                    labels: ['Completados', 'Pendientes', 'Cancelados'],
-                    colors: ['#040A2D', '#ededed', '#970000'],
+            // Gráfico de Citas por Estado - Donut Chart
+            if ($('#estados-donut-chart').length > 0) {
+                var completados = @ViewBag.EventosCompletados;
+                var pendientes = @ViewBag.EventosPendientes;
+                var cancelados = @ViewBag.EventosCancelados;
+
+                var optionsDonut = {
+                    series: [completados, pendientes, cancelados],
+                    chart: { type: 'donut', height: 300 },
+                    labels: ['Completadas', 'Pendientes', 'Canceladas'],
+                    colors: ['#10c469', '#ff9920', '#ff5b5b'], // Verde, Naranja, Rojo
                     legend: { position: 'bottom' },
-                    stroke: { colors: ['#000000'], width: 1 }
+                    stroke: { colors: ['#ffffff'], width: 2 }
                 };
-                new ApexCharts(document.querySelector("#estados-donut-chart"), options2).render();
+                new ApexCharts(document.querySelector("#estados-donut-chart"), optionsDonut).render();
             }
 
-            // Small Metrics Charts - C3
-            if ($('#conversion-chart').length > 0) {
-                c3.generate({
-                    bindto: '#conversion-chart',
-                    data: { columns: [['data', 28, 35, 30, 45, 55, 38]], type: 'line' },
-                    axis: { x: { show: false }, y: { show: false } },
-                    size: { height: 50, width: 120 },
-                    legend: { show: false },
-                    color: { pattern: ['#10c469'] }
-                });
-            }
-            if ($('#new-clients-chart').length > 0) {
-                c3.generate({
-                    bindto: '#new-clients-chart',
-                    data: { columns: [['data', 12, 14, 18, 22, 19, 24]], type: 'bar' },
-                    axis: { x: { show: false }, y: { show: false } },
-                    size: { height: 50, width: 120 },
-                    legend: { show: false },
-                    color: { pattern: ['#040A2D'] }
-                });
-            }
-            if ($('#avg-value-chart').length > 0) {
-                c3.generate({
-                    bindto: '#avg-value-chart',
-                    data: { columns: [['data', 10, 11, 10.5, 12, 13.3]], type: 'area-spline' },
-                    axis: { x: { show: false }, y: { show: false } },
-                    size: { height: 50, width: 120 },
-                    legend: { show: false },
-                    color: { pattern: ['#970000'] }
-                });
+            // Gráfico de Ganancias por Cliente - Bar Chart
+            if ($('#ganancias-bar-chart').length > 0) {
+                var clientesGanancias = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.GananciasLabels));
+                var montosGanancias = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.GananciasData));
+
+                var optionsBar = {
+                    series: [{
+                        name: 'Ganancias',
+                        data: montosGanancias
+                    }],
+                    chart: {
+                        type: 'bar',
+                        height: 350,
+                        toolbar: { show: false }
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 6,
+                            horizontal: false,
+                            columnWidth: '45%',
+                            distributed: true
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) {
+                            return "$" + val.toLocaleString();
+                        },
+                        style: {
+                            colors: ['#FFFFFF']
+                        }
+                    },
+                    colors: ['#040A2D', '#970000', '#7a7a7a', '#c2c2c2', '#a8a8a8'],
+                    xaxis: {
+                        categories: clientesGanancias,
+                        labels: {
+                            style: {
+                                colors: '#000000',
+                                fontWeight: 500
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Monto ($)'
+                        },
+                        labels: {
+                            formatter: function (val) {
+                                return "$" + val.toLocaleString();
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: '#ededed'
+                    },
+                    legend: {
+                        show: false
+                    }
+                };
+                new ApexCharts(document.querySelector("#ganancias-bar-chart"), optionsBar).render();
             }
         });
     </script>

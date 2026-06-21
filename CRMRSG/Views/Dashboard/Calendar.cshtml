@@ -1,12 +1,102 @@
-﻿@{
+@{
     ViewBag.Title = "Calendario";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    /* Prevent squishing and force correct table cell structure */
+    #calendar th.fc-day-header, 
+    #calendar td.fc-day-number, 
+    #calendar td.fc-day {
+        display: table-cell !important;
+    }
+    #calendar .fc-row .fc-content-skeleton table,
+    #calendar .fc-row .fc-bg table {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    #calendar .fc-row .fc-content-skeleton td,
+    #calendar .fc-row .fc-bg td {
+        display: table-cell !important;
+    }
+
+    /* Premium layout design matching client reference */
+    #calendar {
+        font-family: 'Poppins', 'Inter', sans-serif !important;
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #f0f3f6;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    }
+    #calendar th.fc-day-header {
+        text-transform: uppercase !important;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        color: #333333 !important;
+        letter-spacing: 0.08em !important;
+        padding: 15px 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    #calendar td.fc-day-number {
+        text-align: center !important;
+        font-size: 1.6rem !important;
+        font-weight: 700 !important;
+        color: #111111 !important;
+        padding: 16px 5px !important;
+        vertical-align: middle !important;
+        border: none !important;
+        position: relative;
+        cursor: pointer;
+    }
+    #calendar td.fc-day {
+        border: none !important;
+    }
+    #calendar .fc-other-month {
+        opacity: 0.25 !important;
+    }
+    #calendar .fc-row {
+        border-bottom: 1px solid #ededed !important;
+        min-height: 110px !important;
+    }
+    #calendar .fc-row:last-child {
+        border-bottom: none !important;
+    }
+    #calendar td.fc-today {
+        background: transparent !important;
+    }
+    #calendar td.fc-today .fc-day-number {
+        color: #040A2D !important;
+        display: inline-block;
+    }
+    #calendar td.fc-today .fc-day-number::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 52px;
+        height: 52px;
+        border: 2.5px solid #040A2D;
+        border-radius: 12px;
+        box-sizing: border-box;
+    }
+    #calendar .fc-event {
+        border-radius: 6px !important;
+        border: none !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        padding: 6px 10px !important;
+        margin: 2px 5px !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    }
+</style>
+
 <div class="content-header">
     <div class="d-flex align-items-center">
         <div class="me-auto">
-            <h4 class="page-title">Calendario</h4>
+            <h4 class="page-title">Calendario de Eventos</h4>
             <div class="d-inline-block align-items-center">
                 <nav>
                     <ol class="breadcrumb">
@@ -21,145 +111,154 @@
 
 <section class="content">
     <div class="row">
-        <div class="col-12">
-            <div class="row">
-                <div class="col-xl-9">									
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="mb-30 mb-xl-0">
-                                <div id="calendar"></div>
-                            </div>
-                        </div>
+        <div class="col-xl-9 col-12">									
+            <div class="card">
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>							
+        <div class="col-xl-3 col-12">
+            <div class="d-grid gap-2">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-nuevo-evento">
+                    <i class="fa fa-plus me-2"></i> Crear Nuevo Evento
+                </button>
+            </div>
+            <div class="box mt-20">
+                <div class="box-header with-border">
+                    <h5 class="box-title">Leyenda de Estados</h5>
+                </div>
+                <div class="box-body">
+                    <div class="d-flex align-items-center mb-10">
+                        <span class="badge badge-warning me-10">&nbsp;&nbsp;</span>
+                        <span>Cita Pendiente / Programada</span>
                     </div>
-                </div>							
-                <div class="col-xl-3">
-                    <div class="d-grid">
-                        <button class="btn btn-danger" id="btn-new-event">Crear Nuevo Evento</button>
+                    <div class="d-flex align-items-center mb-10">
+                        <span class="badge badge-success me-10">&nbsp;&nbsp;</span>
+                        <span>Cita Realizada / Completada</span>
                     </div>
-                    <div id="external-events" class="mt-20">
-                        <br>
-                        <p class="text-muted">Arrastra y suelta un evento en el calendario</p>
-                        <div class="external-event bg-success" data-class="bg-success">
-                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Almuerzo de Negocios
-                        </div>
-                        <div class="external-event bg-primary" data-class="bg-primary">
-                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Reuni&oacute;n de Equipo
-                        </div>
-                        <div class="external-event bg-warning" data-class="bg-warning">
-                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Llamada de Seguimiento
-                        </div>
-                        <div class="external-event bg-info" data-class="bg-info">
-                            <i class="mdi mdi-arrow-right me-2 vertical-middle"></i>Presentaci&oacute;n de Propuesta
-                        </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge badge-danger me-10">&nbsp;&nbsp;</span>
+                        <span>Cita Cancelada</span>
                     </div>
                 </div>
-            </div>					
-        </div>				
+            </div>
+        </div>
     </div> 
 </section>
 
-@section scripts {
-    <script src="~/Content/assets/vendor_components/full-calendar/moment.js"></script>
-    <script src="~/Content/assets/vendor_components/full-calendar/fullcalendar.min.js"></script>
-    
-    <!-- Script para inicializar y quemar datos en el calendario -->
-    <script>
-        $(document.ready).ready(function() {
-            var date = new Date();
-            var d    = date.getDate(),
-                m    = date.getMonth(),
-                y    = date.getFullYear();
+<!-- Modal Nuevo Evento -->
+<div class="modal fade" id="modal-nuevo-evento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agendar Cita / Evento Comercial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-nuevo-evento">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Asunto / Descripción del Evento</label>
+                        <input type="text" id="evt-descripcion" class="form-control" placeholder="Ej: Reunión comercial con cliente" required />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" id="evt-fecha" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Hora</label>
+                            <input type="time" id="evt-hora" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Lugar / Medio</label>
+                        <input type="text" id="evt-lugar" class="form-control" placeholder="Ej: Oficina Principal, Microsoft Teams" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Estado Inicial</label>
+                        <select id="evt-estado" class="form-select">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Completada">Completada</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-danger" id="btn-guardar-evento">Agendar Evento</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+@section scripts {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/es.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Inicializar FullCalendar
             $('#calendar').fullCalendar({
                 header: {
                     left  : 'prev,next today',
                     center: 'title',
                     right : 'month,agendaWeek,agendaDay'
                 },
+                locale: 'es',
                 buttonText: {
                     today: 'Hoy',
                     month: 'Mes',
                     week : 'Semana',
-                    day  : 'D&iacute;a'
+                    day  : 'Día'
                 },
-                events: [
-                    {
-                        title          : 'Reuni&oacute;n Mensual',
-                        start          : new Date(y, m, 1),
-                        backgroundColor: '#0052cc', // primary
-                        borderColor    : '#0052cc'
-                    },
-                    {
-                        title          : 'Presentaci&oacute;n Tech Solutions',
-                        start          : new Date(y, m, d - 5),
-                        end            : new Date(y, m, d - 2),
-                        backgroundColor: '#ff9920', // warning
-                        borderColor    : '#ff9920'
-                    },
-                    {
-                        title          : 'Demo Acme Corp',
-                        start          : new Date(y, m, d, 10, 30),
-                        allDay         : false,
-                        backgroundColor: '#188ae2', // info
-                        borderColor    : '#188ae2'
-                    },
-                    {
-                        title          : 'Almuerzo Cliente VIP',
-                        start          : new Date(y, m, d, 12, 0),
-                        end            : new Date(y, m, d, 14, 0),
-                        allDay         : false,
-                        backgroundColor: '#10c469', // success
-                        borderColor    : '#10c469'
-                    },
-                    {
-                        title          : 'Cierre de Contrato',
-                        start          : new Date(y, m, d + 1, 19, 0),
-                        end            : new Date(y, m, d + 1, 22, 30),
-                        allDay         : false,
-                        backgroundColor: '#ff5b5b', // danger
-                        borderColor    : '#ff5b5b'
-                    },
-                    {
-                        title          : 'Renovaci&oacute;n de Licencias',
-                        start          : new Date(y, m, 28),
-                        end            : new Date(y, m, 29),
-                        url            : '#',
-                        backgroundColor: '#3b5998', 
-                        borderColor    : '#3b5998'
-                    }
-                ],
-                editable  : true,
-                droppable : true, 
-                drop      : function (date, allDay) { 
-                    var originalEventObject = $(this).data('eventObject');
-                    var copiedEventObject = $.extend({}, originalEventObject);
-                    copiedEventObject.start           = date;
-                    copiedEventObject.allDay          = allDay;
-                    copiedEventObject.backgroundColor = $(this).css('background-color');
-                    copiedEventObject.borderColor     = $(this).css('border-color');
-                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
-                }
+                events: '@Url.Action("GetEventosJson", "Dashboard")',
+                editable: false,
+                droppable: false
             });
 
-            /* initialize the external events */
-            function init_events(ele) {
-                ele.each(function () {
-                    var eventObject = {
-                        title: $.trim($(this).text()) 
-                    };
-                    $(this).data('eventObject', eventObject);
-                    $(this).draggable({
-                        zIndex        : 1070,
-                        revert        : true, 
-                        revertDuration: 0  
-                    });
+            // Guardar Evento mediante AJAX
+            $('#btn-guardar-evento').on('click', function() {
+                var desc = $('#evt-descripcion').val();
+                var fecha = $('#evt-fecha').val();
+                var hora = $('#evt-hora').val();
+                var lugar = $('#evt-lugar').val();
+                var estado = $('#evt-estado').val();
+
+                if (!desc || !fecha || !hora || !lugar) {
+                    alert('Por favor complete todos los campos obligatorios.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("CrearEventoRapido", "Dashboard")',
+                    type: 'POST',
+                    data: {
+                        descripcion: desc,
+                        fecha: fecha,
+                        hora: hora,
+                        lugar: lugar,
+                        estado: estado
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Refrescar el calendario
+                            $('#calendar').fullCalendar('refetchEvents');
+                            // Cerrar modal y limpiar
+                            $('#modal-nuevo-evento').modal('hide');
+                            $('#form-nuevo-evento')[0].reset();
+                        } else {
+                            alert('Error al agendar evento: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error de conexión al servidor.');
+                    }
                 });
-            }
-            init_events($('#external-events div.external-event'));
+            });
         });
     </script>
 }
-
-
-
-

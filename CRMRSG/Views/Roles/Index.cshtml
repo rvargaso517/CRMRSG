@@ -1,4 +1,4 @@
-﻿@model IEnumerable<CRMRSG.EntityFramework.roles>
+@model IEnumerable<CRMRSG.EntityFramework.role>
 
 @{
     ViewBag.Title = "Roles del Sistema";
@@ -50,7 +50,7 @@
                             {
                                 <tr>
                                     <td>#ROL-@item.id_rol</td>
-                                    <td class="fw-bold text-dark">@item.nombre_rol</td>
+                                    <td class="fw-bold text-dark">@item.nombre</td>
                                 </tr>
                             }
                         </tbody>

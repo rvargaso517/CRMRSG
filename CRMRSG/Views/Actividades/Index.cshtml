@@ -1,4 +1,6 @@
-﻿@{
+@model List<CRMRSG.EntityFramework.cita>
+
+@{
     ViewBag.Title = "Actividades";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -16,117 +18,275 @@
                 </nav>
             </div>
         </div>
+        <div class="d-flex align-items-center">
+            <!-- Filtro por rango temporal -->
+            <div class="me-3">
+                <select id="filtro-actividades" class="form-select border-primary fw-bold" style="width: 200px;">
+                    <option value="todos" @(ViewBag.FiltroActivo == "todos" ? "selected" : "")>⏰ Todo el historial</option>
+                    <option value="dia" @(ViewBag.FiltroActivo == "dia" ? "selected" : "")>📅 Hoy</option>
+                    <option value="semana" @(ViewBag.FiltroActivo == "semana" ? "selected" : "")>🗓️ Última Semana</option>
+                    <option value="mes" @(ViewBag.FiltroActivo == "mes" ? "selected" : "")>📊 Último Mes</option>
+                </select>
+            </div>
+            <a href="~/Actividades/Crear" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Registrar Actividad
+            </a>
+        </div>
     </div>
 </div>
 
 <div class="row">
     <div class="col-12">
         <div class="box">
-            <div class="box-header with-border d-flex justify-content-between align-items-center">
-                <h3 class="box-title">Historial de Actividades</h3>
-                <a href="~/Actividades/Crear" class="btn btn-primary">
-                    <i class="fa fa-plus"></i> Registrar Actividad
-                </a>
+            <div class="box-header with-border">
+                <h3 class="box-title">Historial de Actividades Comerciales</h3>
             </div>
 
             <div class="box-body">
+                @Html.AntiForgeryToken()
 
-                <!-- HU-026 Distribución de Estados -->
+                <!-- Distribución de Estados -->
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <div class="alert alert-primary">
-                            <strong>Pendientes:</strong> @ViewBag.Pendientes
+                        <div class="alert alert-primary d-flex justify-content-between align-items-center mb-10">
+                            <strong>🕒 Pendientes:</strong> 
+                            <span class="badge bg-primary text-white fs-14">@ViewBag.Pendientes</span>
                         </div>
                     </div>
-
                     <div class="col-md-4">
-                        <div class="alert alert-success">
-                            <strong>Confirmadas:</strong> @ViewBag.Confirmadas
+                        <div class="alert alert-success d-flex justify-content-between align-items-center mb-10">
+                            <strong>✅ Realizadas:</strong> 
+                            <span class="badge bg-success text-white fs-14">@ViewBag.Confirmadas</span>
                         </div>
                     </div>
-
                     <div class="col-md-4">
-                        <div class="alert alert-danger">
-                            <strong>Canceladas:</strong> @ViewBag.Canceladas
+                        <div class="alert alert-danger d-flex justify-content-between align-items-center mb-10">
+                            <strong>❌ Aplazadas:</strong> 
+                            <span class="badge bg-danger text-white fs-14">@ViewBag.Canceladas</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="timeline">
-
-                    <!-- timeline time label -->
-                    <span class="timeline-label">
-                        <span class="badge badge-primary-light badge-pill">15 Abril 2024</span>
-                    </span>
-
-                    <!-- timeline item -->
-                    <div class="timeline-item">
-                        <div class="timeline-point timeline-point-success">
-                            <i class="fa fa-phone"></i>
-                        </div>
-                        <div class="timeline-event">
-                            <div class="timeline-heading">
-                                <h4 class="timeline-title">
-                                    <a href="#">Llamada con cliente</a>
-                                </h4>
-                                <span class="timeline-time">
-                                    <i class="fa fa-clock-o"></i> 10:30 AM
-                                </span>
-                            </div>
-                            <div class="timeline-body">
-                                Conversaci&oacute;n telef&oacute;nica con Ana Mart&iacute;nez (Tech Solutions LLC) sobre los requerimientos t&eacute;cnicos de la implementaci&oacute;n del ERP.
-                            </div>
-                        </div>
+                @if (Model.Count == 0)
+                {
+                    <div class="p-40 text-center text-muted fs-16 border rounded">
+                        <i class="fa fa-history fa-2x mb-15"></i>
+                        <p class="mb-0">No se encontraron actividades registradas para el período seleccionado.</p>
                     </div>
-
-                    <!-- timeline item -->
-                    <div class="timeline-item">
-                        <div class="timeline-point timeline-point-info">
-                            <i class="fa fa-envelope"></i>
-                        </div>
-                        <div class="timeline-event">
-                            <div class="timeline-heading">
-                                <h4 class="timeline-title">
-                                    <a href="#">Correo enviado</a>
-                                </h4>
-                                <span class="timeline-time">
-                                    <i class="fa fa-clock-o"></i> 02:15 PM
+                }
+                else
+                {
+                    <div class="timeline">
+                        @{
+                            string lastDate = "";
+                        }
+                        @foreach (var item in Model)
+                        {
+                            string currentDate = item.fecha.ToString("dd MMMM yyyy");
+                            if (currentDate != lastDate)
+                            {
+                                lastDate = currentDate;
+                                <span class="timeline-label">
+                                    <span class="badge badge-primary-light badge-pill">@currentDate</span>
                                 </span>
+                            }
+
+                            string iconClass = "fa-calendar";
+                            string pointClass = "timeline-point-primary";
+                            if (item.lugar != null)
+                            {
+                                if (item.lugar.ToLower().Contains("llamada")) { iconClass = "fa-phone"; pointClass = "timeline-point-success"; }
+                                else if (item.lugar.ToLower().Contains("correo")) { iconClass = "fa-envelope"; pointClass = "timeline-point-info"; }
+                                else if (item.lugar.ToLower().Contains("presencial")) { iconClass = "fa-users"; pointClass = "timeline-point-warning"; }
+                                else if (item.lugar.ToLower().Contains("virtual")) { iconClass = "fa-desktop"; pointClass = "timeline-point-danger"; }
+                            }
+
+                            <div class="timeline-item">
+                                <div class="timeline-point @pointClass">
+                                    <i class="fa @iconClass"></i>
+                                </div>
+                                <div class="timeline-event">
+                                    <div class="timeline-heading d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <h4 class="timeline-title fw-bold">
+                                            @item.descripcion
+                                        </h4>
+                                        <span class="timeline-time font-monospace text-dark fw-bold">
+                                            <i class="fa fa-clock-o me-5"></i> @(item.hora.ToString(@"hh\:mm"))
+                                        </span>
+                                    </div>
+                                    <div class="timeline-body">
+                                        <p class="mb-5">
+                                            <strong>Cliente/Empresa:</strong> 
+                                            @(item.cliente != null ? item.cliente.empresa + " (" + item.cliente.nombre + ")" : "Particular / Ninguno")
+                                        </p>
+                                        <p class="mb-5">
+                                            <strong>Colaborador:</strong> 
+                                            @(item.usuario != null ? item.usuario.nombre + " " + item.usuario.apellido : "Sistema")
+                                        </p>
+                                        <p class="mb-10">
+                                            <strong>Estado:</strong> 
+                                            @if (item.estado == "Completada")
+                                            {
+                                                <span class="badge badge-success-light">Realizada</span>
+                                            }
+                                            else if (item.estado == "Aplazada")
+                                            {
+                                                <span class="badge badge-danger-light">Aplazada</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-warning-light">Pendiente</span>
+                                            }
+                                        </p>
+
+                                        @if (item.estado != "Completada")
+                                        {
+                                            <div class="text-end">
+                                                <button class="btn btn-sm btn-success-light btn-completar-actividad" data-id="@item.id_cita">
+                                                    <i class="fa fa-check me-2"></i> Completada
+                                                </button>
+                                                <button class="btn btn-sm btn-warning-light btn-posponer-actividad" data-id="@item.id_cita">
+                                                    <i class="fa fa-clock-o me-2"></i> Aplazar
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
                             </div>
-                            <div class="timeline-body">
-                                Se envi&oacute; la propuesta comercial actualizada a Acme Corporation.
-                            </div>
-                        </div>
+                        }
                     </div>
-
-                    <!-- timeline time label -->
-                    <span class="timeline-label">
-                        <span class="badge badge-info-light badge-pill">14 Abril 2024</span>
-                    </span>
-
-                    <!-- timeline item -->
-                    <div class="timeline-item">
-                        <div class="timeline-point timeline-point-warning">
-                            <i class="fa fa-users"></i>
-                        </div>
-                        <div class="timeline-event">
-                            <div class="timeline-heading">
-                                <h4 class="timeline-title">
-                                    <a href="#">Reunión presencial</a>
-                                </h4>
-                                <span class="timeline-time">
-                                    <i class="fa fa-clock-o"></i> 09:00 AM
-                                </span>
-                            </div>
-                            <div class="timeline-body">
-                                Presentaci&oacute;n del portafolio de servicios en las oficinas de Global Enterprises.
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
+                }
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal Posponer Actividad -->
+<div class="modal fade" id="modal-posponer-actividad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aplazar Actividad Comercial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Nueva Fecha</label>
+                    <input type="date" id="posponer-act-fecha" class="form-control" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Razón del Aplazamiento / Comentario</label>
+                    <textarea id="posponer-act-razon" rows="3" class="form-control" placeholder="Escriba la justificación o motivo del aplazamiento..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-warning" id="btn-confirmar-posponer-act">Confirmar Aplazamiento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function() {
+            // Manejador de cambio de filtro temporal
+            $('#filtro-actividades').on('change', function() {
+                window.location.href = '@Url.Action("Index", "Actividades")?filtro=' + $(this).val();
+            });
+
+            // Completar Actividad
+            $('.btn-completar-actividad').on('click', function() {
+                var actId = $(this).data('id');
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                var $btn = $(this);
+
+                if (confirm('¿Desea marcar esta actividad como realizada?')) {
+                    $.ajax({
+                        url: '@Url.Action("Completar", "Actividades")',
+                        type: 'POST',
+                        data: {
+                            id: actId,
+                            __RequestVerificationToken: token
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                // Encontrar el elemento timeline-event del botón
+                                var $timelineEvent = $btn.closest('.timeline-event');
+
+                                // Encontrar y actualizar el estado
+                                var $estadoSpan = $timelineEvent.find('.badge');
+                                $estadoSpan.removeClass('badge-warning-light').addClass('badge-success-light').text('Realizada');
+
+                                // Remover los botones de acción
+                                $btn.closest('.text-end').remove();
+
+                                alert(res.message);
+                            } else {
+                                alert(res.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Error al actualizar la actividad.');
+                        }
+                    });
+                }
+            });
+
+            // Posponer Actividad
+            var currentPosponerId = null;
+            $('.btn-posponer-actividad').on('click', function() {
+                currentPosponerId = $(this).data('id');
+                $('#modal-posponer-actividad').modal('show');
+            });
+
+            $('#btn-confirmar-posponer-act').on('click', function() {
+                var razon = $('#posponer-act-razon').val();
+                var nuevaFecha = $('#posponer-act-fecha').val();
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                if (!nuevaFecha || !razon) {
+                    alert('Debe especificar la nueva fecha y la razón.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("Posponer", "Actividades")',
+                    type: 'POST',
+                    data: {
+                        id: currentPosponerId,
+                        razon: razon,
+                        nuevaFecha: nuevaFecha,
+                        __RequestVerificationToken: token
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            // Encontrar el elemento timeline-event del botón posponer
+                            var $btn = $('[data-id="' + currentPosponerId + '"]').closest('.timeline-event');
+
+                            // Actualizar el estado a "Aplazada"
+                            var $estadoSpan = $btn.find('.badge');
+                            $estadoSpan.removeClass('badge-warning-light').addClass('badge-danger-light').text('Aplazada');
+
+                            // Remover los botones de acción
+                            $btn.find('.text-end').remove();
+
+                            $('#modal-posponer-actividad').modal('hide');
+
+                            // Limpiar el formulario del modal
+                            $('#posponer-act-fecha').val('');
+                            $('#posponer-act-razon').val('');
+
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al aplazar la actividad.');
+                    }
+                });
+            });
+        });
+    </script>
+}

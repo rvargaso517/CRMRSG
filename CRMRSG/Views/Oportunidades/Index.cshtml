@@ -1,4 +1,6 @@
-﻿@{
+@model IEnumerable<CRMRSG.EntityFramework.oportunidade>
+
+@{
     ViewBag.Title = "Oportunidades";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -27,6 +29,14 @@
                 <a href="~/Oportunidades/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nueva Oportunidad</a>
             </div>
             <div class="box-body">
+                @if (TempData["MensajeExito"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-20" role="alert">
+                        <i class="ti-check me-10"></i> @TempData["MensajeExito"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
@@ -37,74 +47,84 @@
                                 <th>Etapa</th>
                                 <th>Probabilidad</th>
                                 <th>Cierre Est.</th>
+                                <th>Responsable</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td><a href="#" class="fw-bold">Renovaci&oacute;n de Licencias</a></td>
-                                <td>Acme Corporation</td>
-                                <td>$15,000</td>
-                                <td><span class="badge badge-primary-light">Propuesta Enviada</span></td>
-                                <td>
-                                    <div class="progress progress-sm mb-0">
-                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <small>70%</small>
-                                </td>
-                                <td>15 May 2024</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="#" class="fw-bold">Implementaci&oacute;n ERP</a></td>
-                                <td>Tech Solutions LLC</td>
-                                <td>$120,000</td>
-                                <td><span class="badge badge-warning-light">Negociaci&oacute;n</span></td>
-                                <td>
-                                    <div class="progress progress-sm mb-0">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <small>50%</small>
-                                </td>
-                                <td>30 Jun 2024</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="#" class="fw-bold">Soporte T&eacute;cnico Anual</a></td>
-                                <td>Global Enterprises</td>
-                                <td>$8,500</td>
-                                <td><span class="badge badge-success-light">Ganada</span></td>
-                                <td>
-                                    <div class="progress progress-sm mb-0">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <small>100%</small>
-                                </td>
-                                <td>01 Abr 2024</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="#" class="fw-bold">Auditor&iacute;a de Seguridad</a></td>
-                                <td>Stark Industries</td>
-                                <td>$45,000</td>
-                                <td><span class="badge badge-danger-light">Perdida</span></td>
-                                <td>
-                                    <div class="progress progress-sm mb-0">
-                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <small>0%</small>
-                                </td>
-                                <td>10 Mar 2024</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-info-light"><i class="fa fa-pencil"></i></a>
-                                </td>
-                            </tr>
+                            @if (!Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-30">
+                                        <i class="ti-info-alt fs-30 d-block mb-10"></i>
+                                        No hay oportunidades registradas todavía.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in Model)
+                                {
+                                    string badgeClass = "badge-primary-light";
+                                    string progressBg = "bg-primary";
+                                    string etapaLow = (item.etapa ?? "").ToLower();
+
+                                    if (etapaLow.Contains("ganada"))
+                                    {
+                                        badgeClass = "badge-success-light";
+                                        progressBg = "bg-success";
+                                    }
+                                    else if (etapaLow.Contains("perdida"))
+                                    {
+                                        badgeClass = "badge-danger-light";
+                                        progressBg = "bg-danger";
+                                    }
+                                    else if (etapaLow.Contains("negociación") || etapaLow.Contains("negociacion"))
+                                    {
+                                        badgeClass = "badge-warning-light";
+                                        progressBg = "bg-warning";
+                                    }
+                                    else if (etapaLow.Contains("propuesta"))
+                                    {
+                                        badgeClass = "badge-info-light";
+                                        progressBg = "bg-info";
+                                    }
+
+                                    <tr id="row-op-@item.id_oportunidad">
+                                        <td>
+                                            <a href="~/Oportunidades/Detalle/@item.id_oportunidad" class="fw-bold text-primary">@item.nombre</a>
+                                        </td>
+                                        <td>
+                                            @(item.cliente != null ? item.cliente.nombre : "Sin cliente")
+                                        </td>
+                                        <td class="fw-bold">
+                                            @(item.valor_estimado.HasValue ? item.valor_estimado.Value.ToString("C") : "$0.00")
+                                        </td>
+                                        <td>
+                                            <span class="badge @badgeClass">@item.etapa</span>
+                                        </td>
+                                        <td style="min-width: 120px;">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="progress progress-sm mb-0 flex-grow-1 me-10">
+                                                    <div class="progress-bar @progressBg" role="progressbar" style="width: @(item.probabilidad ?? 50)%" aria-valuenow="@(item.probabilidad ?? 50)" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                                <small class="fw-bold">@(item.probabilidad ?? 50)%</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @(item.fecha_creacion.HasValue ? item.fecha_creacion.Value.ToString("dd MMM yyyy") : "N/A")
+                                        </td>
+                                        <td>
+                                            <span class="text-fade">@(item.usuario != null ? item.usuario.nombre : "CRM System")</span>
+                                        </td>
+                                        <td>
+                                            <a href="~/Oportunidades/Detalle/@item.id_oportunidad" class="btn btn-sm btn-primary-light" title="Detalle"><i class="fa fa-eye"></i></a>
+                                            <a href="~/Oportunidades/Editar/@item.id_oportunidad" class="btn btn-sm btn-info-light" title="Editar"><i class="fa fa-pencil"></i></a>
+                                            <button onclick="eliminarOportunidad(@item.id_oportunidad, '@item.nombre')" class="btn btn-sm btn-danger-light" title="Eliminar"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
                         </tbody>
                     </table>
                 </div>
@@ -113,6 +133,28 @@
     </div>
 </div>
 
-
-
-
+@section scripts {
+    <script>
+        function eliminarOportunidad(id, nombre) {
+            if (confirm("¿Está seguro de que desea eliminar la oportunidad '" + nombre + "'?")) {
+                $.ajax({
+                    url: '@Url.Action("Eliminar", "Oportunidades")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (res) {
+                        if (res.success) {
+                            $('#row-op-' + id).fadeOut(300, function () {
+                                $(this).remove();
+                            });
+                        } else {
+                            alert("Error al eliminar: " + res.message);
+                        }
+                    },
+                    error: function () {
+                        alert("Error de red al intentar eliminar.");
+                    }
+                });
+            }
+        }
+    </script>
+}

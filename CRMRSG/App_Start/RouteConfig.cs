@@ -14,9 +14,15 @@ namespace CRMRSG
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapRoute(
+                name: "Root",
+                url: "",
+                defaults: new { controller = "Autenticacion", action = "Login" }
+            );
+
+            routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Autenticacion", action = "Login", id = UrlParameter.Optional }
+                defaults: new { action = "Index", id = UrlParameter.Optional }
             );
         }
     }

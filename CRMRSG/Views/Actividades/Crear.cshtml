@@ -1,6 +1,7 @@
 @{
     ViewBag.Title = "Registrar Actividad";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var clientes = (List<CRMRSG.EntityFramework.cliente>)ViewBag.Clientes;
 }
 
 <div class="content-header">
@@ -21,71 +22,69 @@
 </div>
 
 <div class="row">
-    <div class="col-12">
+    <div class="col-lg-8 col-12">
         <div class="box">
             <div class="box-header with-border">
                 <h4 class="box-title">Detalles de la Actividad</h4>
             </div>
-            <form class="form">
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show m-20" role="alert">
+                    <i class="ti-alert me-10"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @using (Html.BeginForm("Crear", "Actividades", FormMethod.Post, new { @class = "form" }))
+            {
+                @Html.AntiForgeryToken()
+
                 <div class="box-body">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label">Tipo de Actividad</label>
-                        <select class="form-select">
-                            <option>Llamada Telef&oacute;nica</option>
-                            <option>Reuni&oacute;n Presencial</option>
-                            <option>Reuni&oacute;n Virtual</option>
-                            <option>Correo Electr&oacute;nico</option>
-                            <option>Demostraci&oacute;n T&eacute;cnica</option>
+                        <select name="tipo_actividad" class="form-select" required>
+                            <option value="Llamada Telefónica">📞 Llamada Telefónica</option>
+                            <option value="Reunión Presencial">👥 Reunión Presencial</option>
+                            <option value="Reunión Virtual">💻 Reunión Virtual</option>
+                            <option value="Correo Electrónico">✉️ Correo Electrónico</option>
+                            <option value="Demostración Técnica">🛠️ Demostración Técnica</option>
                         </select>
                     </div>
+
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Fecha</label>
-                                <input type="date" class="form-control" value="2024-04-15">
-                            </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" name="fecha" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">Hora</label>
-                                <input type="time" class="form-control" value="10:00">
-                            </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Hora</label>
+                            <input type="time" name="hora" class="form-control" value="09:00" required />
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Relacionado con</label>
-                        <select class="form-select">
-                            <option>Ninguno</option>
-                            <optgroup label="Clientes">
-                                <option>Acme Corporation</option>
-                                <option>Tech Solutions</option>
-                            </optgroup>
-                            <optgroup label="Oportunidades">
-                                <option>Venta Licencias Q3</option>
-                                <option>Implementaci&oacute;n ERP</option>
-                            </optgroup>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Relacionado con Cliente / Empresa</label>
+                        <select name="id_cliente" class="form-select">
+                            <option value="">-- Ninguno / Particular --</option>
+                            @foreach (var c in clientes)
+                            {
+                                <option value="@c.id_cliente">@c.empresa (@c.nombre)</option>
+                            }
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Descripci&oacute;n</label>
-                        <textarea rows="4" class="form-control" placeholder="Resumen de lo que ocurri&oacute; en la actividad..."></textarea>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Descripción o Minuta de Actividad</label>
+                        <textarea name="descripcion" rows="5" class="form-control" placeholder="Describa brevemente lo acordado en la llamada, reunión o correo..." required></textarea>
                     </div>
                 </div>
+
                 <div class="box-footer text-end">
-                    <a href="~/Actividades" class="btn btn-warning me-1">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Registrar</button>
+                    <a href="~/Actividades" class="btn btn-secondary me-1">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Registrar Actividad</button>
                 </div>
-            </form>
+            }
         </div>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
-

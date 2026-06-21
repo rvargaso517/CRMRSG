@@ -1,8 +1,13 @@
-﻿@model List<CRMRSG.EntityFramework.bitacora>
+@model List<CRMRSG.EntityFramework.bitacora>
 
 @{
-    ViewBag.Title = "Historial de Acciones";
+    ViewBag.Title = "Bitácora del Sistema";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var usuarios = (List<CRMRSG.EntityFramework.usuario>)ViewBag.Usuarios;
+    var selectedId = (int?)ViewBag.SelectedUsuarioId;
+
+    var chartLabels = (string[])ViewBag.ChartLabels;
+    var chartData = (int[])ViewBag.ChartData;
 }
 
 <div class="content-header">
@@ -12,14 +17,8 @@
             <div class="d-inline-block align-items-center">
                 <nav>
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item">
-                            <a href="~/Dashboard">
-                                <i class="mdi mdi-home-outline"></i>
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Historial
-                        </li>
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Auditoría de Bitácora</li>
                     </ol>
                 </nav>
             </div>
@@ -28,76 +27,149 @@
 </div>
 
 <div class="row">
+    <!-- Gráfico de Actividad por Usuario -->
+    <div class="col-xl-4 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Actividad por Usuario (Top 5)</h4>
+            </div>
+            <div class="box-body">
+                <div id="bitacora-user-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtro de la Bitácora -->
+    <div class="col-xl-8 col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h4 class="box-title">Filtros de Búsqueda</h4>
+            </div>
+            <div class="box-body">
+                @using (Html.BeginForm("Index", "Bitacora", FormMethod.Get, new { @class = "row align-items-end" }))
+                {
+                    <div class="col-md-8 col-12 form-group mb-0">
+                        <label class="form-label">Filtrar por Usuario / Empleado</label>
+                        <select name="usuarioId" class="form-select">
+                            <option value="">-- Todos los Usuarios --</option>
+                            @foreach (var user in usuarios)
+                            {
+                                <option value="@user.id_usuario" @(selectedId == user.id_usuario ? "selected" : "")>
+                                    @user.nombre @user.apellido (@user.correo)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 col-12 text-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa fa-filter me-2"></i> Filtrar
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-12">
         <div class="box">
-
-            ```
-            <div class="box-header with-border d-flex justify-content-between align-items-center">
+            <div class="box-header with-border">
                 <h3 class="box-title">Registro de Actividades del Sistema</h3>
             </div>
-
-            <div class="box-body">
+            <div class="box-body p-0">
                 <div class="table-responsive">
-
                     <table class="table table-hover mb-0">
-
                         <thead class="bg-light">
                             <tr>
-                                <th>Fecha</th>
-                                <th>Acción</th>
-                                <th>Tabla</th>
-                                <th>Registro</th>
-                                <th>IP</th>
+                                <th>Fecha y Hora</th>
                                 <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>Módulo/Tabla</th>
+                                <th>ID Registro</th>
+                                <th>Valor Anterior</th>
+                                <th>Valor Nuevo</th>
+                                <th>Dirección IP</th>
                             </tr>
                         </thead>
-
                         <tbody>
-
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted p-20">
+                                        No se encontraron registros en la bitácora.
+                                    </td>
+                                </tr>
+                            }
                             @foreach (var item in Model)
                             {
                                 <tr>
-
-                                    <td>
+                                    <td class="text-nowrap">
                                         @(item.fecha_hora.HasValue
-                                        ? item.fecha_hora.Value.ToString("dd/MM/yyyy HH:mm")
-                                        : "")
+                                            ? item.fecha_hora.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                            : "N/A")
                                     </td>
-
-                                    <td>
-                                        @item.accion
-                                    </td>
-
-                                    <td>
-                                        @item.tabla_afectada
-                                    </td>
-
-                                    <td>
-                                        @item.id_registro_afectado
-                                    </td>
-
-                                    <td>
-                                        @item.direccion_ip
-                                    </td>
-
-                                    <td>
+                                    <td class="fw-bold">
                                         @(item.usuario != null
-                                        ? item.usuario.nombre
-                                        : "N/A")
+                                            ? item.usuario.nombre + " " + item.usuario.apellido
+                                            : "Sistema/Anónimo")
                                     </td>
-
+                                    <td>
+                                        @if (item.accion == "Creación")
+                                        {
+                                            <span class="badge badge-success-light">Creación</span>
+                                        }
+                                        else if (item.accion == "Modificación")
+                                        {
+                                            <span class="badge badge-warning-light">Modificación</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-danger-light">Eliminación</span>
+                                        }
+                                    </td>
+                                    <td class="text-capitalize">@item.tabla_afectada</td>
+                                    <td>#@item.id_registro_afectado</td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@item.valor_anterior">
+                                        @item.valor_anterior
+                                    </td>
+                                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@item.valor_nuevo">
+                                        @item.valor_nuevo
+                                    </td>
+                                    <td>@item.direccion_ip</td>
                                 </tr>
                             }
-
                         </tbody>
-
                     </table>
-
                 </div>
             </div>
-
         </div>
     </div>
-    ```
-
 </div>
+
+@section scripts {
+    <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
+    <script>
+        $(document).ready(function() {
+            if ($('#bitacora-user-chart').length > 0) {
+                var labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartLabels));
+                var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartData));
+
+                if (labels.length === 0) {
+                    labels = ['Sin datos'];
+                    data = [0];
+                }
+
+                var options = {
+                    series: data,
+                    chart: { type: 'pie', height: 280 },
+                    labels: labels,
+                    colors: ['#040A2D', '#970000', '#10c469', '#ff9920', '#188ae2'],
+                    stroke: { colors: ['#000000'], width: 1 },
+                    legend: { position: 'bottom' }
+                };
+                new ApexCharts(document.querySelector("#bitacora-user-chart"), options).render();
+            }
+        });
+    </script>
+}

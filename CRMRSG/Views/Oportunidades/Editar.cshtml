@@ -1,5 +1,7 @@
+@model CRMRSG.EntityFramework.oportunidade
+
 @{
-    ViewBag.Title = "Nueva Oportunidad";
+    ViewBag.Title = "Editar Oportunidad";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var clientes = ViewBag.Clientes as IEnumerable<CRMRSG.EntityFramework.cliente> ?? new List<CRMRSG.EntityFramework.cliente>();
 }
@@ -7,13 +9,13 @@
 <div class="content-header">
     <div class="d-flex align-items-center">
         <div class="me-auto">
-            <h4 class="page-title">Nueva Oportunidad</h4>
+            <h4 class="page-title">Editar Oportunidad</h4>
             <div class="d-inline-block align-items-center">
                 <nav>
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
                         <li class="breadcrumb-item"><a href="~/Oportunidades">Oportunidades</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Crear</li>
+                        <li class="breadcrumb-item active" aria-current="page">Editar</li>
                     </ol>
                 </nav>
             </div>
@@ -25,18 +27,19 @@
     <div class="col-12">
         <div class="box">
             <div class="box-header with-border">
-                <h4 class="box-title">Detalles de la Oportunidad</h4>
+                <h4 class="box-title">Detalles de la Oportunidad: @Model.nombre</h4>
             </div>
-            @using (Html.BeginForm("Crear", "Oportunidades", FormMethod.Post, new { @class = "form" }))
+            @using (Html.BeginForm("Editar", "Oportunidades", FormMethod.Post, new { @class = "form" }))
             {
                 @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.id_oportunidad)
 
                 <div class="box-body">
                     @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
                     <div class="form-group mb-3">
                         <label class="form-label">Nombre de la Oportunidad</label>
-                        <input type="text" name="nombre" class="form-control" placeholder="Ej: Venta de Licencias Q3" required />
+                        <input type="text" name="nombre" class="form-control" value="@Model.nombre" required />
                     </div>
 
                     <div class="row">
@@ -46,13 +49,13 @@
                                 <option value="">Seleccione un cliente...</option>
                                 @foreach (var client in clientes)
                                 {
-                                    <option value="@client.id_cliente">@client.nombre (@client.correo)</option>
+                                    <option value="@client.id_cliente" @(client.id_cliente == Model.id_cliente ? "selected" : "")>@client.nombre (@client.correo)</option>
                                 }
                             </select>
                         </div>
                         <div class="col-md-6 form-group mb-3">
                             <label class="form-label">Valor Estimado ($)</label>
-                            <input type="number" step="0.01" name="valor_estimado" class="form-control" placeholder="0.00" required />
+                            <input type="number" step="0.01" name="valor_estimado" class="form-control" value="@(Model.valor_estimado.HasValue ? Model.valor_estimado.Value.ToString("F2") : "")" required />
                         </div>
                     </div>
 
@@ -60,29 +63,29 @@
                         <div class="col-md-6 form-group mb-3">
                             <label class="form-label">Etapa de Venta</label>
                             <select name="etapa" class="form-select" required>
-                                <option value="Prospección">Prospección</option>
-                                <option value="Calificación">Calificación</option>
-                                <option value="Propuesta">Propuesta</option>
-                                <option value="Negociación">Negociación</option>
-                                <option value="Cerrada Ganada">Cerrada Ganada</option>
-                                <option value="Cerrada Perdida">Cerrada Perdida</option>
+                                <option value="Prospección" @(Model.etapa == "Prospección" ? "selected" : "")>Prospección</option>
+                                <option value="Calificación" @(Model.etapa == "Calificación" ? "selected" : "")>Calificación</option>
+                                <option value="Propuesta" @(Model.etapa == "Propuesta" ? "selected" : "")>Propuesta</option>
+                                <option value="Negociación" @(Model.etapa == "Negociación" ? "selected" : "")>Negociación</option>
+                                <option value="Cerrada Ganada" @(Model.etapa == "Cerrada Ganada" ? "selected" : "")>Cerrada Ganada</option>
+                                <option value="Cerrada Perdida" @(Model.etapa == "Cerrada Perdida" ? "selected" : "")>Cerrada Perdida</option>
                             </select>
                         </div>
                         <div class="col-md-6 form-group mb-3">
                             <label class="form-label">Fecha de Cierre Estimada</label>
-                            <input type="date" name="fechaClose" class="form-control" required />
+                            <input type="date" name="fechaClose" class="form-control" value="@(Model.fecha_creacion.HasValue ? Model.fecha_creacion.Value.ToString("yyyy-MM-dd") : "")" required />
                         </div>
                     </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label">Descripción</label>
-                        <textarea rows="4" name="descripcion" class="form-control" placeholder="Detalles adicionales sobre la oportunidad..."></textarea>
+                        <textarea rows="4" name="descripcion" class="form-control">@Model.descripcion</textarea>
                     </div>
                 </div>
 
                 <div class="box-footer text-end">
                     <a href="~/Oportunidades" class="btn btn-warning me-1">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Guardar Oportunidad</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                 </div>
             }
         </div>

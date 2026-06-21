@@ -1,14 +1,25 @@
 @model List<CRMRSG.EntityFramework.tarea>
 
 @{
-    ViewBag.Title = "Mis Tareas";
+    ViewBag.Title = "Tareas";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var usuarios = (List<CRMRSG.EntityFramework.usuario>)ViewBag.Usuarios;
+    var selectedId = (int?)ViewBag.SelectedUsuarioId;
+
+    var userLabels = (string[])ViewBag.UserLabels;
+    var userValues = (int[])ViewBag.UserValues;
+
+    var categoryLabels = (string[])ViewBag.CategoryLabels;
+    var categoryValues = (int[])ViewBag.CategoryValues;
+
+    var priorityLabels = (string[])ViewBag.PriorityLabels;
+    var priorityValues = (int[])ViewBag.PriorityValues;
 }
 
 <div class="content-header">
     <div class="d-flex align-items-center">
         <div class="me-auto">
-            <h4 class="page-title">Tareas</h4>
+            <h4 class="page-title">Gestión de Tareas</h4>
             <div class="d-inline-block align-items-center">
                 <nav>
                     <ol class="breadcrumb">
@@ -18,7 +29,7 @@
                             </a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">
-                            Mis Tareas
+                            Tareas
                         </li>
                     </ol>
                 </nav>
@@ -27,23 +38,54 @@
     </div>
 </div>
 
+<!-- Filtros y Selección de Usuario -->
+<div class="row">
+    <div class="col-12 mb-20">
+        <div class="box">
+            <div class="box-body py-15">
+                @using (Html.BeginForm("Index", "Tareas", FormMethod.Get, new { @class = "row align-items-end" }))
+                {
+                    <div class="col-md-9 col-12 form-group mb-0">
+                        <label class="form-label">Filtrar Tareas por Propietario / Asignado</label>
+                        <select name="usuarioId" class="form-select">
+                            <option value="">-- Todos los Usuarios / Colaboradores --</option>
+                            @foreach (var user in usuarios)
+                            {
+                                <option value="@user.id_usuario" @(selectedId == user.id_usuario ? "selected" : "")>
+                                    @user.nombre @user.apellido (@user.correo)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-12 text-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa fa-filter me-2"></i> Aplicar Filtro
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos de Estadísticas -->
 <div class="row">
     <!-- Tareas por Usuario -->
     <div class="col-xl-4 col-12">
         <div class="box">
             <div class="box-header with-border">
-                <h4 class="box-title" style="color: #040A2D;">Filtro por Usuario</h4>
+                <h4 class="box-title" style="color: #040A2D;">Carga por Usuario</h4>
             </div>
             <div class="box-body">
                 <div id="user-task-chart"></div>
             </div>
         </div>
     </div>
-    <!-- Categor&iacute;a de Tareas -->
+    <!-- Categoría de Tareas -->
     <div class="col-xl-4 col-12">
         <div class="box">
             <div class="box-header with-border">
-                <h4 class="box-title" style="color: #040A2D;">Tareas por Categor&iacute;a</h4>
+                <h4 class="box-title" style="color: #040A2D;">Tareas por Estado</h4>
             </div>
             <div class="box-body">
                 <div id="category-task-chart"></div>
@@ -54,7 +96,7 @@
     <div class="col-xl-4 col-12">
         <div class="box">
             <div class="box-header with-border">
-                <h4 class="box-title" style="color: #040A2D;">Tareas con Prioridad</h4>
+                <h4 class="box-title" style="color: #040A2D;">Distribución de Prioridades</h4>
             </div>
             <div class="box-body">
                 <div id="priority-task-chart"></div>
@@ -63,12 +105,12 @@
     </div>
 </div>
 
+<!-- Listado de Tareas -->
 <div class="row">
     <div class="col-12">
         <div class="box">
             <div class="box-header with-border d-flex justify-content-between align-items-center">
-                <h3 class="box-title">Lista de Tareas</h3>
-
+                <h3 class="box-title">Listado General de Tareas</h3>
                 <a href="~/Tareas/Crear" class="btn btn-primary">
                     <i class="fa fa-plus"></i> Nueva Tarea
                 </a>
@@ -76,146 +118,259 @@
 
             <div class="box-body p-0">
                 <div class="table-responsive">
-
+                    @Html.AntiForgeryToken()
                     <table class="table table-hover mb-0">
-
                         <thead class="bg-light">
                             <tr>
-                                <th class="w-25"></th>
-                                <th>Descripci&oacute;n de la Tarea</th>
+                                <th>Responsable</th>
+                                <th>Descripción de la Tarea</th>
                                 <th>Relacionado con</th>
                                 <th>Vencimiento</th>
                                 <th>Prioridad</th>
                                 <th>Estado</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
-
                         <tbody>
-
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted p-20">
+                                        No se encontraron tareas registradas.
+                                    </td>
+                                </tr>
+                            }
                             @foreach (var item in Model)
                             {
                                 <tr>
-
-                                    <td>
-                                        <div class="checkbox">
-                                            <input type="checkbox"
-                                                   id="task_@item.id_tarea">
-                                            <label for="task_@item.id_tarea"></label>
-                                        </div>
+                                    <td class="fw-bold">
+                                        @(item.usuario != null ? item.usuario.nombre + " " + item.usuario.apellido : "Sin asignar")
                                     </td>
-
                                     <td>
-                                        <a href="#"
-                                           class="text-dark fw-500 hover-primary">
+                                        <span class="text-dark fw-500">
                                             @item.titulo
-                                        </a>
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(item.descripcion))
+                                        {
+                                            <br /><small class="text-fade">@item.descripcion</small>
+                                        }
                                     </td>
-
                                     <td>
                                         @(item.cliente != null
-                                        ? item.cliente.nombre
-                                        : "Sin cliente")
+                                            ? item.cliente.empresa
+                                            : "Sin cliente")
                                     </td>
-
                                     <td>
                                         @(item.fecha_limite.HasValue
-                                        ? item.fecha_limite.Value.ToString("dd/MM/yyyy")
-                                        : "Sin fecha")
+                                            ? item.fecha_limite.Value.ToString("dd/MM/yyyy")
+                                            : "Sin fecha")
                                     </td>
-
                                     <td>
-
                                         @if (item.prioridad == "Alta")
                                         {
-                                            <span class="badge badge-danger">
-                                                Alta
-                                            </span>
+                                            <span class="badge badge-danger">Alta</span>
                                         }
                                         else if (item.prioridad == "Media")
                                         {
-                                            <span class="badge badge-warning">
-                                                Media
-                                            </span>
+                                            <span class="badge badge-warning text-dark">Media</span>
                                         }
                                         else
                                         {
-                                            <span class="badge badge-info">
-                                                Baja
-                                            </span>
+                                            <span class="badge badge-info">Baja</span>
                                         }
-
                                     </td>
-
                                     <td>
-
                                         @if (item.estado == "Completada")
                                         {
-                                            <span class="badge badge-success-light">
-                                                @item.estado
-                                            </span>
+                                            <span class="badge badge-success-light">@item.estado</span>
+                                        }
+                                        else if (item.estado == "Aplazada")
+                                        {
+                                            <span class="badge badge-danger-light">@item.estado</span>
                                         }
                                         else
                                         {
-                                            <span class="badge badge-warning-light">
-                                                @item.estado
-                                            </span>
+                                            <span class="badge badge-warning-light">@item.estado</span>
                                         }
-
                                     </td>
-
+                                    <td class="text-center">
+                                        @if (item.estado != "Completada")
+                                        {
+                                            <button class="btn btn-sm btn-success-light btn-completar-tarea" data-id="@item.id_tarea" title="Marcar como completada">
+                                                <i class="fa fa-check"></i> Completada
+                                            </button>
+                                            <button class="btn btn-sm btn-warning-light btn-posponer-tarea" data-id="@item.id_tarea" title="Aplazar / Posponer">
+                                                <i class="fa fa-clock-o"></i> Aplazar
+                                            </button>
+                                        }
+                                    </td>
                                 </tr>
                             }
-
                         </tbody>
-
                     </table>
-
                 </div>
             </div>
         </div>
     </div>
+</div>
 
+<!-- Modal Posponer Tarea -->
+<div class="modal fade" id="modal-posponer-tarea" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aplazar Tarea Comercial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Nueva Fecha Límite</label>
+                    <input type="date" id="posponer-fecha" class="form-control" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Razón del Aplazamiento / Justificación</label>
+                    <textarea id="posponer-razon" rows="3" class="form-control" placeholder="Escriba aquí la justificación de por qué se posterga la actividad comercial..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-warning" id="btn-confirmar-posponer">Confirmar Aplazamiento</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section scripts {
     <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
     <script>
         $(document).ready(function() {
+            // Completar Tarea AJAX
+            $('.btn-completar-tarea').on('click', function() {
+                var taskId = $(this).data('id');
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                
+                if (confirm('¿Desea marcar esta tarea como completada?')) {
+                    $.ajax({
+                        url: '@Url.Action("Completar", "Tareas")',
+                        type: 'POST',
+                        data: {
+                            id: taskId,
+                            __RequestVerificationToken: token
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                alert(res.message);
+                                location.reload();
+                            } else {
+                                alert(res.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Error de red al completar la tarea.');
+                        }
+                    });
+                }
+            });
+
+            // Posponer Tarea AJAX
+            var currentPosponerId = null;
+            $('.btn-posponer-tarea').on('click', function() {
+                currentPosponerId = $(this).data('id');
+                $('#modal-posponer-tarea').modal('show');
+            });
+
+            $('#btn-confirmar-posponer').on('click', function() {
+                var razon = $('#posponer-razon').val();
+                var nuevaFecha = $('#posponer-fecha').val();
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                if (!nuevaFecha || !razon) {
+                    alert('Debe rellenar la nueva fecha y justificar el aplazamiento.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("Posponer", "Tareas")',
+                    type: 'POST',
+                    data: {
+                        id: currentPosponerId,
+                        razon: razon,
+                        nuevaFecha: nuevaFecha,
+                        __RequestVerificationToken: token
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            $('#modal-posponer-tarea').modal('hide');
+                            alert(res.message);
+                            location.reload();
+                        } else {
+                            alert(res.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error al postergar la tarea.');
+                    }
+                });
+            });
+
             // Tareas por Usuario (Pie Chart)
             if($('#user-task-chart').length > 0) {
+                var userLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(userLabels));
+                var userValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(userValues));
+
+                if (userLabels.length === 0) {
+                    userLabels = ['Sin datos'];
+                    userValues = [0];
+                }
+
                 var optionsUser = {
-                    series: [12, 8, 5],
-                    chart: { type: 'pie', height: 300 },
-                    labels: ['Juan Garc&iacute;a', 'Ana Mart&iacute;nez', 'Carlos L&oacute;pez'],
-                    colors: ['#040A2D', '#970000', '#ededed'], // Azul, Rojo, Gris
-                    stroke: { colors: ['#000000'], width: 1 },
+                    series: userValues,
+                    chart: { type: 'pie', height: 280 },
+                    labels: userLabels,
+                    colors: ['#040A2D', '#970000', '#10c469', '#ff9920', '#188ae2'],
+                    stroke: { colors: ['#ffffff'], width: 1 },
                     legend: { position: 'bottom' }
                 };
                 new ApexCharts(document.querySelector("#user-task-chart"), optionsUser).render();
             }
 
-            // Tareas por Categor&iacute;a (Donut Chart)
+            // Tareas por Categoría/Estado (Donut Chart)
             if($('#category-task-chart').length > 0) {
+                var catLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(categoryLabels));
+                var catValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(categoryValues));
+
+                if (catLabels.length === 0) {
+                    catLabels = ['Sin datos'];
+                    catValues = [0];
+                }
+
                 var optionsCategory = {
-                    series: [15, 6, 4],
-                    chart: { type: 'donut', height: 300 },
-                    labels: ['Correos', 'Cotizaciones', 'Reuniones'],
-                    colors: ['#040A2D', '#970000', '#ededed'], // Azul, Rojo, Gris
-                    stroke: { colors: ['#000000'], width: 1 },
+                    series: catValues,
+                    chart: { type: 'donut', height: 280 },
+                    labels: catLabels,
+                    colors: ['#ff9920', '#188ae2', '#10c469'],
+                    stroke: { colors: ['#ffffff'], width: 1 },
                     legend: { position: 'bottom' }
                 };
                 new ApexCharts(document.querySelector("#category-task-chart"), optionsCategory).render();
             }
 
-            // Tareas por Prioridad (Bar Chart Moderno)
+            // Tareas por Prioridad (Bar Chart)
             if($('#priority-task-chart').length > 0) {
+                var prioLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(priorityLabels));
+                var prioValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(priorityValues));
+
+                if (prioLabels.length === 0) {
+                    prioLabels = ['Alta', 'Media', 'Baja'];
+                    prioValues = [0, 0, 0];
+                }
+
                 var optionsPriority = {
-                    series: [{ name: 'Tareas', data: [80, 55, 35] }],
-                    chart: { type: 'bar', height: 300, toolbar: { show: false } },
-                    plotOptions: { bar: { columnWidth: '35%', borderRadius: 4, distributed: true } },
-                    xaxis: { categories: ['Alta', 'Media', 'Baja'] },
-                    colors: ['#970000', '#040A2D', '#9e9e9e'], // Rojo, Azul, Gris
-                    fill: { type: 'gradient', gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.25, inverseColors: false, opacityFrom: 1, opacityTo: 0.7, stops: [50, 100] } },
+                    series: [{ name: 'Tareas', data: prioValues }],
+                    chart: { type: 'bar', height: 280, toolbar: { show: false } },
+                    plotOptions: { bar: { columnWidth: '40%', borderRadius: 4, distributed: true } },
+                    xaxis: { categories: prioLabels },
+                    colors: ['#970000', '#040A2D', '#9e9e9e'],
                     legend: { show: false },
                     dataLabels: { enabled: false }
                 };
@@ -224,8 +379,3 @@
         });
     </script>
 }
-
-
-
-
-

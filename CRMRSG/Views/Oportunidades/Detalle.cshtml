@@ -1,0 +1,118 @@
+@model CRMRSG.EntityFramework.oportunidade
+
+@{
+    ViewBag.Title = "Detalle de Oportunidad";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Detalle de Oportunidad</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item"><a href="~/Oportunidades">Oportunidades</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Detalle</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 col-12">
+        <div class="box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h4 class="box-title">@Model.nombre</h4>
+                <div>
+                    <span class="badge badge-lg @(Model.etapa.ToLower().Contains("ganada") ? "badge-success-light" : (Model.etapa.ToLower().Contains("perdida") ? "badge-danger-light" : "badge-primary-light"))">
+                        @Model.etapa
+                    </span>
+                </div>
+            </div>
+            <div class="box-body">
+                <h5 class="fw-bold mb-10 text-dark">Descripción de la Oportunidad</h5>
+                <p class="fs-15 text-fade mb-30">
+                    @(string.IsNullOrEmpty(Model.descripcion) ? "No hay descripción disponible para esta oportunidad." : Model.descripcion)
+                </p>
+
+                <div class="row mb-30">
+                    <div class="col-md-6 mb-20">
+                        <div class="bg-light p-15 rounded">
+                            <span class="d-block text-fade small">Valor Estimado</span>
+                            <span class="fs-22 fw-bold text-dark">@(Model.valor_estimado.HasValue ? Model.valor_estimado.Value.ToString("C") : "$0.00")</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-20">
+                        <div class="bg-light p-15 rounded">
+                            <span class="d-block text-fade small">Fecha de Cierre Estimada</span>
+                            <span class="fs-22 fw-bold text-dark">@(Model.fecha_creacion.HasValue ? Model.fecha_creacion.Value.ToString("dd MMM yyyy") : "N/A")</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-10 text-dark">Probabilidad de Cierre</h5>
+                <div class="d-flex align-items-center justify-content-between mb-5">
+                    <span class="small text-fade">Basado en la etapa: @Model.etapa</span>
+                    <span class="fw-bold">@(Model.probabilidad ?? 50)%</span>
+                </div>
+                <div class="progress progress-lg mb-0">
+                    <div class="progress-bar @(Model.etapa.ToLower().Contains("ganada") ? "bg-success" : (Model.etapa.ToLower().Contains("perdida") ? "bg-danger" : "bg-primary"))" role="progressbar" style="width: @(Model.probabilidad ?? 50)%" aria-valuenow="@(Model.probabilidad ?? 50)" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            <div class="box-footer d-flex justify-content-between">
+                <a href="~/Oportunidades" class="btn btn-warning">Volver al Listado</a>
+                <a href="~/Oportunidades/Editar/@Model.id_oportunidad" class="btn btn-primary"><i class="fa fa-pencil me-5"></i> Editar Detalles</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-12">
+        <!-- Tarjeta del Cliente -->
+        <div class="box">
+            <div class="box-header with-border">
+                <h5 class="box-title">Cliente Asociado</h5>
+            </div>
+            <div class="box-body text-center">
+                @if (Model.cliente != null)
+                {
+                    <div class="mb-15">
+                        <i class="ti-user text-primary bg-primary-light rounded-circle p-20 fs-30"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark">@Model.cliente.nombre</h4>
+                    <p class="text-fade small">@Model.cliente.correo</p>
+                    <hr />
+                    <div class="text-start">
+                        <p class="mb-5 small"><strong>Teléfono:</strong> @(string.IsNullOrEmpty(Model.cliente.telefono) ? "No especificado" : Model.cliente.telefono)</p>
+                        <p class="mb-5 small"><strong>Empresa:</strong> @(string.IsNullOrEmpty(Model.cliente.empresa) ? "No especificada" : Model.cliente.empresa)</p>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No hay información de cliente asignada.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Tarjeta del Propietario -->
+        <div class="box">
+            <div class="box-header with-border">
+                <h5 class="box-title">Propietario / Creador</h5>
+            </div>
+            <div class="box-body">
+                <div class="d-flex align-items-center">
+                    <div class="bg-info-light rounded p-10 me-15">
+                        <i class="ti-user text-info fs-20"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold">@(Model.usuario != null ? Model.usuario.nombre : "CRM System")</h6>
+                        <small class="text-fade">@(Model.usuario != null && Model.usuario.role != null ? Model.usuario.role.nombre : "Colaborador CRM")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

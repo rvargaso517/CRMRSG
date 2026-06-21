@@ -1,4 +1,4 @@
-﻿@model IEnumerable<CRMRSG.EntityFramework.cliente>
+@model IEnumerable<CRMRSG.EntityFramework.cliente>
 @{
     ViewBag.Title = "Clientes";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -7,7 +7,7 @@
 <div class="content-header">
     <div class="d-flex align-items-center">
         <div class="me-auto">
-            <h4 class="page-title">Clientes</h4>
+            <h4 class="page-title">Gestión de Clientes</h4>
             <div class="d-inline-block align-items-center">
                 <nav>
                     <ol class="breadcrumb">
@@ -23,20 +23,31 @@
 <div class="row">
     <div class="col-12">
         <div class="box">
-            <div class="box-header with-border d-flex justify-content-between align-items-center">
-                <h3 class="box-title">Todos los Clientes</h3>
-                <a href="~/Clientes/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Cliente</a>
+            <div class="box-header with-border d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h3 class="box-title">Listado de Clientes Inteligente</h3>
+                
+                <!-- Filtros rápidos por clasificación -->
+                <div class="btn-group" role="group" id="btn-group-filter">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-filter="all">Todos</button>
+                    <button type="button" class="btn btn-sm btn-outline-success" data-filter="VIP">👑 VIP (Score >= 70)</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" data-filter="Medio">🤝 Medio (35-69)</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Bajo">❄️ Bajo (< 35)</button>
+                </div>
+
+                <a href="~/Clientes/Crear" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Nuevo Cliente</a>
             </div>
             <div class="box-body">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="clientes-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Empresa</th>
                                 <th>Contacto Principal</th>
                                 <th>Email</th>
-                                <th>Tel&eacute;fono</th>
+                                <th>Teléfono</th>
+                                <th class="w-150">Lead Scoring</th>
+                                <th>Clasificación</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -46,10 +57,9 @@
                             {
                                 foreach (var item in Model)
                                 {
-                                    <tr>
+                                    <tr class="cliente-row" data-clasificacion="@item.Clasificacion">
                                         <td>#C-@item.id_cliente.ToString("D3")</td>
                                         <td>
-                                            <!-- PASO 3: Redirección profesional usando el Helper de ASP.NET a la vista Detalle -->
                                             <a href="@Url.Action("Detalle", "Clientes", new { id = item.id_cliente })" class="fw-bold text-info" title="Ver ficha y contactos">
                                                 @item.empresa
                                             </a>
@@ -58,13 +68,41 @@
                                         <td>@item.correo</td>
                                         <td>@item.telefono</td>
                                         <td>
+                                            <!-- Lead Scoring Progress Bar -->
+                                            <div class="progress progress-xs mb-1" style="height: 6px;">
+                                                <div class="progress-bar bg-@(item.LeadScore >= 70 ? "success" : (item.LeadScore >= 35 ? "warning" : "danger"))" 
+                                                     role="progressbar" 
+                                                     style="width: @(item.LeadScore)%;" 
+                                                     aria-valuenow="@item.LeadScore" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="badge badge-@(item.LeadScore >= 70 ? "success" : (item.LeadScore >= 35 ? "warning" : "danger"))-light fw-bold fs-11">
+                                                @item.LeadScore / 100 pts
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (item.Clasificacion == "VIP")
+                                            {
+                                                <span class="badge badge-success px-10 py-5">👑 VIP</span>
+                                            }
+                                            else if (item.Clasificacion == "Medio")
+                                            {
+                                                <span class="badge badge-warning px-10 py-5 text-dark">🤝 Medio</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary px-10 py-5 text-dark">❄️ Bajo</span>
+                                            }
+                                        </td>
+                                        <td>
                                             @if (item.estado == "Activo" || item.estado == "1")
                                             {
                                                 <span class="badge badge-success-light">Activo</span>
                                             }
                                             else if (item.estado != null && (item.estado.Contains("Negociac") || item.estado == "En Negociaci&oacute;n"))
                                             {
-                                                <span class="badge badge-warning-light">En Negociaci&oacute;n</span>
+                                                <span class="badge badge-warning-light">En Negociación</span>
                                             }
                                             else
                                             {
@@ -85,7 +123,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">No hay clientes registrados en la base de datos.</td>
+                                    <td colspan="9" class="text-center text-muted">No hay clientes registrados en la base de datos.</td>
                                 </tr>
                             }
                         </tbody>
@@ -98,10 +136,25 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    $(document).ready(function() {
+        // Filtro interactivo en cliente
+        $('#btn-group-filter button').on('click', function() {
+            $('#btn-group-filter button').removeClass('active');
+            $(this).addClass('active');
+
+            var filter = $(this).data('filter');
+            if (filter === 'all') {
+                $('.cliente-row').fadeIn(200);
+            } else {
+                $('.cliente-row').hide();
+                $('.cliente-row[data-clasificacion="' + filter + '"]').fadeIn(200);
+            }
+        });
+    });
+
     function confirmarEliminar(id, empresa) {
         var urlEliminar = '@Url.Action("Eliminar", "Clientes")';
 
-        // Mensaje limpio sin caracteres raros para la confirmación
         if (confirm("Sistema CRM-RSG: ¿Está seguro de que desea eliminar permanentemente a la empresa '" + empresa + "'?")) {
             $.ajax({
                 url: urlEliminar,

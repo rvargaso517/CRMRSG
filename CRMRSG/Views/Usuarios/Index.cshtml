@@ -1,0 +1,210 @@
+@model List<CRMRSG.EntityFramework.usuario>
+
+@{
+    ViewBag.Title = "Gestión de Usuarios";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var roles = (List<CRMRSG.EntityFramework.role>)ViewBag.Roles;
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Administración</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Gestión de Usuarios</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        <div class="text-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-nuevo-usuario">
+                <i class="fa fa-user-plus me-2"></i> Nuevo Usuario
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="ti-check me-10"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="ti-alert me-10"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">Usuarios y Empleados Registrados</h3>
+            </div>
+            <div class="box-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Correo</th>
+                                <th>Fecha Registro</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary-light rounded-circle p-10 me-15 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ti-user text-primary fs-18"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">@user.nombre @user.apellido</h6>
+                                                <small class="text-muted">ID: #USR-@user.id_usuario</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@user.correo</td>
+                                    <td>
+                                        @(user.fecha_creacion.HasValue 
+                                            ? user.fecha_creacion.Value.ToString("dd/MM/yyyy") 
+                                            : "N/A")
+                                    </td>
+                                    <td>
+                                        @using (Html.BeginForm("CambiarRol", "Usuarios", FormMethod.Post, new { @class = "d-flex align-items-center m-0" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id_usuario" value="@user.id_usuario" />
+                                            <select name="id_rol" class="form-select form-select-sm" onchange="this.form.submit()" @(user.id_usuario == (int)Session["UsuarioId"] ? "disabled" : "")>
+                                                @foreach (var rol in roles)
+                                                {
+                                                    <option value="@rol.id_rol" @(user.id_rol == rol.id_rol ? "selected" : "")>@rol.nombre</option>
+                                                }
+                                            </select>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input switch-estado-btn" 
+                                                   type="checkbox" 
+                                                   id="switch_@user.id_usuario" 
+                                                   data-id="@user.id_usuario" 
+                                                   @(user.estado == true ? "checked" : "")
+                                                   @(user.id_usuario == (int)Session["UsuarioId"] ? "disabled" : "")>
+                                            <label class="form-check-label" for="switch_@user.id_usuario" id="lbl_@user.id_usuario">
+                                                @(user.estado == true ? "Activo" : "Inactivo")
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="~/Bitacora?usuarioId=@user.id_usuario" class="btn btn-sm btn-info-light" title="Ver bitácora de actividad">
+                                            <i class="fa fa-history"></i> Historial
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Usuario -->
+<div class="modal fade" id="modal-nuevo-usuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @using (Html.BeginForm("Crear", "Usuarios", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" name="nombre" class="form-control" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" name="apellido" class="form-control" />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Correo Electrónico (@@gmail.com)</label>
+                        <input type="email" name="correo" class="form-control" placeholder="usuario@gmail.com" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="password" class="form-control" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Rol de Acceso</label>
+                        <select name="id_rol" class="form-select">
+                            @foreach (var rol in roles)
+                            {
+                                <option value="@rol.id_rol">@rol.nombre</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function() {
+            $(".switch-estado-btn").on("change", function() {
+                var userId = $(this).data("id");
+                var isChecked = $(this).is(":checked");
+                var label = $("#lbl_" + userId);
+                
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '@Url.Action("ToggleEstado", "Usuarios")',
+                    type: 'POST',
+                    data: {
+                        id: userId,
+                        __RequestVerificationToken: token
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (response.nuevoEstado) {
+                                label.text("Activo");
+                            } else {
+                                label.text("Inactivo");
+                            }
+                        } else {
+                            alert(response.message);
+                            $("#switch_" + userId).prop("checked", !isChecked);
+                        }
+                    },
+                    error: function() {
+                        alert("Error al actualizar el estado del usuario.");
+                        $("#switch_" + userId).prop("checked", !isChecked);
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -149,6 +149,7 @@
     <Compile Include="Controllers\PerfilController.cs" />
     <Compile Include="Controllers\RolesController.cs" />
     <Compile Include="Controllers\TareasController.cs" />
+    <Compile Include="Controllers\UsuariosController.cs" />
     <Compile Include="EntityFramework\bitacora.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
@@ -158,6 +159,7 @@
     <Compile Include="EntityFramework\cliente.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\cliente_extension.cs" />
     <Compile Include="EntityFramework\contacto_cliente.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
@@ -2290,6 +2292,8 @@
     <Content Include="Views\Clientes\Crear.cshtml" />
     <Content Include="Views\Oportunidades\Index.cshtml" />
     <Content Include="Views\Oportunidades\Crear.cshtml" />
+    <Content Include="Views\Oportunidades\Editar.cshtml" />
+    <Content Include="Views\Oportunidades\Detalle.cshtml" />
     <Content Include="Views\Tareas\Index.cshtml" />
     <Content Include="Views\Tareas\Crear.cshtml" />
     <Content Include="Views\Dashboard\Index_new.cshtml" />
