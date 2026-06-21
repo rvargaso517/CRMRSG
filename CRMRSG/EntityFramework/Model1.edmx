@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
   <!-- EF Runtime content -->
   <edmx:Runtime>
@@ -121,6 +121,39 @@
           <Property Name="fecha_creacion" Type="datetime" />
           <Property Name="ultimo_login" Type="datetime" />
           <Property Name="id_rol" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="contacto_cliente">
+          <Key>
+            <PropertyRef Name="id_contacto" />
+          </Key>
+          <Property Name="id_contacto" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="id_cliente" Type="int" Nullable="false" />
+          <Property Name="nombre" Type="varchar" MaxLength="150" Nullable="false" />
+          <Property Name="telefono" Type="varchar" MaxLength="50" />
+          <Property Name="correo" Type="varchar" MaxLength="100" />
+          <Property Name="puesto" Type="varchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="nota_cliente">
+          <Key>
+            <PropertyRef Name="id_note" />
+          </Key>
+          <Property Name="id_note" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="id_cliente" Type="int" Nullable="false" />
+          <Property Name="comentario" Type="text" Nullable="false" />
+          <Property Name="fecha_creacion" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="tarea_cliente">
+          <Key>
+            <PropertyRef Name="id_tarea" />
+          </Key>
+          <Property Name="id_tarea" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="id_cliente" Type="int" Nullable="false" />
+          <Property Name="tipo_trabajo" Type="varchar" MaxLength="150" Nullable="false" />
+          <Property Name="descripcion" Type="text" />
+          <Property Name="ganancia" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="fecha_inicio" Type="datetime" Nullable="false" />
+          <Property Name="fecha_fin" Type="datetime" />
+          <Property Name="estado" Type="varchar" MaxLength="50" Nullable="false" />
         </EntityType>
         <Association Name="FK_bitacora_usuarios">
           <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
@@ -264,6 +297,9 @@
           <EntitySet Name="roles" EntityType="Self.roles" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="tareas" EntityType="Self.tareas" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="usuarios" EntityType="Self.usuarios" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="contacto_cliente" EntityType="Self.contacto_cliente" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="nota_cliente" EntityType="Self.nota_cliente" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tarea_cliente" EntityType="Self.tarea_cliente" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_bitacora_usuarios" Association="Self.FK_bitacora_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="bitacora" EntitySet="bitacora" />
@@ -453,6 +489,39 @@
           <NavigationProperty Name="role" Relationship="Self.FK_usuarios_roles" FromRole="usuarios" ToRole="roles" />
           <NavigationProperty Name="tareas" Relationship="Self.FK_tareas_usuarios" FromRole="usuarios" ToRole="tareas" />
         </EntityType>
+        <EntityType Name="contacto_cliente">
+          <Key>
+            <PropertyRef Name="id_contacto" />
+          </Key>
+          <Property Name="id_contacto" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="id_cliente" Type="Int32" Nullable="false" />
+          <Property Name="nombre" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="telefono" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="correo" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="puesto" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="nota_cliente">
+          <Key>
+            <PropertyRef Name="id_note" />
+          </Key>
+          <Property Name="id_note" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="id_cliente" Type="Int32" Nullable="false" />
+          <Property Name="comentario" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="fecha_creacion" Type="DateTime" Precision="3" Nullable="false" />
+        </EntityType>
+        <EntityType Name="tarea_cliente">
+          <Key>
+            <PropertyRef Name="id_tarea" />
+          </Key>
+          <Property Name="id_tarea" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="id_cliente" Type="Int32" Nullable="false" />
+          <Property Name="tipo_trabajo" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="descripcion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="ganancia" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="fecha_inicio" Type="DateTime" Precision="3" Nullable="false" />
+          <Property Name="fecha_fin" Type="DateTime" Precision="3" />
+          <Property Name="estado" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+        </EntityType>
         <Association Name="FK_bitacora_usuarios">
           <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
           <End Role="bitacora" Type="Self.bitacora" Multiplicity="*" />
@@ -595,6 +664,9 @@
           <EntitySet Name="roles" EntityType="Self.role" />
           <EntitySet Name="tareas" EntityType="Self.tarea" />
           <EntitySet Name="usuarios" EntityType="Self.usuario" />
+          <EntitySet Name="contacto_cliente" EntityType="Self.contacto_cliente" />
+          <EntitySet Name="nota_cliente" EntityType="Self.nota_cliente" />
+          <EntitySet Name="tarea_cliente" EntityType="Self.tarea_cliente" />
           <AssociationSet Name="FK_bitacora_usuarios" Association="Self.FK_bitacora_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="bitacora" EntitySet="bitacoras" />
@@ -769,6 +841,42 @@
                 <ScalarProperty Name="fecha_creacion" ColumnName="fecha_creacion" />
                 <ScalarProperty Name="ultimo_login" ColumnName="ultimo_login" />
                 <ScalarProperty Name="id_rol" ColumnName="id_rol" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="contacto_cliente">
+            <EntityTypeMapping TypeName="CRM_RSGModel.contacto_cliente">
+              <MappingFragment StoreEntitySet="contacto_cliente">
+                <ScalarProperty Name="id_contacto" ColumnName="id_contacto" />
+                <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
+                <ScalarProperty Name="nombre" ColumnName="nombre" />
+                <ScalarProperty Name="telefono" ColumnName="telefono" />
+                <ScalarProperty Name="correo" ColumnName="correo" />
+                <ScalarProperty Name="puesto" ColumnName="puesto" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="nota_cliente">
+            <EntityTypeMapping TypeName="CRM_RSGModel.nota_cliente">
+              <MappingFragment StoreEntitySet="nota_cliente">
+                <ScalarProperty Name="id_note" ColumnName="id_note" />
+                <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
+                <ScalarProperty Name="comentario" ColumnName="comentario" />
+                <ScalarProperty Name="fecha_creacion" ColumnName="fecha_creacion" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="tarea_cliente">
+            <EntityTypeMapping TypeName="CRM_RSGModel.tarea_cliente">
+              <MappingFragment StoreEntitySet="tarea_cliente">
+                <ScalarProperty Name="id_tarea" ColumnName="id_tarea" />
+                <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
+                <ScalarProperty Name="tipo_trabajo" ColumnName="tipo_trabajo" />
+                <ScalarProperty Name="descripcion" ColumnName="descripcion" />
+                <ScalarProperty Name="ganancia" ColumnName="ganancia" />
+                <ScalarProperty Name="fecha_inicio" ColumnName="fecha_inicio" />
+                <ScalarProperty Name="fecha_fin" ColumnName="fecha_fin" />
+                <ScalarProperty Name="estado" ColumnName="estado" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
