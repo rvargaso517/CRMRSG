@@ -118,65 +118,87 @@
             <section class="sidebar position-relative">
                 <div class="multinav">
                     <div class="multinav-scroll">
+                        @{
+                            bool esAdmin = Session["RolId"] != null && (int)Session["RolId"] == 1;
+                            string perms = Session["Permisos"] != null ? Session["Permisos"].ToString() : "";
+                            var permList = perms.Split(',');
+
+                            bool puedeVerClientes = esAdmin || permList.Contains("Clientes:Ver") || permList.Contains("Admin:Acceso");
+                            bool puedeVerOportunidades = esAdmin || permList.Contains("Oportunidades:Ver") || permList.Contains("Admin:Acceso");
+                            bool puedeVerTareas = esAdmin || permList.Contains("Tareas:Ver") || permList.Contains("Admin:Acceso");
+                            bool puedeVerActividades = esAdmin || permList.Contains("Actividades:Ver") || permList.Contains("Admin:Acceso");
+                        }
                         <ul class="sidebar-menu" data-widget="tree">
                             <li><a href="@Url.Action("Index", "Dashboard")"><i data-feather="home"></i><span>Dashboard</span></a></li>
                             <li><a href="@Url.Action("Calendar", "Dashboard")"><i data-feather="calendar"></i><span>Calendario</span></a></li>
 
-                            <li class="treeview">
-                                <a href="#">
-                                    <i data-feather="users"></i>
-                                    <span>Clientes</span>
-                                    <span class="pull-right-container">
-                                        <i class="fa fa-angle-right pull-right"></i>
-                                    </span>
-                                </a>
-                                <ul class="treeview-menu">
-                                    <li><a href="@Url.Action("Index", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todos los Clientes</a></li>
-                                    <li><a href="@Url.Action("Crear", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nuevo Cliente</a></li>
-                                </ul>
-                            </li>
+                            @if (puedeVerClientes)
+                            {
+                                <li class="treeview">
+                                    <a href="#">
+                                        <i data-feather="users"></i>
+                                        <span>Clientes</span>
+                                        <span class="pull-right-container">
+                                            <i class="fa fa-angle-right pull-right"></i>
+                                        </span>
+                                    </a>
+                                    <ul class="treeview-menu">
+                                        <li><a href="@Url.Action("Index", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todos los Clientes</a></li>
+                                        <li><a href="@Url.Action("Crear", "Clientes")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nuevo Cliente</a></li>
+                                    </ul>
+                                </li>
+                            }
 
-                            <li class="treeview">
-                                <a href="#">
-                                    <i data-feather="briefcase"></i>
-                                    <span>Oportunidades</span>
-                                    <span class="pull-right-container">
-                                        <i class="fa fa-angle-right pull-right"></i>
-                                    </span>
-                                </a>
-                                <ul class="treeview-menu">
-                                    <li><a href="@Url.Action("Index", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Oportunidades</a></li>
-                                    <li><a href="@Url.Action("Crear", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Oportunidad</a></li>
-                                </ul>
-                            </li>
+                            @if (puedeVerOportunidades)
+                            {
+                                <li class="treeview">
+                                    <a href="#">
+                                        <i data-feather="briefcase"></i>
+                                        <span>Oportunidades</span>
+                                        <span class="pull-right-container">
+                                            <i class="fa fa-angle-right pull-right"></i>
+                                        </span>
+                                    </a>
+                                    <ul class="treeview-menu">
+                                        <li><a href="@Url.Action("Index", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Oportunidades</a></li>
+                                        <li><a href="@Url.Action("Crear", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Oportunidad</a></li>
+                                    </ul>
+                                </li>
+                            }
 
-                            <li class="treeview">
-                                <a href="#">
-                                    <i data-feather="check-circle"></i>
-                                    <span>Tareas</span>
-                                    <span class="pull-right-container">
-                                        <i class="fa fa-angle-right pull-right"></i>
-                                    </span>
-                                </a>
-                                <ul class="treeview-menu">
-                                    <li><a href="@Url.Action("Index", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Mis Tareas</a></li>
-                                    <li><a href="@Url.Action("Crear", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Tarea</a></li>
-                                </ul>
-                            </li>
+                            @if (puedeVerTareas)
+                            {
+                                <li class="treeview">
+                                    <a href="#">
+                                        <i data-feather="check-circle"></i>
+                                        <span>Tareas</span>
+                                        <span class="pull-right-container">
+                                            <i class="fa fa-angle-right pull-right"></i>
+                                        </span>
+                                    </a>
+                                    <ul class="treeview-menu">
+                                        <li><a href="@Url.Action("Index", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Mis Tareas</a></li>
+                                        <li><a href="@Url.Action("Crear", "Tareas")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Tarea</a></li>
+                                    </ul>
+                                </li>
+                            }
 
-                            <li class="treeview">
-                                <a href="#">
-                                    <i data-feather="activity"></i>
-                                    <span>Actividades</span>
-                                    <span class="pull-right-container">
-                                        <i class="fa fa-angle-right pull-right"></i>
-                                    </span>
-                                </a>
-                                <ul class="treeview-menu">
-                                    <li><a href="@Url.Action("Index", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Actividades</a></li>
-                                    <li><a href="@Url.Action("Crear", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Actividad</a></li>
-                                </ul>
-                            </li>
+                            @if (puedeVerActividades)
+                            {
+                                <li class="treeview">
+                                    <a href="#">
+                                        <i data-feather="activity"></i>
+                                        <span>Actividades</span>
+                                        <span class="pull-right-container">
+                                            <i class="fa fa-angle-right pull-right"></i>
+                                        </span>
+                                    </a>
+                                    <ul class="treeview-menu">
+                                        <li><a href="@Url.Action("Index", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Actividades</a></li>
+                                        <li><a href="@Url.Action("Crear", "Actividades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Actividad</a></li>
+                                    </ul>
+                                </li>
+                            }
 
                             <li class="treeview">
                                 <a href="#">
@@ -188,7 +210,6 @@
                                 </a>
                                 <ul class="treeview-menu">
                                     <li><a href="@Url.Action("Index", "Notificaciones")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Notificaciones</a></li>
-                                    
                                 </ul>
                             </li>
 

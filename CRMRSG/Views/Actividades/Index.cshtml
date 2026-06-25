@@ -21,11 +21,21 @@
         <div class="d-flex align-items-center">
             <!-- Filtro por rango temporal -->
             <div class="me-3">
-                <select id="filtro-actividades" class="form-select border-primary fw-bold" style="width: 200px;">
+                <select id="filtro-actividades" class="form-select border-primary fw-bold" style="width: 180px;">
                     <option value="todos" @(ViewBag.FiltroActivo == "todos" ? "selected" : "")>⏰ Todo el historial</option>
                     <option value="dia" @(ViewBag.FiltroActivo == "dia" ? "selected" : "")>📅 Hoy</option>
                     <option value="semana" @(ViewBag.FiltroActivo == "semana" ? "selected" : "")>🗓️ Última Semana</option>
                     <option value="mes" @(ViewBag.FiltroActivo == "mes" ? "selected" : "")>📊 Último Mes</option>
+                </select>
+            </div>
+            <!-- Filtro por estado -->
+            <div class="me-3">
+                <select id="filtro-estado-actividades" class="form-select border-primary fw-bold" style="width: 180px;">
+                    <option value="todos" @(ViewBag.EstadoActivo == "todos" ? "selected" : "")>📝 Todos los estados</option>
+                    <option value="Pendiente" @(ViewBag.EstadoActivo == "Pendiente" ? "selected" : "")>🕒 Pendientes</option>
+                    <option value="Realizada" @(ViewBag.EstadoActivo == "Realizada" ? "selected" : "")>✅ Realizadas</option>
+                    <option value="Aplazada" @(ViewBag.EstadoActivo == "Aplazada" ? "selected" : "")>⏳ Aplazadas</option>
+                    <option value="Cancelada" @(ViewBag.EstadoActivo == "Cancelada" ? "selected" : "")>❌ Canceladas</option>
                 </select>
             </div>
             <a href="~/Actividades/Crear" class="btn btn-primary">
@@ -47,21 +57,27 @@
 
                 <!-- Distribución de Estados -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="alert alert-primary d-flex justify-content-between align-items-center mb-10">
                             <strong>🕒 Pendientes:</strong> 
                             <span class="badge bg-primary text-white fs-14">@ViewBag.Pendientes</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="alert alert-success d-flex justify-content-between align-items-center mb-10">
                             <strong>✅ Realizadas:</strong> 
                             <span class="badge bg-success text-white fs-14">@ViewBag.Confirmadas</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <div class="alert alert-warning d-flex justify-content-between align-items-center mb-10">
+                            <strong>⏳ Aplazadas:</strong> 
+                            <span class="badge bg-warning text-white fs-14">@ViewBag.Aplazadas</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="alert alert-danger d-flex justify-content-between align-items-center mb-10">
-                            <strong>❌ Aplazadas:</strong> 
+                            <strong>❌ Canceladas:</strong> 
                             <span class="badge bg-danger text-white fs-14">@ViewBag.Canceladas</span>
                         </div>
                     </div>
@@ -131,15 +147,19 @@
                                             }
                                             else if (item.estado == "Aplazada")
                                             {
-                                                <span class="badge badge-danger-light">Aplazada</span>
+                                                <span class="badge badge-warning-light">Aplazada</span>
+                                            }
+                                            else if (item.estado == "Cancelada")
+                                            {
+                                                <span class="badge badge-danger-light">Cancelada</span>
                                             }
                                             else
                                             {
-                                                <span class="badge badge-warning-light">Pendiente</span>
+                                                <span class="badge badge-info-light">Pendiente</span>
                                             }
                                         </p>
 
-                                        @if (item.estado != "Completada")
+                                        @if (item.estado != "Completada" && item.estado != "Cancelada")
                                         {
                                             <div class="text-end">
                                                 <button class="btn btn-sm btn-success-light btn-completar-actividad" data-id="@item.id_cita">
@@ -147,6 +167,9 @@
                                                 </button>
                                                 <button class="btn btn-sm btn-warning-light btn-posponer-actividad" data-id="@item.id_cita">
                                                     <i class="fa fa-clock-o me-2"></i> Aplazar
+                                                </button>
+                                                <button class="btn btn-sm btn-danger-light btn-cancelar-actividad" data-id="@item.id_cita">
+                                                    <i class="fa fa-times me-2"></i> Cancelar
                                                 </button>
                                             </div>
                                         }
@@ -190,10 +213,15 @@
 @section scripts {
     <script>
         $(document).ready(function() {
-            // Manejador de cambio de filtro temporal
-            $('#filtro-actividades').on('change', function() {
-                window.location.href = '@Url.Action("Index", "Actividades")?filtro=' + $(this).val();
-            });
+            // Manejador de cambio de filtros temporal y de estado
+            function actualizarFiltros() {
+                var filtro = $('#filtro-actividades').val();
+                var estado = $('#filtro-estado-actividades').val();
+                window.location.href = '@Url.Action("Index", "Actividades")?filtro=' + filtro + '&estado=' + estado;
+            }
+
+            $('#filtro-actividades').on('change', actualizarFiltros);
+            $('#filtro-estado-actividades').on('change', actualizarFiltros);
 
             // Completar Actividad
             $('.btn-completar-actividad').on('click', function() {
@@ -216,7 +244,7 @@
 
                                 // Encontrar y actualizar el estado
                                 var $estadoSpan = $timelineEvent.find('.badge');
-                                $estadoSpan.removeClass('badge-warning-light').addClass('badge-success-light').text('Realizada');
+                                $estadoSpan.removeClass('badge-warning-light badge-info-light badge-danger-light').addClass('badge-success-light').text('Realizada');
 
                                 // Remover los botones de acción
                                 $btn.closest('.text-end').remove();
@@ -266,7 +294,7 @@
 
                             // Actualizar el estado a "Aplazada"
                             var $estadoSpan = $btn.find('.badge');
-                            $estadoSpan.removeClass('badge-warning-light').addClass('badge-danger-light').text('Aplazada');
+                            $estadoSpan.removeClass('badge-warning-light badge-info-light badge-danger-light badge-success-light').addClass('badge-warning-light').text('Aplazada');
 
                             // Remover los botones de acción
                             $btn.find('.text-end').remove();
@@ -286,6 +314,44 @@
                         alert('Error al aplazar la actividad.');
                     }
                 });
+            });
+
+            // Cancelar Actividad
+            $('.btn-cancelar-actividad').on('click', function() {
+                var actId = $(this).data('id');
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                var $btn = $(this);
+
+                if (confirm('¿Desea marcar esta actividad como cancelada?')) {
+                    $.ajax({
+                        url: '@Url.Action("Cancelar", "Actividades")',
+                        type: 'POST',
+                        data: {
+                            id: actId,
+                            __RequestVerificationToken: token
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                // Encontrar el elemento timeline-event del botón
+                                var $timelineEvent = $btn.closest('.timeline-event');
+
+                                // Encontrar y actualizar el estado
+                                var $estadoSpan = $timelineEvent.find('.badge');
+                                $estadoSpan.removeClass('badge-warning-light badge-info-light badge-success-light').addClass('badge-danger-light').text('Cancelada');
+
+                                // Remover los botones de acción
+                                $btn.closest('.text-end').remove();
+
+                                alert(res.message);
+                            } else {
+                                alert(res.message);
+                            }
+                        },
+                        error: function() {
+                            alert('Error al cancelar la actividad.');
+                        }
+                    });
+                }
             });
         });
     </script>

@@ -10,9 +10,24 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
+        private bool TienePermiso(string permiso)
+        {
+            if (Session["UsuarioId"] == null) return false;
+            if (Session["RolId"] != null && (int)Session["RolId"] == 1) return true;
+            if (Session["Permisos"] == null) return false;
+            string perms = Session["Permisos"].ToString();
+            return perms.Split(',').Contains(permiso) || perms.Split(',').Contains("Admin:Acceso");
+        }
+
         // GET: Clientes
         public ActionResult Index()
         {
+            if (!TienePermiso("Clientes:Ver"))
+            {
+                TempData["Error"] = "No tiene permisos para ver Clientes.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+
             var listaClientes = db.clientes.ToList();
             return View(listaClientes);
         }
@@ -20,6 +35,11 @@ namespace CRMRSG.Controllers
         // GET: Clientes/Crear
         public ActionResult Crear()
         {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para crear Clientes.";
+                return RedirectToAction("Index");
+            }
             return View();
         }
 
@@ -28,6 +48,12 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Crear(cliente nuevoCliente)
         {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para crear Clientes.";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 nuevoCliente.fecha_registro = DateTime.Now;
@@ -47,6 +73,12 @@ namespace CRMRSG.Controllers
         // GET: Clientes/Editar/5
         public ActionResult Editar(int? id)
         {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para editar Clientes.";
+                return RedirectToAction("Index");
+            }
+
             if (id == null)
             {
                 return RedirectToAction("Index");
@@ -67,6 +99,12 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Editar(cliente clienteModificado)
         {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para editar Clientes.";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 var clienteDb = db.clientes.Find(clienteModificado.id_cliente);
@@ -93,6 +131,11 @@ namespace CRMRSG.Controllers
         [HttpPost]
         public ActionResult Eliminar(int id)
         {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                return Json(new { success = false, message = "No autorizado" });
+            }
+
             var clienteEliminar = db.clientes.Find(id);
 
             if (clienteEliminar != null)
@@ -117,6 +160,14 @@ namespace CRMRSG.Controllers
         // GET: clientes/ExportarClientesCSV (HU-034)
         public void ExportarClientesCSV()
         {
+            if (!TienePermiso("Clientes:Ver"))
+            {
+                Response.Clear();
+                Response.Write("No autorizado");
+                Response.End();
+                return;
+            }
+
             var listaClientes = db.clientes.ToList();
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -165,7 +216,11 @@ namespace CRMRSG.Controllers
         {
             try
             {
-                // Validar que el nombre no venga vacío
+                if (!TienePermiso("Clientes:Gestionar"))
+                {
+                    return Json(new { success = false, message = "No autorizado" });
+                }
+
                 if (string.IsNullOrEmpty(nombre))
                 {
                     return Json(new { success = false, message = "El nombre del contacto es obligatorio, mae." });
@@ -173,7 +228,6 @@ namespace CRMRSG.Controllers
 
                 using (CRM_RSGEntities db = new CRM_RSGEntities())
                 {
-                    // Creamos el nuevo objeto de la tabla que creaste con el script
                     var nuevoContacto = new contacto_cliente
                     {
                         id_cliente = id_cliente,
@@ -195,5 +249,4 @@ namespace CRMRSG.Controllers
             }
         }
     }
-
 }

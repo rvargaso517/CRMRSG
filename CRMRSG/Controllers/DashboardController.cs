@@ -105,33 +105,148 @@ namespace CRMRSG.Controllers
             ViewBag.EventosCompletados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("complet") || e.Estado.ToLower() == "realizada")?.Cantidad ?? 0;
             ViewBag.EventosPendientes = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("pendient") || e.Estado.ToLower() == "programada")?.Cantidad ?? 0;
             ViewBag.EventosCancelados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("cancel") || e.Estado.ToLower() == "suspendida")?.Cantidad ?? 0;
+            ViewBag.EventosAplazados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("aplaz") || e.Estado.ToLower() == "aplazada")?.Cantidad ?? 0;
 
             // Si no hay datos, metemos valores dummy estéticos para que no quede en blanco
-            if (ViewBag.EventosCompletados == 0 && ViewBag.EventosPendientes == 0 && ViewBag.EventosCancelados == 0)
+            if (ViewBag.EventosCompletados == 0 && ViewBag.EventosPendientes == 0 && ViewBag.EventosCancelados == 0 && ViewBag.EventosAplazados == 0)
             {
                 ViewBag.EventosCompletados = 5;
                 ViewBag.EventosPendientes = 8;
                 ViewBag.EventosCancelados = 2;
+                ViewBag.EventosAplazados = 3;
             }
 
             // 2. Cantidad de Eventos (Gráfico de Líneas/Barras por Fecha)
-            var eventosPorFecha = citasQuery
-                .Where(c => c.fecha != null)
-                .GroupBy(c => c.fecha)
-                .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
-                .OrderBy(g => g.Fecha)
-                .Take(10)
-                .ToList();
+            string[] fechasLabels;
+            int[] cantidadesData;
 
-            ViewBag.EventosFechas = eventosPorFecha.Select(e => e.Fecha.ToString("dd/MM")).ToArray();
-            ViewBag.EventosCantidades = eventosPorFecha.Select(e => e.Cantidad).ToArray();
-
-            // Si está vacío, rellenamos con fechas del mes actual
-            if (ViewBag.EventosFechas.Length == 0)
+            if (filtro == "dia")
             {
-                ViewBag.EventosFechas = new string[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
-                ViewBag.EventosCantidades = new int[] { 3, 5, 2, 7, 6, 1, 4 };
+                var eventosHoy = citasQuery
+                    .Where(c => c.fecha == DateTime.Today)
+                    .ToList();
+
+                var grouped = eventosHoy
+                    .GroupBy(c => c.hora.Hours)
+                    .Select(g => new { Hora = g.Key, Cantidad = g.Count() })
+                    .OrderBy(x => x.Hora)
+                    .ToList();
+
+                if (grouped.Any())
+                {
+                    fechasLabels = grouped.Select(g => $"{g.Hora:D2}:00").ToArray();
+                    cantidadesData = grouped.Select(g => g.Cantidad).ToArray();
+                }
+                else
+                {
+                    fechasLabels = new string[] { "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
+                    cantidadesData = new int[] { 1, 2, 0, 3, 1, 2, 0 };
+                }
             }
+            else if (filtro == "semana")
+            {
+                DateTime startOfWeek = DateTime.Today.AddDays(-6);
+                var eventosSemana = citasQuery
+                    .Where(c => c.fecha >= startOfWeek)
+                    .ToList();
+
+                var grouped = eventosSemana
+                    .GroupBy(c => c.fecha.Date)
+                    .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
+                    .OrderBy(x => x.Fecha)
+                    .ToList();
+
+                fechasLabels = new string[7];
+                cantidadesData = new int[7];
+                for (int i = 0; i < 7; i++)
+                {
+                    var dt = startOfWeek.AddDays(i);
+                    fechasLabels[i] = dt.ToString("dd/MM");
+                    cantidadesData[i] = grouped.FirstOrDefault(g => g.Fecha == dt)?.Cantidad ?? 0;
+                }
+
+                if (cantidadesData.All(c => c == 0))
+                {
+                    cantidadesData = new int[] { 2, 4, 1, 3, 5, 2, 4 };
+                }
+            }
+            else if (filtro == "mes")
+            {
+                DateTime startOfMonth = DateTime.Today.AddDays(-29);
+                var eventosMes = citasQuery
+                    .Where(c => c.fecha >= startOfMonth)
+                    .ToList();
+
+                var grouped = eventosMes
+                    .GroupBy(c => c.fecha.Date)
+                    .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
+                    .OrderBy(x => x.Fecha)
+                    .ToList();
+
+                fechasLabels = new string[10];
+                cantidadesData = new int[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    var dtStart = startOfMonth.AddDays(i * 3);
+                    var dtEnd = startOfMonth.AddDays(i * 3 + 2);
+                    fechasLabels[i] = dtStart.ToString("dd/MM");
+                    cantidadesData[i] = grouped.Where(g => g.Fecha >= dtStart && g.Fecha <= dtEnd).Sum(g => g.Cantidad);
+                }
+
+                if (cantidadesData.All(c => c == 0))
+                {
+                    cantidadesData = new int[] { 3, 5, 2, 8, 4, 6, 9, 3, 7, 5 };
+                }
+            }
+            else if (filtro == "anio")
+            {
+                DateTime startOfYear = new DateTime(DateTime.Today.Year, 1, 1);
+                var eventosAnio = citasQuery
+                    .Where(c => c.fecha >= startOfYear)
+                    .ToList();
+
+                var grouped = eventosAnio
+                    .GroupBy(c => c.fecha.Month)
+                    .Select(g => new { Mes = g.Key, Cantidad = g.Count() })
+                    .OrderBy(x => x.Mes)
+                    .ToList();
+
+                string[] nombreMeses = { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
+                fechasLabels = new string[12];
+                cantidadesData = new int[12];
+                for (int i = 0; i < 12; i++)
+                {
+                    fechasLabels[i] = nombreMeses[i];
+                    cantidadesData[i] = grouped.FirstOrDefault(g => g.Mes == (i + 1))?.Cantidad ?? 0;
+                }
+
+                if (cantidadesData.All(c => c == 0))
+                {
+                    cantidadesData = new int[] { 15, 22, 18, 30, 25, 35, 28, 40, 32, 45, 38, 50 };
+                }
+            }
+            else // "todos"
+            {
+                var eventosPorFecha = citasQuery
+                    .Where(c => c.fecha != null)
+                    .GroupBy(c => c.fecha)
+                    .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
+                    .OrderBy(g => g.Fecha)
+                    .Take(10)
+                    .ToList();
+
+                fechasLabels = eventosPorFecha.Select(e => e.Fecha.ToString("dd/MM")).ToArray();
+                cantidadesData = eventosPorFecha.Select(e => e.Cantidad).ToArray();
+
+                if (fechasLabels.Length == 0)
+                {
+                    fechasLabels = new string[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
+                    cantidadesData = new int[] { 3, 5, 2, 7, 6, 1, 4 };
+                }
+            }
+
+            ViewBag.EventosFechas = fechasLabels;
+            ViewBag.EventosCantidades = cantidadesData;
 
             // Ganancias por Cliente (para el nuevo gráfico en Dashboard)
             var gananciasClientes = oportunidadesQuery

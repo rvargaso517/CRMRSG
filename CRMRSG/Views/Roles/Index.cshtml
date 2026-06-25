@@ -9,6 +9,21 @@
     <h4 class="page-title">Seguridad</h4>
 </div>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ti-check me-10"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ti-alert me-10"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 <div class="row">
     <div class="col-lg-4 col-12">
         <div class="box">
@@ -19,9 +34,60 @@
             {
                 @Html.AntiForgeryToken()
                 <div class="box-body">
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label">Nombre del Rol</label>
                         <input type="text" name="nombre_rol" class="form-control" placeholder="Ej: Administrador, Ventas" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label fw-bold">Permisos de Acceso</label>
+                        <div class="border rounded p-3 bg-light" style="max-height: 350px; overflow-y: auto;">
+                            <div class="mb-2 fw-semibold text-primary border-bottom pb-1">👥 Clientes</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Clientes:Ver" id="p_cli_ver" checked>
+                                <label class="form-check-label small" for="p_cli_ver">Ver Clientes</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Clientes:Gestionar" id="p_cli_gest" checked>
+                                <label class="form-check-label small" for="p_cli_gest">Gestionar Clientes (Crear/Editar)</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">💼 Oportunidades</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Oportunidades:Ver" id="p_op_ver" checked>
+                                <label class="form-check-label small" for="p_op_ver">Ver Oportunidades</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Oportunidades:Gestionar" id="p_op_gest" checked>
+                                <label class="form-check-label small" for="p_op_gest">Gestionar Oportunidades</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">📌 Tareas</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Tareas:Ver" id="p_tar_ver" checked>
+                                <label class="form-check-label small" for="p_tar_ver">Ver Tareas</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Tareas:Gestionar" id="p_tar_gest" checked>
+                                <label class="form-check-label small" for="p_tar_gest">Gestionar Tareas</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">📅 Actividades</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Actividades:Ver" id="p_act_ver" checked>
+                                <label class="form-check-label small" for="p_act_ver">Ver Actividades</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Actividades:Gestionar" id="p_act_gest" checked>
+                                <label class="form-check-label small" for="p_act_gest">Gestionar Actividades</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">🛠️ Sistema</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Admin:Acceso" id="p_admin">
+                                <label class="form-check-label small" for="p_admin">Administración Completa</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="box-footer text-end">
@@ -43,6 +109,7 @@
                             <tr>
                                 <th>ID Rol</th>
                                 <th>Nombre del Perfil de Acceso</th>
+                                <th>Permisos Asignados</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,6 +118,20 @@
                                 <tr>
                                     <td>#ROL-@item.id_rol</td>
                                     <td class="fw-bold text-dark">@item.nombre</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(item.descripcion))
+                                        {
+                                            var splitPerms = item.descripcion.Split(',');
+                                            foreach (var p in splitPerms)
+                                            {
+                                                <span class="badge badge-primary-light small mb-1 me-1">@p</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-fade small">Sin permisos asignados</span>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>

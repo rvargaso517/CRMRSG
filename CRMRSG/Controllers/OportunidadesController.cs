@@ -11,10 +11,23 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
+        private bool TienePermiso(string permiso)
+        {
+            if (Session["UsuarioId"] == null) return false;
+            if (Session["RolId"] != null && (int)Session["RolId"] == 1) return true;
+            if (Session["Permisos"] == null) return false;
+            string perms = Session["Permisos"].ToString();
+            return perms.Split(',').Contains(permiso) || perms.Split(',').Contains("Admin:Acceso");
+        }
+
         // GET: Oportunidades
         public ActionResult Index()
         {
-            if (Session["UsuarioId"] == null) return RedirectToAction("Login", "Autenticacion");
+            if (!TienePermiso("Oportunidades:Ver"))
+            {
+                TempData["Error"] = "No tiene permisos para ver Oportunidades.";
+                return RedirectToAction("Index", "Dashboard");
+            }
 
             int usuarioId = (int)Session["UsuarioId"];
             int rolId = (int)Session["RolId"];
@@ -34,7 +47,11 @@ namespace CRMRSG.Controllers
         // GET: Oportunidades/Crear
         public ActionResult Crear()
         {
-            if (Session["UsuarioId"] == null) return RedirectToAction("Login", "Autenticacion");
+            if (!TienePermiso("Oportunidades:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para crear Oportunidades.";
+                return RedirectToAction("Index");
+            }
             ViewBag.Clientes = db.clientes.ToList();
             return View();
         }
@@ -44,7 +61,11 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Crear(oportunidade op, string fechaClose)
         {
-            if (Session["UsuarioId"] == null) return RedirectToAction("Login", "Autenticacion");
+            if (!TienePermiso("Oportunidades:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para crear Oportunidades.";
+                return RedirectToAction("Index");
+            }
 
             if (ModelState.IsValid)
             {
@@ -73,7 +94,11 @@ namespace CRMRSG.Controllers
         // GET: Oportunidades/Editar/5
         public ActionResult Editar(int id)
         {
-            if (Session["UsuarioId"] == null) return RedirectToAction("Login", "Autenticacion");
+            if (!TienePermiso("Oportunidades:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para editar Oportunidades.";
+                return RedirectToAction("Index");
+            }
 
             var op = db.oportunidades.Find(id);
             if (op == null) return HttpNotFound();
@@ -93,7 +118,11 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Editar(oportunidade op, string fechaClose)
         {
-            if (Session["UsuarioId"] == null) return RedirectToAction("Login", "Autenticacion");
+            if (!TienePermiso("Oportunidades:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para editar Oportunidades.";
+                return RedirectToAction("Index");
+            }
 
             var opDb = db.oportunidades.Find(op.id_oportunidad);
             if (opDb == null) return HttpNotFound();
@@ -128,7 +157,11 @@ namespace CRMRSG.Controllers
         // GET: Oportunidades/Detalle/5
         public ActionResult Detalle(int id)
         {
-            if (Session["UsuarioId"] == null) return RedirectToAction("Login", "Autenticacion");
+            if (!TienePermiso("Oportunidades:Ver"))
+            {
+                TempData["Error"] = "No tiene permisos para ver detalles de Oportunidades.";
+                return RedirectToAction("Index");
+            }
 
             var op = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).FirstOrDefault(o => o.id_oportunidad == id);
             if (op == null) return HttpNotFound();
@@ -146,9 +179,9 @@ namespace CRMRSG.Controllers
         [HttpPost]
         public JsonResult Eliminar(int id)
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Oportunidades:Gestionar"))
             {
-                return Json(new { success = false, message = "Sesión no válida" });
+                return Json(new { success = false, message = "No autorizado" });
             }
 
             try
@@ -166,6 +199,45 @@ namespace CRMRSG.Controllers
                 }
 
                 db.oportunidades.Remove(op);
+                db.SaveChanges();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // POST: Oportunidades/CambiarEtapa
+        [HttpPost]
+        public JsonResult CambiarEtapa(int id, string etapa, string razon)
+        {
+            if (!TienePermiso("Oportunidades:Gestionar"))
+            {
+                return Json(new { success = false, message = "No autorizado" });
+            }
+
+            try
+            {
+                var op = db.oportunidades.Find(id);
+                if (op == null)
+                {
+                    return Json(new { success = false, message = "Oportunidad no encontrada" });
+                }
+
+                int rolId = (int)Session["RolId"];
+                if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+                {
+                    return Json(new { success = false, message = "No tiene permisos para modificar esta oportunidad" });
+                }
+
+                op.etapa = etapa;
+                op.probabilidad = GetProbabilidadPorEtapa(etapa);
+                if (etapa == "Cerrada Perdida" && !string.IsNullOrWhiteSpace(razon))
+                {
+                    op.descripcion = (op.descripcion ?? "") + "\n[Motivo Pérdida: " + razon + "]";
+                }
                 db.SaveChanges();
 
                 return Json(new { success = true });

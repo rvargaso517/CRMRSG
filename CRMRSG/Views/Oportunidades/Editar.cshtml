@@ -91,3 +91,25 @@
         </div>
     </div>
 </div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('form').on('submit', function (e) {
+                var etapa = $('select[name="etapa"]').val();
+                if (etapa === 'Cerrada Perdida') {
+                    var desc = $('textarea[name="descripcion"]').val();
+                    if (!desc || !desc.includes('[Motivo Pérdida:')) {
+                        var razon = prompt("Es obligatorio indicar la razón de la pérdida o cancelación de esta oportunidad:");
+                        if (!razon || razon.trim() === '') {
+                            alert("Debe especificar una razón para guardar la oportunidad como perdida.");
+                            e.preventDefault();
+                            return false;
+                        }
+                        $('textarea[name="descripcion"]').val((desc ? desc + "\n" : "") + "[Motivo Pérdida: " + razon + "]");
+                    }
+                }
+            });
+        });
+    </script>
+}

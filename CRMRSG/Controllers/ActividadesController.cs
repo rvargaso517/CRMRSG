@@ -10,12 +10,22 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
-        // GET: Actividades
-        public ActionResult Index(string filtro)
+        private bool TienePermiso(string permiso)
         {
-            if (Session["UsuarioId"] == null)
+            if (Session["UsuarioId"] == null) return false;
+            if (Session["RolId"] != null && (int)Session["RolId"] == 1) return true;
+            if (Session["Permisos"] == null) return false;
+            string perms = Session["Permisos"].ToString();
+            return perms.Split(',').Contains(permiso) || perms.Split(',').Contains("Admin:Acceso");
+        }
+
+        // GET: Actividades
+        public ActionResult Index(string filtro, string estado)
+        {
+            if (!TienePermiso("Actividades:Ver"))
             {
-                return RedirectToAction("Login", "Autenticacion");
+                TempData["Error"] = "No tiene permisos para ver Actividades.";
+                return RedirectToAction("Index", "Dashboard");
             }
 
             int usuarioId = (int)Session["UsuarioId"];
@@ -25,8 +35,13 @@ namespace CRMRSG.Controllers
             {
                 filtro = "todos";
             }
+            if (string.IsNullOrEmpty(estado))
+            {
+                estado = "todos";
+            }
 
             ViewBag.FiltroActivo = filtro;
+            ViewBag.EstadoActivo = estado;
 
             // Determinar rango de fecha
             DateTime desde = DateTime.MinValue;
@@ -48,12 +63,45 @@ namespace CRMRSG.Controllers
                 query = query.Where(c => c.fecha >= desde);
             }
 
+            // Aplicar rango de estado
+            if (estado != "todos")
+            {
+                if (estado == "Pendiente")
+                {
+                    query = query.Where(c => c.estado == "Pendiente" || c.estado == "Programada");
+                }
+                else if (estado == "Realizada")
+                {
+                    query = query.Where(c => c.estado == "Completada" || c.estado == "Confirmada" || c.estado == "Realizada");
+                }
+                else if (estado == "Aplazada")
+                {
+                    query = query.Where(c => c.estado == "Aplazada");
+                }
+                else if (estado == "Cancelada")
+                {
+                    query = query.Where(c => c.estado == "Cancelada" || c.estado == "Suspendida");
+                }
+            }
+
             var listaActividades = query.OrderByDescending(c => c.fecha).ThenByDescending(c => c.hora).ToList();
 
-            // Estadísticas rápidas por estado
-            ViewBag.Pendientes = listaActividades.Count(x => x.estado == "Pendiente" || x.estado == "Programada");
-            ViewBag.Confirmadas = listaActividades.Count(x => x.estado == "Completada" || x.estado == "Confirmada" || x.estado == "Realizada");
-            ViewBag.Canceladas = listaActividades.Count(x => x.estado == "Cancelada" || x.estado == "Aplazada" || x.estado == "Suspendida");
+            // Estadísticas rápidas por estado (sobre la query sin filtro de estado)
+            var statsQuery = db.citas.AsQueryable();
+            if (!isAdmin)
+            {
+                statsQuery = statsQuery.Where(c => c.id_usuario == usuarioId);
+            }
+            if (filtro != "todos")
+            {
+                statsQuery = statsQuery.Where(c => c.fecha >= desde);
+            }
+            var listForStats = statsQuery.ToList();
+
+            ViewBag.Pendientes = listForStats.Count(x => x.estado == "Pendiente" || x.estado == "Programada");
+            ViewBag.Confirmadas = listForStats.Count(x => x.estado == "Completada" || x.estado == "Confirmada" || x.estado == "Realizada");
+            ViewBag.Canceladas = listForStats.Count(x => x.estado == "Cancelada" || x.estado == "Suspendida");
+            ViewBag.Aplazadas = listForStats.Count(x => x.estado == "Aplazada");
 
             return View(listaActividades);
         }
@@ -61,9 +109,10 @@ namespace CRMRSG.Controllers
         // GET: Actividades/Crear
         public ActionResult Crear()
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Actividades:Gestionar"))
             {
-                return RedirectToAction("Login", "Autenticacion");
+                TempData["Error"] = "No tiene permisos para crear Actividades.";
+                return RedirectToAction("Index");
             }
 
             int usuarioId = (int)Session["UsuarioId"];
@@ -89,9 +138,10 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Crear(string tipo_actividad, string fecha, string hora, int? id_cliente, string descripcion)
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Actividades:Gestionar"))
             {
-                return RedirectToAction("Login", "Autenticacion");
+                TempData["Error"] = "No tiene permisos para registrar Actividades.";
+                return RedirectToAction("Index");
             }
 
             if (string.IsNullOrWhiteSpace(tipo_actividad) || string.IsNullOrWhiteSpace(fecha) || string.IsNullOrWhiteSpace(hora) || string.IsNullOrWhiteSpace(descripcion))
@@ -131,9 +181,9 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Completar(int id)
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Actividades:Gestionar"))
             {
-                return Json(new { success = false, message = "Sesión no válida" });
+                return Json(new { success = false, message = "No autorizado" });
             }
 
             var c = db.citas.Find(id);
@@ -151,9 +201,9 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Posponer(int id, string razon, string nuevaFecha)
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Actividades:Gestionar"))
             {
-                return Json(new { success = false, message = "Sesión no válida" });
+                return Json(new { success = false, message = "No autorizado" });
             }
 
             var c = db.citas.Find(id);
@@ -170,6 +220,26 @@ namespace CRMRSG.Controllers
                 }
                 db.SaveChanges();
                 return Json(new { success = true, message = "Actividad aplazada correctamente." });
+            }
+            return Json(new { success = false, message = "Actividad no encontrada." });
+        }
+
+        // POST: Actividades/Cancelar
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Cancelar(int id)
+        {
+            if (!TienePermiso("Actividades:Gestionar"))
+            {
+                return Json(new { success = false, message = "No autorizado" });
+            }
+
+            var c = db.citas.Find(id);
+            if (c != null)
+            {
+                c.estado = "Cancelada";
+                db.SaveChanges();
+                return Json(new { success = true, message = "Actividad marcada como cancelada." });
             }
             return Json(new { success = false, message = "Actividad no encontrada." });
         }

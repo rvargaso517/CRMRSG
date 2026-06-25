@@ -77,6 +77,7 @@ namespace CRMRSG.Controllers
             Session["Nombre"] = usuario.nombre;
             Session["RolId"] = usuario.id_rol;
             Session["Correo"] = usuario.correo;
+            Session["Permisos"] = usuario.role != null ? usuario.role.descripcion : "";
 
             return RedirectToAction("Index", "Dashboard");
         }

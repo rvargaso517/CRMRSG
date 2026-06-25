@@ -283,12 +283,13 @@
                 var completados = @ViewBag.EventosCompletados;
                 var pendientes = @ViewBag.EventosPendientes;
                 var cancelados = @ViewBag.EventosCancelados;
+                var aplazados = @(ViewBag.EventosAplazados ?? 0);
 
                 var optionsDonut = {
-                    series: [completados, pendientes, cancelados],
+                    series: [completados, pendientes, cancelados, aplazados],
                     chart: { type: 'donut', height: 300 },
-                    labels: ['Completadas', 'Pendientes', 'Canceladas'],
-                    colors: ['#10c469', '#ff9920', '#ff5b5b'], // Verde, Naranja, Rojo
+                    labels: ['Completadas', 'Pendientes', 'Canceladas', 'Aplazadas'],
+                    colors: ['#10c469', '#ff9920', '#ff5b5b', '#7367f0'], // Verde, Naranja, Rojo, Morado
                     legend: { position: 'bottom' },
                     stroke: { colors: ['#ffffff'], width: 2 }
                 };

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Web.Mvc;
+using System.Data.Entity;
 using CRMRSG.EntityFramework;
 
 namespace CRMRSG.Controllers
@@ -9,16 +10,32 @@ namespace CRMRSG.Controllers
     {
         private CRM_RSGEntities db = new CRM_RSGEntities();
 
-        // GET: Tareas
-        public ActionResult Index(int? usuarioId)
+        private bool TienePermiso(string permiso)
         {
-            if (Session["UsuarioId"] == null)
+            if (Session["UsuarioId"] == null) return false;
+            if (Session["RolId"] != null && (int)Session["RolId"] == 1) return true;
+            if (Session["Permisos"] == null) return false;
+            string perms = Session["Permisos"].ToString();
+            return perms.Split(',').Contains(permiso) || perms.Split(',').Contains("Admin:Acceso");
+        }
+
+        // GET: Tareas
+        public ActionResult Index(int? usuarioId, string filtroFecha)
+        {
+            if (!TienePermiso("Tareas:Ver"))
             {
-                return RedirectToAction("Login", "Autenticacion");
+                TempData["Error"] = "No tiene permisos para ver Tareas.";
+                return RedirectToAction("Index", "Dashboard");
             }
 
             int currentUserId = (int)Session["UsuarioId"];
             bool isAdmin = Session["RolId"] != null && (int)Session["RolId"] == 1;
+
+            if (string.IsNullOrEmpty(filtroFecha))
+            {
+                filtroFecha = "todos";
+            }
+            ViewBag.FiltroFechaActivo = filtroFecha;
 
             var query = db.tareas.AsQueryable();
 
@@ -37,19 +54,55 @@ namespace CRMRSG.Controllers
                 usuarioId = currentUserId;
             }
 
+            // Filtrar por fecha_limite
+            DateTime today = DateTime.Today;
+            if (filtroFecha == "hoy")
+            {
+                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) == today);
+            }
+            else if (filtroFecha == "manana")
+            {
+                DateTime tomorrow = today.AddDays(1);
+                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) == tomorrow);
+            }
+            else if (filtroFecha == "semana")
+            {
+                DateTime endOfWeek = today.AddDays(7);
+                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) >= today && DbFunctions.TruncateTime(t.fecha_limite.Value) <= endOfWeek);
+            }
+            else if (filtroFecha == "mes")
+            {
+                DateTime endOfMonth = today.AddMonths(1);
+                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) >= today && DbFunctions.TruncateTime(t.fecha_limite.Value) <= endOfMonth);
+            }
+
             var tareas = query.ToList();
             ViewBag.SelectedUsuarioId = usuarioId;
 
-            // 1. Tareas por Usuario (Pie Chart)
-            var userStats = db.tareas
-                .GroupBy(t => t.usuario != null ? t.usuario.nombre + " " + t.usuario.apellido : "Sin asignar")
-                .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
-                .ToList();
-            ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
-            ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
+            // 1. Tareas por Usuario (Pie Chart) - Si se filtra por un usuario específico, mostramos su progreso por estado
+            if (usuarioId.HasValue || !isAdmin)
+            {
+                var userStats = query
+                    .GroupBy(t => t.estado ?? "Pendiente")
+                    .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                    .ToList();
+                ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
+                ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
+                ViewBag.UserChartTitle = "Mi Progreso de Tareas";
+            }
+            else
+            {
+                var userStats = query
+                    .GroupBy(t => t.usuario != null ? t.usuario.nombre + " " + t.usuario.apellido : "Sin asignar")
+                    .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                    .ToList();
+                ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
+                ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
+                ViewBag.UserChartTitle = "Carga por Usuario";
+            }
 
             // 2. Tareas por Estado / Categoría (Donut Chart)
-            var catStats = db.tareas
+            var catStats = query
                 .GroupBy(t => t.estado ?? "Pendiente")
                 .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
                 .ToList();
@@ -57,7 +110,7 @@ namespace CRMRSG.Controllers
             ViewBag.CategoryValues = catStats.Select(x => x.Cantidad).ToArray();
 
             // 3. Tareas por Prioridad (Bar Chart)
-            var prioStats = db.tareas
+            var prioStats = query
                 .GroupBy(t => t.prioridad ?? "Media")
                 .Select(g => new { Prioridad = g.Key, Cantidad = g.Count() })
                 .ToList();
@@ -70,6 +123,11 @@ namespace CRMRSG.Controllers
         // GET: Tareas/Crear
         public ActionResult Crear()
         {
+            if (!TienePermiso("Tareas:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para crear Tareas.";
+                return RedirectToAction("Index");
+            }
             ViewBag.Clientes = db.clientes.ToList();
             return View();
         }
@@ -79,6 +137,12 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Crear(tarea nuevaTarea)
         {
+            if (!TienePermiso("Tareas:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para crear Tareas.";
+                return RedirectToAction("Index");
+            }
+
             if (ModelState.IsValid)
             {
                 nuevaTarea.estado = "Pendiente";
@@ -99,6 +163,12 @@ namespace CRMRSG.Controllers
         // Tareas agrupadas por prioridad
         public ActionResult Prioridades()
         {
+            if (!TienePermiso("Tareas:Ver"))
+            {
+                TempData["Error"] = "No autorizado.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+
             ViewBag.Alta = db.tareas.Count(x => x.prioridad == "Alta");
             ViewBag.Media = db.tareas.Count(x => x.prioridad == "Media");
             ViewBag.Baja = db.tareas.Count(x => x.prioridad == "Baja");
@@ -106,10 +176,15 @@ namespace CRMRSG.Controllers
             return View();
         }
 
-
         // Tareas agrupadas por categorías (estados)
         public ActionResult Categorias()
         {
+            if (!TienePermiso("Tareas:Ver"))
+            {
+                TempData["Error"] = "No autorizado.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+
             ViewBag.Pendientes = db.tareas.Count(x => x.estado == "Pendiente");
             ViewBag.EnProceso = db.tareas.Count(x => x.estado == "En Proceso");
             ViewBag.Completadas = db.tareas.Count(x => x.estado == "Completada");
@@ -122,9 +197,9 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Completar(int id)
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Tareas:Gestionar"))
             {
-                return Json(new { success = false, message = "Sesión no válida" });
+                return Json(new { success = false, message = "No autorizado" });
             }
 
             var t = db.tareas.Find(id);
@@ -142,9 +217,9 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Posponer(int id, string razon, string nuevaFecha)
         {
-            if (Session["UsuarioId"] == null)
+            if (!TienePermiso("Tareas:Gestionar"))
             {
-                return Json(new { success = false, message = "Sesión no válida" });
+                return Json(new { success = false, message = "No autorizado" });
             }
 
             var t = db.tareas.Find(id);
@@ -160,7 +235,7 @@ namespace CRMRSG.Controllers
                     t.fecha_limite = DateTime.Parse(nuevaFecha);
                 }
                 db.SaveChanges();
-                return Json(new { success = true, message = "Tarea aplazada con éxito." });
+                return Json(new { success = true, message = "Tarea aplazada correctamente." });
             }
             return Json(new { success = false, message = "Tarea no encontrada." });
         }
@@ -171,7 +246,6 @@ namespace CRMRSG.Controllers
             {
                 db.Dispose();
             }
-
             base.Dispose(disposing);
         }
     }

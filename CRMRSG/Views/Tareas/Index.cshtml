@@ -45,23 +45,54 @@
             <div class="box-body py-15">
                 @using (Html.BeginForm("Index", "Tareas", FormMethod.Get, new { @class = "row align-items-end" }))
                 {
-                    <div class="col-md-9 col-12 form-group mb-0">
-                        <label class="form-label">Filtrar Tareas por Propietario / Asignado</label>
-                        <select name="usuarioId" class="form-select">
-                            <option value="">-- Todos los Usuarios / Colaboradores --</option>
-                            @foreach (var user in usuarios)
-                            {
-                                <option value="@user.id_usuario" @(selectedId == user.id_usuario ? "selected" : "")>
-                                    @user.nombre @user.apellido (@user.correo)
-                                </option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-3 col-12 text-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fa fa-filter me-2"></i> Aplicar Filtro
-                        </button>
-                    </div>
+                    if (usuarios != null && usuarios.Count > 1)
+                    {
+                        <div class="col-md-5 col-12 form-group mb-0">
+                            <label class="form-label">Propietario / Asignado</label>
+                            <select name="usuarioId" class="form-select">
+                                <option value="">-- Todos los Usuarios --</option>
+                                @foreach (var user in usuarios)
+                                {
+                                    <option value="@user.id_usuario" @(selectedId == user.id_usuario ? "selected" : "")>
+                                        @user.nombre @user.apellido
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-12 form-group mb-0">
+                            <label class="form-label">Rango Temporal (Fecha Límite)</label>
+                            <select name="filtroFecha" class="form-select">
+                                <option value="todos" @(ViewBag.FiltroFechaActivo == "todos" ? "selected" : "")>⏰ Todos los tiempos</option>
+                                <option value="hoy" @(ViewBag.FiltroFechaActivo == "hoy" ? "selected" : "")>📅 Hoy</option>
+                                <option value="manana" @(ViewBag.FiltroFechaActivo == "manana" ? "selected" : "")>🌅 Mañana</option>
+                                <option value="semana" @(ViewBag.FiltroFechaActivo == "semana" ? "selected" : "")>🗓️ Próximos 7 días</option>
+                                <option value="mes" @(ViewBag.FiltroFechaActivo == "mes" ? "selected" : "")>📊 Próximos 30 días</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-12 text-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fa fa-filter me-2"></i> Aplicar Filtro
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-md-9 col-12 form-group mb-0">
+                            <label class="form-label">Rango Temporal (Fecha Límite)</label>
+                            <select name="filtroFecha" class="form-select">
+                                <option value="todos" @(ViewBag.FiltroFechaActivo == "todos" ? "selected" : "")>⏰ Todos los tiempos</option>
+                                <option value="hoy" @(ViewBag.FiltroFechaActivo == "hoy" ? "selected" : "")>📅 Hoy</option>
+                                <option value="manana" @(ViewBag.FiltroFechaActivo == "manana" ? "selected" : "")>🌅 Mañana</option>
+                                <option value="semana" @(ViewBag.FiltroFechaActivo == "semana" ? "selected" : "")>🗓️ Próximos 7 días</option>
+                                <option value="mes" @(ViewBag.FiltroFechaActivo == "mes" ? "selected" : "")>📊 Próximos 30 días</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-12 text-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fa fa-filter me-2"></i> Aplicar Filtro
+                            </button>
+                        </div>
+                    }
                 }
             </div>
         </div>
@@ -70,39 +101,67 @@
 
 <!-- Gráficos de Estadísticas -->
 <div class="row">
-    <!-- Tareas por Usuario -->
-    <div class="col-xl-4 col-12">
-        <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title" style="color: #040A2D;">Carga por Usuario</h4>
-            </div>
-            <div class="box-body">
-                <div id="user-task-chart"></div>
-            </div>
-        </div>
-    </div>
-    <!-- Categoría de Tareas -->
-    <div class="col-xl-4 col-12">
-        <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title" style="color: #040A2D;">Tareas por Estado</h4>
-            </div>
-            <div class="box-body">
-                <div id="category-task-chart"></div>
+    @if (selectedId == null)
+    {
+        <!-- Tareas por Usuario -->
+        <div class="col-xl-4 col-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h4 class="box-title" style="color: #040A2D;">@(ViewBag.UserChartTitle ?? "Carga por Usuario")</h4>
+                </div>
+                <div class="box-body">
+                    <div id="user-task-chart"></div>
+                </div>
             </div>
         </div>
-    </div>
-    <!-- Tareas por Prioridad -->
-    <div class="col-xl-4 col-12">
-        <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title" style="color: #040A2D;">Distribución de Prioridades</h4>
-            </div>
-            <div class="box-body">
-                <div id="priority-task-chart"></div>
+        <!-- Categoría de Tareas -->
+        <div class="col-xl-4 col-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h4 class="box-title" style="color: #040A2D;">Tareas por Estado</h4>
+                </div>
+                <div class="box-body">
+                    <div id="category-task-chart"></div>
+                </div>
             </div>
         </div>
-    </div>
+        <!-- Tareas por Prioridad -->
+        <div class="col-xl-4 col-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h4 class="box-title" style="color: #040A2D;">Distribución de Prioridades</h4>
+                </div>
+                <div class="box-body">
+                    <div id="priority-task-chart"></div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Categoría de Tareas -->
+        <div class="col-xl-6 col-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h4 class="box-title" style="color: #040A2D;">Tareas por Estado</h4>
+                </div>
+                <div class="box-body">
+                    <div id="category-task-chart"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Tareas por Prioridad -->
+        <div class="col-xl-6 col-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h4 class="box-title" style="color: #040A2D;">Distribución de Prioridades</h4>
+                </div>
+                <div class="box-body">
+                    <div id="priority-task-chart"></div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <!-- Listado de Tareas -->

@@ -120,6 +120,11 @@
                                         <td>
                                             <a href="~/Oportunidades/Detalle/@item.id_oportunidad" class="btn btn-sm btn-primary-light" title="Detalle"><i class="fa fa-eye"></i></a>
                                             <a href="~/Oportunidades/Editar/@item.id_oportunidad" class="btn btn-sm btn-info-light" title="Editar"><i class="fa fa-pencil"></i></a>
+                                            @if (!etapaLow.Contains("ganada") && !etapaLow.Contains("perdida"))
+                                            {
+                                                <button onclick="cambiarEtapa(@item.id_oportunidad, 'Cerrada Ganada')" class="btn btn-sm btn-success-light" title="Marcar Ganada / Completada"><i class="fa fa-check"></i></button>
+                                                <button onclick="cambiarEtapa(@item.id_oportunidad, 'Cerrada Perdida')" class="btn btn-sm btn-warning-light" title="Marcar Perdida / Cancelada"><i class="fa fa-times"></i></button>
+                                            }
                                             <button onclick="eliminarOportunidad(@item.id_oportunidad, '@item.nombre')" class="btn btn-sm btn-danger-light" title="Eliminar"><i class="fa fa-trash"></i></button>
                                         </td>
                                     </tr>
@@ -135,6 +140,41 @@
 
 @section scripts {
     <script>
+        function cambiarEtapa(id, etapa) {
+            var actionName = etapa === 'Cerrada Ganada' ? 'completar/ganar' : 'cancelar/perder';
+            var razon = '';
+            if (etapa === 'Cerrada Perdida') {
+                razon = prompt("Es obligatorio ingresar la razón de pérdida o cancelación para esta oportunidad:");
+                if (razon === null) {
+                    return; // Clic en Cancelar
+                }
+                if (razon.trim() === '') {
+                    alert("Debe especificar una razón válida.");
+                    return;
+                }
+            } else {
+                if (!confirm("¿Está seguro de que desea " + actionName + " esta oportunidad?")) {
+                    return;
+                }
+            }
+
+            $.ajax({
+                url: '@Url.Action("CambiarEtapa", "Oportunidades")',
+                type: 'POST',
+                data: { id: id, etapa: etapa, razon: razon },
+                success: function (res) {
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert("Error al actualizar la oportunidad: " + res.message);
+                    }
+                },
+                error: function () {
+                    alert("Error de red al intentar actualizar.");
+                }
+            });
+        }
+
         function eliminarOportunidad(id, nombre) {
             if (confirm("¿Está seguro de que desea eliminar la oportunidad '" + nombre + "'?")) {
                 $.ajax({
