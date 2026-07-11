@@ -269,6 +269,11 @@ CREATE TABLE bitacora (
 );
 GO
 
+
+ALTER TABLE tareas ADD alerta_disparada BIT DEFAULT 0;
+ALTER TABLE notificaciones ADD tipo VARCHAR(50) DEFAULT 'General';
+ALTER TABLE notificaciones ADD id_referencia INT NULL; 
+
 -- =====================================================
 -- FIN DEL SCRIPT
 -- =====================================================

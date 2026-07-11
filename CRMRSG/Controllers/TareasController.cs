@@ -20,6 +20,7 @@ namespace CRMRSG.Controllers
         }
 
         // GET: Tareas
+        // GET: Tareas
         public ActionResult Index(int? usuarioId, string filtroFecha)
         {
             if (!TienePermiso("Tareas:Ver"))
@@ -30,6 +31,12 @@ namespace CRMRSG.Controllers
 
             int currentUserId = (int)Session["UsuarioId"];
             bool isAdmin = Session["RolId"] != null && (int)Session["RolId"] == 1;
+
+            // ==========================================
+            // NUEVO: HU-019 Ejecutar el chequeo automático de alertas
+            // ==========================================
+            VerificarYGenerarAlertas(currentUserId, isAdmin);
+            // ==========================================
 
             if (string.IsNullOrEmpty(filtroFecha))
             {
@@ -79,7 +86,7 @@ namespace CRMRSG.Controllers
             var tareas = query.ToList();
             ViewBag.SelectedUsuarioId = usuarioId;
 
-            // 1. Tareas por Usuario (Pie Chart) - Si se filtra por un usuario específico, mostramos su progreso por estado
+            // 1. Tareas por Usuario (Pie Chart)
             if (usuarioId.HasValue || !isAdmin)
             {
                 var userStats = query
@@ -118,6 +125,70 @@ namespace CRMRSG.Controllers
             ViewBag.PriorityValues = prioStats.Select(x => x.Cantidad).ToArray();
 
             return View(tareas);
+        }
+
+       
+        private void VerificarYGenerarAlertas(int currentUserId, bool isAdmin)
+        {
+            DateTime limiteAlerta = DateTime.Today.AddDays(2); // Alertas si vencen en 2 días o menos
+            DateTime hoy = DateTime.Today;
+
+           
+            var tareasProximas = db.tareas
+                .Where(t => t.estado != "Completada"
+                         && t.fecha_limite.HasValue
+                         && t.fecha_limite.Value <= limiteAlerta
+                         
+                         && (isAdmin || t.id_usuario == currentUserId))
+                .ToList();
+
+           
+
+            bool huboCambios = false;
+
+            foreach (var tarea in tareasProximas)
+            {
+                
+                if (tarea.alerta_disparada == null || tarea.alerta_disparada == false)
+                {
+                    string diasRestantesMsg = "";
+                    if (tarea.fecha_limite.Value < hoy)
+                    {
+                        diasRestantesMsg = "¡Está VENCIDA desde el " + tarea.fecha_limite.Value.ToString("dd/MM/yyyy") + "!";
+                    }
+                    else if (tarea.fecha_limite.Value == hoy)
+                    {
+                        diasRestantesMsg = "Vence HOY.";
+                    }
+                    else
+                    {
+                        int dias = (tarea.fecha_limite.Value - hoy).Days;
+                        diasRestantesMsg = $"Vence en {dias} días ({tarea.fecha_limite.Value.ToString("dd/MM/yyyy")}).";
+                    }
+
+                    
+                    var nuevaNotificacion = new notificacione
+                    {
+                        mensaje = $"Alerta de Seguimiento: La tarea '{tarea.titulo}' requiere atención. {diasRestantesMsg}",
+                        fecha = DateTime.Now,
+                        leida = false,
+                        id_usuario = tarea.id_usuario,
+                        tipo = "Alerta de Seguimiento",
+                        id_referencia = tarea.id_tarea
+                    };
+
+                    db.notificaciones.Add(nuevaNotificacion);
+
+                    
+                    tarea.alerta_disparada = true;
+                    huboCambios = true;
+                }
+            }
+
+            if (huboCambios)
+            {
+                db.SaveChanges();
+            }
         }
 
         // GET: Tareas/Crear

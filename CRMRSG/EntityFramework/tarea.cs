@@ -14,6 +14,12 @@ namespace CRMRSG.EntityFramework
     
     public partial class tarea
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+        public tarea()
+        {
+            this.tarea_cliente = new HashSet<tarea_cliente>();
+        }
+    
         public int id_tarea { get; set; }
         public string titulo { get; set; }
         public string descripcion { get; set; }
@@ -22,8 +28,11 @@ namespace CRMRSG.EntityFramework
         public Nullable<System.DateTime> fecha_limite { get; set; }
         public Nullable<int> id_cliente { get; set; }
         public Nullable<int> id_usuario { get; set; }
+        public Nullable<bool> alerta_disparada { get; set; }
     
         public virtual cliente cliente { get; set; }
         public virtual usuario usuario { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<tarea_cliente> tarea_cliente { get; set; }
     }
 }
