@@ -135,6 +135,9 @@ namespace CRMRSG.Controllers
 
             if (ModelState.IsValid)
             {
+                
+                bool esNuevaPropuesta = (op.etapa == "Propuesta" && opDb.etapa != "Propuesta");
+
                 opDb.nombre = op.nombre;
                 opDb.descripcion = op.descripcion;
                 opDb.etapa = op.etapa;
@@ -145,6 +148,22 @@ namespace CRMRSG.Controllers
                     opDb.fecha_creacion = DateTime.Parse(fechaClose);
                 }
                 opDb.probabilidad = GetProbabilidadPorEtapa(op.etapa);
+
+                // Generar tarea automática si pasa a Propuesta
+                if (esNuevaPropuesta)
+                {
+                    var tareaAutomatica = new tarea
+                    {
+                        titulo = $"Seguimiento de Propuesta: {opDb.nombre}",
+                        descripcion = $"Automatización Comercial: La oportunidad avanzó a etapa de Propuesta. Revisar requerimientos y enviar cotización formal.",
+                        prioridad = "Alta",
+                        estado = "Pendiente",
+                        fecha_limite = DateTime.Now.AddDays(3), 
+                        id_usuario = opDb.id_usuario,
+                        alerta_disparada = false
+                    };
+                    db.tareas.Add(tareaAutomatica);
+                }
 
                 db.SaveChanges();
                 return RedirectToAction("Index");
@@ -232,12 +251,32 @@ namespace CRMRSG.Controllers
                     return Json(new { success = false, message = "No tiene permisos para modificar esta oportunidad" });
                 }
 
+                
+                bool esNuevaPropuesta = (etapa == "Propuesta" && op.etapa != "Propuesta");
+
                 op.etapa = etapa;
                 op.probabilidad = GetProbabilidadPorEtapa(etapa);
                 if (etapa == "Cerrada Perdida" && !string.IsNullOrWhiteSpace(razon))
                 {
                     op.descripcion = (op.descripcion ?? "") + "\n[Motivo Pérdida: " + razon + "]";
                 }
+
+               
+                if (esNuevaPropuesta)
+                {
+                    var tareaAutomatica = new tarea
+                    {
+                        titulo = $"Seguimiento de Propuesta Rápido: {op.nombre}",
+                        descripcion = $"Automatización Comercial: Oportunidad movida a Propuesta de forma rápida. Gestionar cotización formal.",
+                        prioridad = "Alta",
+                        estado = "Pendiente",
+                        fecha_limite = DateTime.Now.AddDays(2), 
+                        id_usuario = op.id_usuario,
+                        alerta_disparada = false
+                    };
+                    db.tareas.Add(tareaAutomatica);
+                }
+
                 db.SaveChanges();
 
                 return Json(new { success = true });

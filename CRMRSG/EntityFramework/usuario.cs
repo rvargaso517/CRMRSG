@@ -24,6 +24,7 @@ namespace CRMRSG.EntityFramework
             this.oportunidades = new HashSet<oportunidade>();
             this.reportes = new HashSet<reporte>();
             this.tareas = new HashSet<tarea>();
+            this.nota_cliente = new HashSet<nota_cliente>();
         }
     
         public int id_usuario { get; set; }
@@ -57,5 +58,7 @@ namespace CRMRSG.EntityFramework
         public virtual role role { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<tarea> tareas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<nota_cliente> nota_cliente { get; set; }
     }
 }

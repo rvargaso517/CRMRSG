@@ -20,6 +20,9 @@ namespace CRMRSG.EntityFramework
             this.citas = new HashSet<cita>();
             this.oportunidades = new HashSet<oportunidade>();
             this.tareas = new HashSet<tarea>();
+            this.contacto_cliente = new HashSet<contacto_cliente>();
+            this.nota_cliente = new HashSet<nota_cliente>();
+            this.tarea_cliente = new HashSet<tarea_cliente>();
         }
     
         public int id_cliente { get; set; }
@@ -39,5 +42,11 @@ namespace CRMRSG.EntityFramework
         public virtual ICollection<oportunidade> oportunidades { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<tarea> tareas { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<contacto_cliente> contacto_cliente { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<nota_cliente> nota_cliente { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<tarea_cliente> tarea_cliente { get; set; }
     }
 }

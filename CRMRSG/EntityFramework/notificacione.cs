@@ -19,6 +19,8 @@ namespace CRMRSG.EntityFramework
         public Nullable<System.DateTime> fecha { get; set; }
         public Nullable<bool> leida { get; set; }
         public Nullable<int> id_usuario { get; set; }
+        public string tipo { get; set; }
+        public Nullable<int> id_referencia { get; set; }
     
         public virtual usuario usuario { get; set; }
     }

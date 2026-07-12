@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
   <!-- EF Runtime content -->
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="CRM_RSGModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="CRM_RSGModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="bitacora">
           <Key>
             <PropertyRef Name="id_registro" />
@@ -13,8 +13,8 @@
           <Property Name="accion" Type="varchar" MaxLength="50" />
           <Property Name="tabla_afectada" Type="varchar" MaxLength="100" />
           <Property Name="id_registro_afectado" Type="int" />
-          <Property Name="valor_anterior" Type="text" />
-          <Property Name="valor_nuevo" Type="text" />
+          <Property Name="valor_anterior" Type="varchar(max)" />
+          <Property Name="valor_nuevo" Type="varchar(max)" />
           <Property Name="fecha_hora" Type="datetime" />
           <Property Name="direccion_ip" Type="varchar" MaxLength="100" />
           <Property Name="id_usuario" Type="int" />
@@ -46,6 +46,28 @@
           <Property Name="fecha_registro" Type="datetime" />
           <Property Name="id_usuario" Type="int" />
         </EntityType>
+        <EntityType Name="contacto_cliente">
+          <Key>
+            <PropertyRef Name="id_contacto" />
+          </Key>
+          <Property Name="id_contacto" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="nombre" Type="varchar" MaxLength="100" Nullable="false" />
+          <Property Name="apellido" Type="varchar" MaxLength="100" />
+          <Property Name="puesto" Type="varchar" MaxLength="100" />
+          <Property Name="telefono" Type="varchar" MaxLength="20" />
+          <Property Name="correo" Type="varchar" MaxLength="150" />
+          <Property Name="id_cliente" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="nota_cliente">
+          <Key>
+            <PropertyRef Name="id_nota" />
+          </Key>
+          <Property Name="id_nota" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="comentario" Type="text" Nullable="false" />
+          <Property Name="fecha_creacion" Type="datetime" />
+          <Property Name="id_cliente" Type="int" Nullable="false" />
+          <Property Name="id_usuario" Type="int" Nullable="false" />
+        </EntityType>
         <EntityType Name="notificaciones">
           <Key>
             <PropertyRef Name="id_notificacion" />
@@ -55,6 +77,8 @@
           <Property Name="fecha" Type="datetime" />
           <Property Name="leida" Type="bit" />
           <Property Name="id_usuario" Type="int" />
+          <Property Name="tipo" Type="varchar" MaxLength="50" />
+          <Property Name="id_referencia" Type="int" />
         </EntityType>
         <EntityType Name="oportunidades">
           <Key>
@@ -89,6 +113,14 @@
           <Property Name="nombre" Type="varchar" MaxLength="50" Nullable="false" />
           <Property Name="descripcion" Type="varchar" MaxLength="255" />
         </EntityType>
+        <EntityType Name="tarea_cliente">
+          <Key>
+            <PropertyRef Name="id_tarea_cliente" />
+          </Key>
+          <Property Name="id_tarea_cliente" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="id_tarea" Type="int" Nullable="false" />
+          <Property Name="id_cliente" Type="int" Nullable="false" />
+        </EntityType>
         <EntityType Name="tareas">
           <Key>
             <PropertyRef Name="id_tarea" />
@@ -101,6 +133,7 @@
           <Property Name="fecha_limite" Type="date" />
           <Property Name="id_cliente" Type="int" />
           <Property Name="id_usuario" Type="int" />
+          <Property Name="alerta_disparada" Type="bit" />
         </EntityType>
         <EntityType Name="usuarios">
           <Key>
@@ -121,39 +154,6 @@
           <Property Name="fecha_creacion" Type="datetime" />
           <Property Name="ultimo_login" Type="datetime" />
           <Property Name="id_rol" Type="int" Nullable="false" />
-        </EntityType>
-        <EntityType Name="contacto_cliente">
-          <Key>
-            <PropertyRef Name="id_contacto" />
-          </Key>
-          <Property Name="id_contacto" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="id_cliente" Type="int" Nullable="false" />
-          <Property Name="nombre" Type="varchar" MaxLength="150" Nullable="false" />
-          <Property Name="telefono" Type="varchar" MaxLength="50" />
-          <Property Name="correo" Type="varchar" MaxLength="100" />
-          <Property Name="puesto" Type="varchar" MaxLength="100" />
-        </EntityType>
-        <EntityType Name="nota_cliente">
-          <Key>
-            <PropertyRef Name="id_note" />
-          </Key>
-          <Property Name="id_note" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="id_cliente" Type="int" Nullable="false" />
-          <Property Name="comentario" Type="text" Nullable="false" />
-          <Property Name="fecha_creacion" Type="datetime" Nullable="false" />
-        </EntityType>
-        <EntityType Name="tarea_cliente">
-          <Key>
-            <PropertyRef Name="id_tarea" />
-          </Key>
-          <Property Name="id_tarea" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="id_cliente" Type="int" Nullable="false" />
-          <Property Name="tipo_trabajo" Type="varchar" MaxLength="150" Nullable="false" />
-          <Property Name="descripcion" Type="text" />
-          <Property Name="ganancia" Type="decimal" Precision="18" Scale="2" Nullable="false" />
-          <Property Name="fecha_inicio" Type="datetime" Nullable="false" />
-          <Property Name="fecha_fin" Type="datetime" />
-          <Property Name="estado" Type="varchar" MaxLength="50" Nullable="false" />
         </EntityType>
         <Association Name="FK_bitacora_usuarios">
           <End Role="usuarios" Type="Self.usuarios" Multiplicity="0..1" />
@@ -199,6 +199,46 @@
               <PropertyRef Name="id_usuario" />
             </Principal>
             <Dependent Role="clientes">
+              <PropertyRef Name="id_usuario" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_contacto_cliente_clientes">
+          <End Role="clientes" Type="Self.clientes" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="contacto_cliente" Type="Self.contacto_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="clientes">
+              <PropertyRef Name="id_cliente" />
+            </Principal>
+            <Dependent Role="contacto_cliente">
+              <PropertyRef Name="id_cliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_nota_cliente_clientes">
+          <End Role="clientes" Type="Self.clientes" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="nota_cliente" Type="Self.nota_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="clientes">
+              <PropertyRef Name="id_cliente" />
+            </Principal>
+            <Dependent Role="nota_cliente">
+              <PropertyRef Name="id_cliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_nota_cliente_usuarios">
+          <End Role="usuarios" Type="Self.usuarios" Multiplicity="1" />
+          <End Role="nota_cliente" Type="Self.nota_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="usuarios">
+              <PropertyRef Name="id_usuario" />
+            </Principal>
+            <Dependent Role="nota_cliente">
               <PropertyRef Name="id_usuario" />
             </Dependent>
           </ReferentialConstraint>
@@ -251,6 +291,32 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_tarea_cliente_clientes">
+          <End Role="clientes" Type="Self.clientes" Multiplicity="1" />
+          <End Role="tarea_cliente" Type="Self.tarea_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="clientes">
+              <PropertyRef Name="id_cliente" />
+            </Principal>
+            <Dependent Role="tarea_cliente">
+              <PropertyRef Name="id_cliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tarea_cliente_tareas">
+          <End Role="tareas" Type="Self.tareas" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="tarea_cliente" Type="Self.tarea_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tareas">
+              <PropertyRef Name="id_tarea" />
+            </Principal>
+            <Dependent Role="tarea_cliente">
+              <PropertyRef Name="id_tarea" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_tareas_clientes">
           <End Role="clientes" Type="Self.clientes" Multiplicity="0..1" />
           <End Role="tareas" Type="Self.tareas" Multiplicity="*" />
@@ -291,15 +357,15 @@
           <EntitySet Name="bitacora" EntityType="Self.bitacora" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="citas" EntityType="Self.citas" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="clientes" EntityType="Self.clientes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="contacto_cliente" EntityType="Self.contacto_cliente" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="nota_cliente" EntityType="Self.nota_cliente" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="notificaciones" EntityType="Self.notificaciones" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="oportunidades" EntityType="Self.oportunidades" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="reportes" EntityType="Self.reportes" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="roles" EntityType="Self.roles" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="tarea_cliente" EntityType="Self.tarea_cliente" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="tareas" EntityType="Self.tareas" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="usuarios" EntityType="Self.usuarios" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="contacto_cliente" EntityType="Self.contacto_cliente" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="nota_cliente" EntityType="Self.nota_cliente" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="tarea_cliente" EntityType="Self.tarea_cliente" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_bitacora_usuarios" Association="Self.FK_bitacora_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="bitacora" EntitySet="bitacora" />
@@ -315,6 +381,18 @@
           <AssociationSet Name="FK_clientes_usuarios" Association="Self.FK_clientes_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="clientes" EntitySet="clientes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_contacto_cliente_clientes" Association="Self.FK_contacto_cliente_clientes">
+            <End Role="clientes" EntitySet="clientes" />
+            <End Role="contacto_cliente" EntitySet="contacto_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_nota_cliente_clientes" Association="Self.FK_nota_cliente_clientes">
+            <End Role="clientes" EntitySet="clientes" />
+            <End Role="nota_cliente" EntitySet="nota_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_nota_cliente_usuarios" Association="Self.FK_nota_cliente_usuarios">
+            <End Role="usuarios" EntitySet="usuarios" />
+            <End Role="nota_cliente" EntitySet="nota_cliente" />
           </AssociationSet>
           <AssociationSet Name="FK_notificaciones_usuarios" Association="Self.FK_notificaciones_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
@@ -332,6 +410,14 @@
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="reportes" EntitySet="reportes" />
           </AssociationSet>
+          <AssociationSet Name="FK_tarea_cliente_clientes" Association="Self.FK_tarea_cliente_clientes">
+            <End Role="clientes" EntitySet="clientes" />
+            <End Role="tarea_cliente" EntitySet="tarea_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tarea_cliente_tareas" Association="Self.FK_tarea_cliente_tareas">
+            <End Role="tareas" EntitySet="tareas" />
+            <End Role="tarea_cliente" EntitySet="tarea_cliente" />
+          </AssociationSet>
           <AssociationSet Name="FK_tareas_clientes" Association="Self.FK_tareas_clientes">
             <End Role="clientes" EntitySet="clientes" />
             <End Role="tareas" EntitySet="tareas" />
@@ -345,8 +431,7 @@
             <End Role="usuarios" EntitySet="usuarios" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="CRM_RSGModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -397,6 +482,9 @@
           <NavigationProperty Name="usuario" Relationship="Self.FK_clientes_usuarios" FromRole="clientes" ToRole="usuarios" />
           <NavigationProperty Name="oportunidades" Relationship="Self.FK_oportunidades_clientes" FromRole="clientes" ToRole="oportunidades" />
           <NavigationProperty Name="tareas" Relationship="Self.FK_tareas_clientes" FromRole="clientes" ToRole="tareas" />
+          <NavigationProperty Name="contacto_cliente" Relationship="CRM_RSGModel.FK_contacto_cliente_clientes" FromRole="cliente" ToRole="contacto_cliente" />
+          <NavigationProperty Name="nota_cliente" Relationship="CRM_RSGModel.FK_nota_cliente_clientes" FromRole="cliente" ToRole="nota_cliente" />
+          <NavigationProperty Name="tarea_cliente" Relationship="CRM_RSGModel.FK_tarea_cliente_clientes" FromRole="cliente" ToRole="tarea_cliente" />
         </EntityType>
         <EntityType Name="notificacione">
           <Key>
@@ -408,6 +496,8 @@
           <Property Name="leida" Type="Boolean" />
           <Property Name="id_usuario" Type="Int32" />
           <NavigationProperty Name="usuario" Relationship="Self.FK_notificaciones_usuarios" FromRole="notificaciones" ToRole="usuarios" />
+          <Property Name="tipo" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="id_referencia" Type="Int32" />
         </EntityType>
         <EntityType Name="oportunidade">
           <Key>
@@ -460,6 +550,8 @@
           <Property Name="id_usuario" Type="Int32" />
           <NavigationProperty Name="cliente" Relationship="Self.FK_tareas_clientes" FromRole="tareas" ToRole="clientes" />
           <NavigationProperty Name="usuario" Relationship="Self.FK_tareas_usuarios" FromRole="tareas" ToRole="usuarios" />
+          <Property Name="alerta_disparada" Type="Boolean" />
+          <NavigationProperty Name="tarea_cliente" Relationship="CRM_RSGModel.FK_tarea_cliente_tareas" FromRole="tarea" ToRole="tarea_cliente" />
         </EntityType>
         <EntityType Name="usuario">
           <Key>
@@ -488,39 +580,7 @@
           <NavigationProperty Name="reportes" Relationship="Self.FK_reportes_usuarios" FromRole="usuarios" ToRole="reportes" />
           <NavigationProperty Name="role" Relationship="Self.FK_usuarios_roles" FromRole="usuarios" ToRole="roles" />
           <NavigationProperty Name="tareas" Relationship="Self.FK_tareas_usuarios" FromRole="usuarios" ToRole="tareas" />
-        </EntityType>
-        <EntityType Name="contacto_cliente">
-          <Key>
-            <PropertyRef Name="id_contacto" />
-          </Key>
-          <Property Name="id_contacto" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="id_cliente" Type="Int32" Nullable="false" />
-          <Property Name="nombre" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
-          <Property Name="telefono" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="correo" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
-          <Property Name="puesto" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
-        </EntityType>
-        <EntityType Name="nota_cliente">
-          <Key>
-            <PropertyRef Name="id_note" />
-          </Key>
-          <Property Name="id_note" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="id_cliente" Type="Int32" Nullable="false" />
-          <Property Name="comentario" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
-          <Property Name="fecha_creacion" Type="DateTime" Precision="3" Nullable="false" />
-        </EntityType>
-        <EntityType Name="tarea_cliente">
-          <Key>
-            <PropertyRef Name="id_tarea" />
-          </Key>
-          <Property Name="id_tarea" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="id_cliente" Type="Int32" Nullable="false" />
-          <Property Name="tipo_trabajo" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
-          <Property Name="descripcion" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="ganancia" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
-          <Property Name="fecha_inicio" Type="DateTime" Precision="3" Nullable="false" />
-          <Property Name="fecha_fin" Type="DateTime" Precision="3" />
-          <Property Name="estado" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <NavigationProperty Name="nota_cliente" Relationship="CRM_RSGModel.FK_nota_cliente_usuarios" FromRole="usuario" ToRole="nota_cliente" />
         </EntityType>
         <Association Name="FK_bitacora_usuarios">
           <End Role="usuarios" Type="Self.usuario" Multiplicity="0..1" />
@@ -664,9 +724,6 @@
           <EntitySet Name="roles" EntityType="Self.role" />
           <EntitySet Name="tareas" EntityType="Self.tarea" />
           <EntitySet Name="usuarios" EntityType="Self.usuario" />
-          <EntitySet Name="contacto_cliente" EntityType="Self.contacto_cliente" />
-          <EntitySet Name="nota_cliente" EntityType="Self.nota_cliente" />
-          <EntitySet Name="tarea_cliente" EntityType="Self.tarea_cliente" />
           <AssociationSet Name="FK_bitacora_usuarios" Association="Self.FK_bitacora_usuarios">
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="bitacora" EntitySet="bitacoras" />
@@ -711,8 +768,132 @@
             <End Role="usuarios" EntitySet="usuarios" />
             <End Role="tareas" EntitySet="tareas" />
           </AssociationSet>
-        </EntityContainer>
-      </Schema>
+          <EntitySet Name="contacto_cliente" EntityType="CRM_RSGModel.contacto_cliente" />
+          <EntitySet Name="nota_cliente" EntityType="CRM_RSGModel.nota_cliente" />
+          <EntitySet Name="tarea_cliente" EntityType="CRM_RSGModel.tarea_cliente" />
+          <AssociationSet Name="FK_contacto_cliente_clientes" Association="CRM_RSGModel.FK_contacto_cliente_clientes">
+            <End Role="cliente" EntitySet="clientes" />
+            <End Role="contacto_cliente" EntitySet="contacto_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_nota_cliente_clientes" Association="CRM_RSGModel.FK_nota_cliente_clientes">
+            <End Role="cliente" EntitySet="clientes" />
+            <End Role="nota_cliente" EntitySet="nota_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tarea_cliente_clientes" Association="CRM_RSGModel.FK_tarea_cliente_clientes">
+            <End Role="cliente" EntitySet="clientes" />
+            <End Role="tarea_cliente" EntitySet="tarea_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_nota_cliente_usuarios" Association="CRM_RSGModel.FK_nota_cliente_usuarios">
+            <End Role="usuario" EntitySet="usuarios" />
+            <End Role="nota_cliente" EntitySet="nota_cliente" />
+          </AssociationSet>
+          <AssociationSet Name="FK_tarea_cliente_tareas" Association="CRM_RSGModel.FK_tarea_cliente_tareas">
+            <End Role="tarea" EntitySet="tareas" />
+            <End Role="tarea_cliente" EntitySet="tarea_cliente" />
+          </AssociationSet>
+          </EntityContainer>
+        <EntityType Name="contacto_cliente">
+          <Key>
+            <PropertyRef Name="id_contacto" />
+          </Key>
+          <Property Name="id_contacto" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="nombre" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="apellido" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="puesto" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+          <Property Name="telefono" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="correo" Type="String" MaxLength="150" FixedLength="false" Unicode="false" />
+          <Property Name="id_cliente" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="cliente" Relationship="CRM_RSGModel.FK_contacto_cliente_clientes" FromRole="contacto_cliente" ToRole="cliente" />
+        </EntityType>
+        <EntityType Name="nota_cliente">
+          <Key>
+            <PropertyRef Name="id_nota" />
+          </Key>
+          <Property Name="id_nota" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="comentario" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="fecha_creacion" Type="DateTime" Precision="3" />
+          <Property Name="id_cliente" Type="Int32" Nullable="false" />
+          <Property Name="id_usuario" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="cliente" Relationship="CRM_RSGModel.FK_nota_cliente_clientes" FromRole="nota_cliente" ToRole="cliente" />
+          <NavigationProperty Name="usuario" Relationship="CRM_RSGModel.FK_nota_cliente_usuarios" FromRole="nota_cliente" ToRole="usuario" />
+        </EntityType>
+        <EntityType Name="tarea_cliente">
+          <Key>
+            <PropertyRef Name="id_tarea_cliente" />
+          </Key>
+          <Property Name="id_tarea_cliente" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="id_tarea" Type="Int32" Nullable="false" />
+          <Property Name="id_cliente" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="cliente" Relationship="CRM_RSGModel.FK_tarea_cliente_clientes" FromRole="tarea_cliente" ToRole="cliente" />
+          <NavigationProperty Name="tarea" Relationship="CRM_RSGModel.FK_tarea_cliente_tareas" FromRole="tarea_cliente" ToRole="tarea" />
+        </EntityType>
+        <Association Name="FK_contacto_cliente_clientes">
+          <End Type="CRM_RSGModel.cliente" Role="cliente" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="CRM_RSGModel.contacto_cliente" Role="contacto_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="cliente">
+              <PropertyRef Name="id_cliente" />
+            </Principal>
+            <Dependent Role="contacto_cliente">
+              <PropertyRef Name="id_cliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_nota_cliente_clientes">
+          <End Type="CRM_RSGModel.cliente" Role="cliente" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="CRM_RSGModel.nota_cliente" Role="nota_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="cliente">
+              <PropertyRef Name="id_cliente" />
+            </Principal>
+            <Dependent Role="nota_cliente">
+              <PropertyRef Name="id_cliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tarea_cliente_clientes">
+          <End Type="CRM_RSGModel.cliente" Role="cliente" Multiplicity="1" />
+          <End Type="CRM_RSGModel.tarea_cliente" Role="tarea_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="cliente">
+              <PropertyRef Name="id_cliente" />
+            </Principal>
+            <Dependent Role="tarea_cliente">
+              <PropertyRef Name="id_cliente" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_nota_cliente_usuarios">
+          <End Type="CRM_RSGModel.usuario" Role="usuario" Multiplicity="1" />
+          <End Type="CRM_RSGModel.nota_cliente" Role="nota_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="usuario">
+              <PropertyRef Name="id_usuario" />
+            </Principal>
+            <Dependent Role="nota_cliente">
+              <PropertyRef Name="id_usuario" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_tarea_cliente_tareas">
+          <End Type="CRM_RSGModel.tarea" Role="tarea" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="CRM_RSGModel.tarea_cliente" Role="tarea_cliente" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="tarea">
+              <PropertyRef Name="id_tarea" />
+            </Principal>
+            <Dependent Role="tarea_cliente">
+              <PropertyRef Name="id_tarea" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
     <edmx:Mappings>
@@ -765,6 +946,8 @@
           <EntitySetMapping Name="notificaciones">
             <EntityTypeMapping TypeName="CRM_RSGModel.notificacione">
               <MappingFragment StoreEntitySet="notificaciones">
+                <ScalarProperty Name="id_referencia" ColumnName="id_referencia" />
+                <ScalarProperty Name="tipo" ColumnName="tipo" />
                 <ScalarProperty Name="id_notificacion" ColumnName="id_notificacion" />
                 <ScalarProperty Name="mensaje" ColumnName="mensaje" />
                 <ScalarProperty Name="fecha" ColumnName="fecha" />
@@ -812,6 +995,7 @@
           <EntitySetMapping Name="tareas">
             <EntityTypeMapping TypeName="CRM_RSGModel.tarea">
               <MappingFragment StoreEntitySet="tareas">
+                <ScalarProperty Name="alerta_disparada" ColumnName="alerta_disparada" />
                 <ScalarProperty Name="id_tarea" ColumnName="id_tarea" />
                 <ScalarProperty Name="titulo" ColumnName="titulo" />
                 <ScalarProperty Name="descripcion" ColumnName="descripcion" />
@@ -847,40 +1031,37 @@
           <EntitySetMapping Name="contacto_cliente">
             <EntityTypeMapping TypeName="CRM_RSGModel.contacto_cliente">
               <MappingFragment StoreEntitySet="contacto_cliente">
-                <ScalarProperty Name="id_contacto" ColumnName="id_contacto" />
                 <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
-                <ScalarProperty Name="nombre" ColumnName="nombre" />
-                <ScalarProperty Name="telefono" ColumnName="telefono" />
                 <ScalarProperty Name="correo" ColumnName="correo" />
+                <ScalarProperty Name="telefono" ColumnName="telefono" />
                 <ScalarProperty Name="puesto" ColumnName="puesto" />
+                <ScalarProperty Name="apellido" ColumnName="apellido" />
+                <ScalarProperty Name="nombre" ColumnName="nombre" />
+                <ScalarProperty Name="id_contacto" ColumnName="id_contacto" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="nota_cliente">
             <EntityTypeMapping TypeName="CRM_RSGModel.nota_cliente">
               <MappingFragment StoreEntitySet="nota_cliente">
-                <ScalarProperty Name="id_note" ColumnName="id_note" />
+                <ScalarProperty Name="id_usuario" ColumnName="id_usuario" />
                 <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
-                <ScalarProperty Name="comentario" ColumnName="comentario" />
                 <ScalarProperty Name="fecha_creacion" ColumnName="fecha_creacion" />
+                <ScalarProperty Name="comentario" ColumnName="comentario" />
+                <ScalarProperty Name="id_nota" ColumnName="id_nota" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="tarea_cliente">
             <EntityTypeMapping TypeName="CRM_RSGModel.tarea_cliente">
               <MappingFragment StoreEntitySet="tarea_cliente">
-                <ScalarProperty Name="id_tarea" ColumnName="id_tarea" />
                 <ScalarProperty Name="id_cliente" ColumnName="id_cliente" />
-                <ScalarProperty Name="tipo_trabajo" ColumnName="tipo_trabajo" />
-                <ScalarProperty Name="descripcion" ColumnName="descripcion" />
-                <ScalarProperty Name="ganancia" ColumnName="ganancia" />
-                <ScalarProperty Name="fecha_inicio" ColumnName="fecha_inicio" />
-                <ScalarProperty Name="fecha_fin" ColumnName="fecha_fin" />
-                <ScalarProperty Name="estado" ColumnName="estado" />
+                <ScalarProperty Name="id_tarea" ColumnName="id_tarea" />
+                <ScalarProperty Name="id_tarea_cliente" ColumnName="id_tarea_cliente" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-        </EntityContainerMapping>
+          </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
   </edmx:Runtime>
