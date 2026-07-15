@@ -215,10 +215,14 @@
                                         }
                                     </td>
                                     <td>
-                                        @(item.cliente != null
-                                            ? item.cliente.empresa
-                                            : "Sin cliente")
-                                    </td>
+                                         @(item.cliente != null
+                                             ? item.cliente.empresa
+                                             : "Sin cliente")
+                                         @if (!string.IsNullOrEmpty(item.contacto_nombre))
+                                         {
+                                             <br /><small class="text-fade"><i class="fa fa-user me-1"></i> Contacto: @item.contacto_nombre</small>
+                                         }
+                                     </td>
                                     <td>
                                         @(item.fecha_limite.HasValue
                                             ? item.fecha_limite.Value.ToString("dd/MM/yyyy")
@@ -308,27 +312,39 @@
                 var taskId = $(this).data('id');
                 var token = $('input[name="__RequestVerificationToken"]').val();
                 
-                if (confirm('¿Desea marcar esta tarea como completada?')) {
-                    $.ajax({
-                        url: '@Url.Action("Completar", "Tareas")',
-                        type: 'POST',
-                        data: {
-                            id: taskId,
-                            __RequestVerificationToken: token
-                        },
-                        success: function(res) {
-                            if (res.success) {
-                                alert(res.message);
-                                location.reload();
-                            } else {
-                                alert(res.message);
+                Swal.fire({
+                    title: '¿Completar tarea?',
+                    text: "¿Desea marcar esta tarea como completada?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10c469',
+                    cancelButtonColor: '#9e9e9e',
+                    confirmButtonText: 'Sí, completar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("Completar", "Tareas")',
+                            type: 'POST',
+                            data: {
+                                id: taskId,
+                                __RequestVerificationToken: token
+                            },
+                            success: function(res) {
+                                if (res.success) {
+                                    Swal.fire('¡Completada!', res.message, 'success').then(function() {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'Error de red al completar la tarea.', 'error');
                             }
-                        },
-                        error: function() {
-                            alert('Error de red al completar la tarea.');
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
 
             // Posponer Tarea AJAX
@@ -344,7 +360,7 @@
                 var token = $('input[name="__RequestVerificationToken"]').val();
 
                 if (!nuevaFecha || !razon) {
-                    alert('Debe rellenar la nueva fecha y justificar el aplazamiento.');
+                    Swal.fire('Campos requeridos', 'Debe especificar la nueva fecha y la razón del aplazamiento.', 'warning');
                     return;
                 }
 
@@ -360,14 +376,15 @@
                     success: function(res) {
                         if (res.success) {
                             $('#modal-posponer-tarea').modal('hide');
-                            alert(res.message);
-                            location.reload();
+                            Swal.fire('¡Aplazada!', res.message, 'success').then(function() {
+                                location.reload();
+                            });
                         } else {
-                            alert(res.message);
+                            Swal.fire('Error', res.message, 'error');
                         }
                     },
                     error: function() {
-                        alert('Error al postergar la tarea.');
+                        Swal.fire('Error', 'Error al postergar la tarea.', 'error');
                     }
                 });
             });

@@ -26,70 +26,53 @@
         background: #ffffff;
         padding: 20px;
         border-radius: 16px;
-        border: 1px solid #f0f3f6;
+        border: 1px solid #e9ecef;
         box-shadow: 0 4px 20px rgba(0,0,0,0.02);
     }
     #calendar th.fc-day-header {
         text-transform: uppercase !important;
-        font-size: 0.85rem !important;
+        font-size: 0.8rem !important;
         font-weight: 700 !important;
-        color: #333333 !important;
-        letter-spacing: 0.08em !important;
-        padding: 15px 0 !important;
-        border: none !important;
-        background: transparent !important;
+        color: #495057 !important;
+        letter-spacing: 0.05em !important;
+        padding: 10px 0 !important;
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
     }
     #calendar td.fc-day-number {
-        text-align: center !important;
-        font-size: 1.6rem !important;
-        font-weight: 700 !important;
-        color: #111111 !important;
-        padding: 16px 5px !important;
-        vertical-align: middle !important;
-        border: none !important;
-        position: relative;
+        text-align: right !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: #495057 !important;
+        padding: 8px 10px !important;
         cursor: pointer;
     }
     #calendar td.fc-day {
-        border: none !important;
+        border: 1px solid #dee2e6 !important;
     }
     #calendar .fc-other-month {
-        opacity: 0.25 !important;
+        opacity: 0.4 !important;
+        background-color: #fafbfc !important;
     }
     #calendar .fc-row {
-        border-bottom: 1px solid #ededed !important;
-        min-height: 110px !important;
-    }
-    #calendar .fc-row:last-child {
-        border-bottom: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        min-height: 120px !important;
     }
     #calendar td.fc-today {
-        background: transparent !important;
+        background: rgba(0, 123, 255, 0.05) !important;
     }
     #calendar td.fc-today .fc-day-number {
-        color: #040A2D !important;
-        display: inline-block;
-    }
-    #calendar td.fc-today .fc-day-number::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 52px;
-        height: 52px;
-        border: 2.5px solid #040A2D;
-        border-radius: 12px;
-        box-sizing: border-box;
+        color: #007bff !important;
+        font-weight: 700 !important;
     }
     #calendar .fc-event {
         border-radius: 6px !important;
         border: none !important;
         font-size: 0.75rem !important;
         font-weight: 600 !important;
-        padding: 6px 10px !important;
-        margin: 2px 5px !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+        padding: 5px 8px !important;
+        margin: 2px 4px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
     }
 </style>
 
@@ -171,6 +154,34 @@
                             <input type="time" id="evt-hora" class="form-control" required />
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Cliente Relacionado</label>
+                            <select id="evt-cliente" class="form-select">
+                                <option value="">-- Ninguno --</option>
+                                @if (ViewBag.Clientes != null)
+                                {
+                                    foreach (var c in (List<CRMRSG.EntityFramework.cliente>)ViewBag.Clientes)
+                                    {
+                                        <option value="@c.id_cliente">@c.nombre (@c.empresa)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Contacto Asociado</label>
+                            <select id="evt-contacto" class="form-select">
+                                <option value="">-- Ninguno --</option>
+                                @if (ViewBag.Contactos != null)
+                                {
+                                    foreach (var co in (List<CRMRSG.EntityFramework.contacto_cliente>)ViewBag.Contactos)
+                                    {
+                                        <option value="@co.id_contacto" data-cliente="@co.id_cliente">@co.nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-group mb-3">
                         <label class="form-label">Lugar / Medio</label>
                         <input type="text" id="evt-lugar" class="form-control" placeholder="Ej: Oficina Principal, Microsoft Teams" required />
@@ -220,6 +231,20 @@
                 droppable: false
             });
 
+            // Filtrar contactos por cliente seleccionado
+            $('#evt-cliente').on('change', function() {
+                var selectedCliente = $(this).val();
+                $('#evt-contacto option').each(function() {
+                    var contactCliente = $(this).data('cliente');
+                    if (!contactCliente || contactCliente == selectedCliente) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                $('#evt-contacto').val('');
+            });
+
             // Guardar Evento mediante AJAX
             $('#btn-guardar-evento').on('click', function() {
                 var desc = $('#evt-descripcion').val();
@@ -227,6 +252,8 @@
                 var hora = $('#evt-hora').val();
                 var lugar = $('#evt-lugar').val();
                 var estado = $('#evt-estado').val();
+                var idCliente = $('#evt-cliente').val();
+                var idContacto = $('#evt-contacto').val();
 
                 if (!desc || !fecha || !hora || !lugar) {
                     alert('Por favor complete todos los campos obligatorios.');
@@ -241,7 +268,9 @@
                         fecha: fecha,
                         hora: hora,
                         lugar: lugar,
-                        estado: estado
+                        estado: estado,
+                        id_cliente: idCliente,
+                        id_contacto: idContacto
                     },
                     success: function(response) {
                         if (response.success) {

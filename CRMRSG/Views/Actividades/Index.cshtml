@@ -135,6 +135,13 @@
                                             <strong>Cliente/Empresa:</strong> 
                                             @(item.cliente != null ? item.cliente.empresa + " (" + item.cliente.nombre + ")" : "Particular / Ninguno")
                                         </p>
+                                        @if (!string.IsNullOrEmpty(item.contacto_nombre))
+                                        {
+                                            <p class="mb-5">
+                                                <strong>Contacto Asociado:</strong> 
+                                                @item.contacto_nombre
+                                            </p>
+                                        }
                                         <p class="mb-5">
                                             <strong>Colaborador:</strong> 
                                             @(item.usuario != null ? item.usuario.nombre + " " + item.usuario.apellido : "Sistema")
@@ -229,36 +236,47 @@
                 var token = $('input[name="__RequestVerificationToken"]').val();
                 var $btn = $(this);
 
-                if (confirm('¿Desea marcar esta actividad como realizada?')) {
-                    $.ajax({
-                        url: '@Url.Action("Completar", "Actividades")',
-                        type: 'POST',
-                        data: {
-                            id: actId,
-                            __RequestVerificationToken: token
-                        },
-                        success: function(res) {
-                            if (res.success) {
-                                // Encontrar el elemento timeline-event del botón
-                                var $timelineEvent = $btn.closest('.timeline-event');
+                Swal.fire({
+                    title: '¿Completar actividad?',
+                    text: "¿Desea marcar esta actividad como realizada?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10c469',
+                    cancelButtonColor: '#9e9e9e',
+                    confirmButtonText: 'Sí, completar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("Completar", "Actividades")',
+                            type: 'POST',
+                            data: {
+                                id: actId,
+                                __RequestVerificationToken: token
+                            },
+                            success: function(res) {
+                                if (res.success) {
+                                    // Encontrar el elemento timeline-event del botón
+                                    var $timelineEvent = $btn.closest('.timeline-event');
 
-                                // Encontrar y actualizar el estado
-                                var $estadoSpan = $timelineEvent.find('.badge');
-                                $estadoSpan.removeClass('badge-warning-light badge-info-light badge-danger-light').addClass('badge-success-light').text('Realizada');
+                                    // Encontrar y actualizar el estado
+                                    var $estadoSpan = $timelineEvent.find('.badge');
+                                    $estadoSpan.removeClass('badge-warning-light badge-info-light badge-danger-light').addClass('badge-success-light').text('Realizada');
 
-                                // Remover los botones de acción
-                                $btn.closest('.text-end').remove();
+                                    // Remover los botones de acción
+                                    $btn.closest('.text-end').remove();
 
-                                alert(res.message);
-                            } else {
-                                alert(res.message);
+                                    Swal.fire('¡Realizada!', res.message, 'success');
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'Error al actualizar la actividad.', 'error');
                             }
-                        },
-                        error: function() {
-                            alert('Error al actualizar la actividad.');
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
 
             // Posponer Actividad
@@ -274,7 +292,7 @@
                 var token = $('input[name="__RequestVerificationToken"]').val();
 
                 if (!nuevaFecha || !razon) {
-                    alert('Debe especificar la nueva fecha y la razón.');
+                    Swal.fire('Campos requeridos', 'Debe especificar la nueva fecha y la razón.', 'warning');
                     return;
                 }
 
@@ -305,13 +323,13 @@
                             $('#posponer-act-fecha').val('');
                             $('#posponer-act-razon').val('');
 
-                            alert(res.message);
+                            Swal.fire('¡Aplazada!', res.message, 'success');
                         } else {
-                            alert(res.message);
+                            Swal.fire('Error', res.message, 'error');
                         }
                     },
                     error: function() {
-                        alert('Error al aplazar la actividad.');
+                        Swal.fire('Error', 'Error al aplazar la actividad.', 'error');
                     }
                 });
             });
@@ -322,36 +340,47 @@
                 var token = $('input[name="__RequestVerificationToken"]').val();
                 var $btn = $(this);
 
-                if (confirm('¿Desea marcar esta actividad como cancelada?')) {
-                    $.ajax({
-                        url: '@Url.Action("Cancelar", "Actividades")',
-                        type: 'POST',
-                        data: {
-                            id: actId,
-                            __RequestVerificationToken: token
-                        },
-                        success: function(res) {
-                            if (res.success) {
-                                // Encontrar el elemento timeline-event del botón
-                                var $timelineEvent = $btn.closest('.timeline-event');
+                Swal.fire({
+                    title: '¿Cancelar actividad?',
+                    text: "¿Desea marcar esta actividad como cancelada?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ff4f5a',
+                    cancelButtonColor: '#9e9e9e',
+                    confirmButtonText: 'Sí, cancelar',
+                    cancelButtonText: 'No, mantener'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("Cancelar", "Actividades")',
+                            type: 'POST',
+                            data: {
+                                id: actId,
+                                __RequestVerificationToken: token
+                            },
+                            success: function(res) {
+                                if (res.success) {
+                                    // Encontrar el elemento timeline-event del botón
+                                    var $timelineEvent = $btn.closest('.timeline-event');
 
-                                // Encontrar y actualizar el estado
-                                var $estadoSpan = $timelineEvent.find('.badge');
-                                $estadoSpan.removeClass('badge-warning-light badge-info-light badge-success-light').addClass('badge-danger-light').text('Cancelada');
+                                    // Encontrar y actualizar el estado
+                                    var $estadoSpan = $timelineEvent.find('.badge');
+                                    $estadoSpan.removeClass('badge-warning-light badge-info-light badge-success-light').addClass('badge-danger-light').text('Cancelada');
 
-                                // Remover los botones de acción
-                                $btn.closest('.text-end').remove();
+                                    // Remover los botones de acción
+                                    $btn.closest('.text-end').remove();
 
-                                alert(res.message);
-                            } else {
-                                alert(res.message);
+                                    Swal.fire('¡Cancelada!', res.message, 'success');
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'Error al cancelar la actividad.', 'error');
                             }
-                        },
-                        error: function() {
-                            alert('Error al cancelar la actividad.');
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
         });
     </script>

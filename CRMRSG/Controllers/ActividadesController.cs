@@ -85,6 +85,15 @@ namespace CRMRSG.Controllers
             }
 
             var listaActividades = query.OrderByDescending(c => c.fecha).ThenByDescending(c => c.hora).ToList();
+            foreach (var act in listaActividades)
+            {
+                act.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM citas WHERE id_cita = " + act.id_cita).FirstOrDefault();
+                if (act.id_contacto.HasValue)
+                {
+                    int cid = act.id_contacto.Value;
+                    act.contacto_nombre = db.contacto_cliente.Where(co => co.id_contacto == cid).Select(co => co.nombre).FirstOrDefault();
+                }
+            }
 
             // Estadísticas rápidas por estado (sobre la query sin filtro de estado)
             var statsQuery = db.citas.AsQueryable();
@@ -164,6 +173,18 @@ namespace CRMRSG.Controllers
                 };
 
                 db.citas.Add(nuevaCita);
+                db.SaveChanges();
+
+                var notiAct = new notificacione
+                {
+                    mensaje = $"Nueva Actividad: Se ha registrado la actividad '{nuevaCita.descripcion}' para el {nuevaCita.fecha.ToString("dd/MM/yyyy")}.",
+                    fecha = DateTime.Now,
+                    leida = false,
+                    id_usuario = nuevaCita.id_usuario ?? 1,
+                    tipo = "Actividad Creada",
+                    id_referencia = nuevaCita.id_cita
+                };
+                db.notificaciones.Add(notiAct);
                 db.SaveChanges();
 
                 TempData["Success"] = "Actividad registrada con éxito.";

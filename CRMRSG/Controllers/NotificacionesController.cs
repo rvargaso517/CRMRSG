@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -21,6 +21,39 @@ namespace CRMRSG.Controllers
             return View();
         }
 
+        private void VerificarYGenerarAlertasCitas()
+        {
+            DateTime limiteAlerta = DateTime.Today.AddDays(1);
+            var citasProximas = db.citas
+                .Where(c => c.estado != "Completada" 
+                         && c.estado != "Realizada" 
+                         && c.estado != "Cancelada"
+                         && c.fecha <= limiteAlerta)
+                .ToList();
+
+            bool huboCambios = false;
+            foreach (var cita in citasProximas)
+            {
+                bool exists = db.notificaciones.Any(n => n.tipo == "Alerta de Cita" && n.id_referencia == cita.id_cita);
+                if (!exists)
+                {
+                    string msg = $"Cita/Evento comercial programado: '{cita.descripcion}' el {cita.fecha.ToString("dd/MM/yyyy")} a las {cita.hora.ToString(@"hh\:mm")}. Lugar: {cita.lugar}";
+                    var noti = new notificacione
+                    {
+                        mensaje = msg,
+                        fecha = DateTime.Now,
+                        leida = false,
+                        id_usuario = cita.id_usuario ?? 1,
+                        tipo = "Alerta de Cita",
+                        id_referencia = cita.id_cita
+                    };
+                    db.notificaciones.Add(noti);
+                    huboCambios = true;
+                }
+            }
+            if (huboCambios) db.SaveChanges();
+        }
+
         [HttpGet]
         public JsonResult ObtenerListaCompletas()
         {
@@ -29,7 +62,13 @@ namespace CRMRSG.Controllers
                 if (Session["UsuarioId"] == null)
                     return Json(new { success = false, mensaje = "Sesión no válida" }, JsonRequestBehavior.AllowGet);
 
-                var notificacionesCrudas = db.notificaciones.OrderByDescending(n => n.fecha).ToList();
+                VerificarYGenerarAlertasCitas();
+
+                int usuarioId = (int)Session["UsuarioId"];
+                var notificacionesCrudas = db.notificaciones
+                    .Where(n => n.id_usuario == usuarioId)
+                    .OrderByDescending(n => n.fecha)
+                    .ToList();
 
                 var listado = notificacionesCrudas.Select(n => new {
                     n.id_notificacion,

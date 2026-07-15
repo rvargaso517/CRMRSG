@@ -107,16 +107,15 @@
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>ID Rol</th>
                                 <th>Nombre del Perfil de Acceso</th>
                                 <th>Permisos Asignados</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var item in Model)
                             {
                                 <tr>
-                                    <td>#ROL-@item.id_rol</td>
                                     <td class="fw-bold text-dark">@item.nombre</td>
                                     <td>
                                         @if (!string.IsNullOrEmpty(item.descripcion))
@@ -132,6 +131,11 @@
                                             <span class="text-fade small">Sin permisos asignados</span>
                                         }
                                     </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-info-light" onclick="openEditRoleModal(@item.id_rol, '@item.nombre', '@item.descripcion')">
+                                            <i class="fa fa-pencil"></i> Editar Perfil
+                                        </button>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -141,3 +145,112 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Editar Rol -->
+<div class="modal fade" id="modal-editar-rol" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Rol y Permisos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @using (Html.BeginForm("Editar", "Roles", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id_rol" id="edit-id-rol" />
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Nombre del Rol</label>
+                        <input type="text" name="nombre_rol" id="edit-nombre-rol" class="form-control" required />
+                        <small class="text-fade" id="edit-nombre-warning" style="display:none; color: #f5365c !important;">El nombre del rol Administrador no se puede modificar por seguridad.</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label fw-bold">Permisos de Acceso</label>
+                        <div class="border rounded p-3 bg-light" style="max-height: 350px; overflow-y: auto;">
+                            <div class="mb-2 fw-semibold text-primary border-bottom pb-1">👥 Clientes</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Clientes:Ver" id="edit_p_cli_ver">
+                                <label class="form-check-label small" for="edit_p_cli_ver">Ver Clientes</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Clientes:Gestionar" id="edit_p_cli_gest">
+                                <label class="form-check-label small" for="edit_p_cli_gest">Gestionar Clientes (Crear/Editar)</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">💼 Oportunidades</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Oportunidades:Ver" id="edit_p_op_ver">
+                                <label class="form-check-label small" for="edit_p_op_ver">Ver Oportunidades</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Oportunidades:Gestionar" id="edit_p_op_gest">
+                                <label class="form-check-label small" for="edit_p_op_gest">Gestionar Oportunidades</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">📌 Tareas</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Tareas:Ver" id="edit_p_tar_ver">
+                                <label class="form-check-label small" for="edit_p_tar_ver">Ver Tareas</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Tareas:Gestionar" id="edit_p_tar_gest">
+                                <label class="form-check-label small" for="edit_p_tar_gest">Gestionar Tareas</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">📅 Actividades</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Actividades:Ver" id="edit_p_act_ver">
+                                <label class="form-check-label small" for="edit_p_act_ver">Ver Actividades</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Actividades:Gestionar" id="edit_p_act_gest">
+                                <label class="form-check-label small" for="edit_p_act_gest">Gestionar Actividades</label>
+                            </div>
+
+                            <div class="mt-3 mb-2 fw-semibold text-primary border-bottom pb-1">🛠️ Sistema</div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="permisos" value="Admin:Acceso" id="edit_p_admin">
+                                <label class="form-check-label small" for="edit_p_admin">Administración Completa</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function openEditRoleModal(id, nombre, permisosString) {
+        $('#edit-id-rol').val(id);
+        $('#edit-nombre-rol').val(nombre);
+        
+        if (id == 1) {
+            $('#edit-nombre-rol').attr('readonly', true);
+            $('#edit-nombre-warning').show();
+        } else {
+            $('#edit-nombre-rol').attr('readonly', false);
+            $('#edit-nombre-warning').hide();
+        }
+
+        // Desmarcar todos los checkboxes primero
+        $('#modal-editar-rol input[type="checkbox"]').prop('checked', false);
+
+        // Marcar los asignados al rol
+        if (permisosString) {
+            const list = permisosString.split(',');
+            list.forEach(p => {
+                $(`#modal-editar-rol input[value="${p.trim()}"]`).prop('checked', true);
+            });
+        }
+
+        var myModal = new bootstrap.Modal(document.getElementById('modal-editar-rol'));
+        myModal.show();
+    }
+</script>

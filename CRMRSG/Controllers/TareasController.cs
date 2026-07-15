@@ -84,6 +84,15 @@ namespace CRMRSG.Controllers
             }
 
             var tareas = query.ToList();
+            foreach (var t in tareas)
+            {
+                t.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM tareas WHERE id_tarea = " + t.id_tarea).FirstOrDefault();
+                if (t.id_contacto.HasValue)
+                {
+                    int cid = t.id_contacto.Value;
+                    t.contacto_nombre = db.contacto_cliente.Where(c => c.id_contacto == cid).Select(c => c.nombre).FirstOrDefault();
+                }
+            }
             ViewBag.SelectedUsuarioId = usuarioId;
 
             // 1. Tareas por Usuario (Pie Chart)
@@ -200,6 +209,8 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
             ViewBag.Clientes = db.clientes.ToList();
+            ViewBag.Responsables = db.usuarios.ToList();
+            ViewBag.Contactos = db.contacto_cliente.ToList();
             return View();
         }
 
@@ -217,17 +228,42 @@ namespace CRMRSG.Controllers
             if (ModelState.IsValid)
             {
                 nuevaTarea.estado = "Pendiente";
-                nuevaTarea.id_usuario = Session["UsuarioId"] != null
-                    ? (int)Session["UsuarioId"]
-                    : 1;
+                if (nuevaTarea.id_usuario == null || nuevaTarea.id_usuario == 0)
+                {
+                    nuevaTarea.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                }
 
                 db.tareas.Add(nuevaTarea);
                 db.SaveChanges();
+
+                // Guardar id_contacto usando SQL crudo ya que no está mapeado en el EDMX
+                if (nuevaTarea.id_contacto.HasValue && nuevaTarea.id_contacto.Value > 0)
+                {
+                    db.Database.ExecuteSqlCommand("UPDATE tareas SET id_contacto = @p0 WHERE id_tarea = @p1", nuevaTarea.id_contacto.Value, nuevaTarea.id_tarea);
+                }
+
+                // HU-030: Automatización - Notificar al usuario asignado
+                if (nuevaTarea.id_usuario.HasValue)
+                {
+                    var noti = new notificacione
+                    {
+                        mensaje = $"Nueva Tarea: Se te ha asignado la tarea '{nuevaTarea.titulo}' con fecha límite {(nuevaTarea.fecha_limite.HasValue ? nuevaTarea.fecha_limite.Value.ToString("dd/MM/yyyy") : "Sin definir")}.",
+                        fecha = DateTime.Now,
+                        leida = false,
+                        id_usuario = nuevaTarea.id_usuario.Value,
+                        tipo = "Tarea Creada",
+                        id_referencia = nuevaTarea.id_tarea
+                    };
+                    db.notificaciones.Add(noti);
+                    db.SaveChanges();
+                }
 
                 return RedirectToAction("Index");
             }
 
             ViewBag.Clientes = db.clientes.ToList();
+            ViewBag.Responsables = db.usuarios.ToList();
+            ViewBag.Contactos = db.contacto_cliente.ToList();
             return View(nuevaTarea);
         }
 

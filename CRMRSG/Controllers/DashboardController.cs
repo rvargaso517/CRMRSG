@@ -3,16 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Net;
+using System.Net.Mail;
+using System.Configuration;
 using CRMRSG.EntityFramework;
 
 namespace CRMRSG.Controllers
 {
+    public class CorreoProgramado
+    {
+        public int id_correo { get; set; }
+        public string destinatario { get; set; }
+        public string asunto { get; set; }
+        public string cuerpo { get; set; }
+        public DateTime fecha_envio { get; set; }
+        public bool enviado { get; set; }
+    }
+
     public class VendedorRendimiento
     {
         public string Nombre { get; set; }
         public int Clientes { get; set; }
         public int Oportunidades { get; set; }
         public int Tareas { get; set; }
+    }
+
+    public class RecomendacionSeguimiento
+    {
+        public string Tipo { get; set; } // warning, info, success
+        public string Titulo { get; set; }
+        public string Mensaje { get; set; }
+        public string Accion { get; set; }
     }
 
     public class DashboardController : Controller
@@ -26,6 +47,8 @@ namespace CRMRSG.Controllers
             {
                 return RedirectToAction("Login", "Autenticacion");
             }
+
+            EnviarCorreosProgramados();
 
             int usuarioId = (int)Session["UsuarioId"];
             int rolId = (int)Session["RolId"];
@@ -281,7 +304,111 @@ namespace CRMRSG.Controllers
             ViewBag.GananciasLabels = gananciasClientes.Select(x => (string)x.Cliente).ToArray();
             ViewBag.GananciasData = gananciasClientes.Select(x => (decimal)x.Total).ToArray();
 
+            // HU-031 - Recomendaciones Inteligentes para Seguimiento
+            var recomendaciones = new List<RecomendacionSeguimiento>();
+            var clientesRec = db.clientes.ToList();
+            
+            // Alertas automáticas de Tareas
+            VerificarYGenerarAlertasTareasDashboard(usuarioId, isAdmin);
+
+            foreach (var c in clientesRec)
+            {
+                var tieneTareas = db.tareas.Any(t => t.id_cliente == c.id_cliente && t.estado != "Completada");
+                var tieneOportunidades = db.oportunidades.Any(o => o.id_cliente == c.id_cliente);
+                
+                if (!tieneOportunidades)
+                {
+                    recomendaciones.Add(new RecomendacionSeguimiento
+                    {
+                        Tipo = "warning",
+                        Titulo = $"Sin oportunidades: {c.empresa}",
+                        Mensaje = $"No hay oportunidades comerciales registradas para {c.nombre}. Se recomienda registrar una para iniciar la prospección.",
+                        Accion = Url.Action("Crear", "Oportunidades")
+                    });
+                }
+                else if (!tieneTareas)
+                {
+                    recomendaciones.Add(new RecomendacionSeguimiento
+                    {
+                        Tipo = "info",
+                        Titulo = $"Sin tareas activas: {c.empresa}",
+                        Mensaje = $"No tienes tareas pendientes con {c.nombre}. Programa una llamada o correo de seguimiento.",
+                        Accion = Url.Action("Crear", "Tareas")
+                    });
+                }
+
+                var opAlta = db.oportunidades.FirstOrDefault(o => o.id_cliente == c.id_cliente && o.etapa == "Propuesta" && o.valor_estimado > 5000);
+                if (opAlta != null)
+                {
+                    recomendaciones.Add(new RecomendacionSeguimiento
+                    {
+                        Tipo = "success",
+                        Titulo = $"Trato caliente: {c.empresa}",
+                        Mensaje = $"Oportunidad '{opAlta.nombre}' de alto valor ({opAlta.valor_estimado:C}) está en etapa de Propuesta. Se recomienda contactar hoy.",
+                        Accion = Url.Action("Detalle", "Oportunidades", new { id = opAlta.id_oportunidad })
+                    });
+                }
+            }
+
+            ViewBag.Recomendaciones = recomendaciones.OrderBy(r => r.Tipo == "success" ? 0 : (r.Tipo == "warning" ? 1 : 2)).Take(3).ToList();
+
+            // listas para templates de correos (HU-032)
+            ViewBag.ClientesEmail = db.clientes.ToList();
+            ViewBag.ContactosEmail = db.contacto_cliente.ToList();
+
             return View();
+        }
+
+        private void VerificarYGenerarAlertasTareasDashboard(int currentUserId, bool isAdmin)
+        {
+            DateTime limiteAlerta = DateTime.Today.AddDays(2);
+            DateTime hoy = DateTime.Today;
+            var tareasProximas = db.tareas
+                .Where(t => t.estado != "Completada"
+                          && t.fecha_limite.HasValue
+                          && t.fecha_limite.Value <= limiteAlerta
+                          && (isAdmin || t.id_usuario == currentUserId))
+                .ToList();
+
+            bool huboCambios = false;
+            foreach (var tarea in tareasProximas)
+            {
+                if (tarea.alerta_disparada == null || tarea.alerta_disparada == false)
+                {
+                    string diasRestantesMsg = "";
+                    if (tarea.fecha_limite.Value < hoy)
+                    {
+                        diasRestantesMsg = "¡Está VENCIDA desde el " + tarea.fecha_limite.Value.ToString("dd/MM/yyyy") + "!";
+                    }
+                    else if (tarea.fecha_limite.Value == hoy)
+                    {
+                        diasRestantesMsg = "Vence HOY.";
+                    }
+                    else
+                    {
+                        int dias = (tarea.fecha_limite.Value - hoy).Days;
+                        diasRestantesMsg = $"Vence en {dias} días ({tarea.fecha_limite.Value.ToString("dd/MM/yyyy")}).";
+                    }
+
+                    var nuevaNotificacion = new notificacione
+                    {
+                        mensaje = $"Alerta de Seguimiento: La tarea '{tarea.titulo}' requiere atención. {diasRestantesMsg}",
+                        fecha = DateTime.Now,
+                        leida = false,
+                        id_usuario = tarea.id_usuario,
+                        tipo = "Alerta de Seguimiento",
+                        id_referencia = tarea.id_tarea
+                    };
+
+                    db.notificaciones.Add(nuevaNotificacion);
+                    tarea.alerta_disparada = true;
+                    huboCambios = true;
+                }
+            }
+            if (huboCambios)
+            {
+                db.SaveChanges();
+            }
         }
 
         // GET: Dashboard/Calendar
@@ -291,6 +418,8 @@ namespace CRMRSG.Controllers
             {
                 return RedirectToAction("Login", "Autenticacion");
             }
+            ViewBag.Clientes = db.clientes.ToList();
+            ViewBag.Contactos = db.contacto_cliente.ToList();
             return View();
         }
 
@@ -311,12 +440,22 @@ namespace CRMRSG.Controllers
             {
                 queryCitas = queryCitas.Where(c => c.id_usuario == usuarioId);
             }
-            var listCitas = queryCitas.ToList().Select(c => new
+            var listCitasCrudas = queryCitas.ToList();
+            foreach (var c in listCitasCrudas)
+            {
+                c.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM citas WHERE id_cita = " + c.id_cita).FirstOrDefault();
+                if (c.id_contacto.HasValue)
+                {
+                    int cid = c.id_contacto.Value;
+                    c.contacto_nombre = db.contacto_cliente.Where(co => co.id_contacto == cid).Select(co => co.nombre).FirstOrDefault();
+                }
+            }
+            var listCitas = listCitasCrudas.Select(c => new
             {
                 id = "cita_" + c.id_cita,
-                title = "📅 " + (c.descripcion ?? "Cita"),
+                title = "📅 " + (c.descripcion ?? "Cita") + (string.IsNullOrEmpty(c.contacto_nombre) ? "" : " (" + c.contacto_nombre + ")"),
                 start = c.fecha.ToString("yyyy-MM-dd") + "T" + c.hora.ToString(@"hh\:mm\:ss"),
-                description = c.lugar ?? "Sin ubicación",
+                description = (c.lugar ?? "Sin ubicación") + (string.IsNullOrEmpty(c.contacto_nombre) ? "" : " | Contacto: " + c.contacto_nombre),
                 className = c.estado == "Completada" ? "bg-success" : (c.estado == "Cancelada" ? "bg-danger" : "bg-warning")
             }).ToList();
 
@@ -341,7 +480,7 @@ namespace CRMRSG.Controllers
 
         // POST: Dashboard/CrearEventoRapido
         [HttpPost]
-        public JsonResult CrearEventoRapido(string descripcion, string fecha, string hora, string lugar, string estado, int? id_cliente)
+        public JsonResult CrearEventoRapido(string descripcion, string fecha, string hora, string lugar, string estado, int? id_cliente, int? id_contacto)
         {
             try
             {
@@ -367,11 +506,119 @@ namespace CRMRSG.Controllers
                 db.citas.Add(nuevaCita);
                 db.SaveChanges();
 
+                if (id_contacto.HasValue && id_contacto.Value > 0)
+                {
+                    db.Database.ExecuteSqlCommand("UPDATE citas SET id_contacto = @p0 WHERE id_cita = @p1", id_contacto.Value, nuevaCita.id_cita);
+                }
+
                 return Json(new { success = true, id = nuevaCita.id_cita, message = "Evento agendado con éxito." });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult EnviarCorreo(string destinatario, string asunto, string cuerpo)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(destinatario) || string.IsNullOrEmpty(asunto) || string.IsNullOrEmpty(cuerpo))
+                {
+                    return Json(new { success = false, message = "Por favor, complete todos los campos." });
+                }
+
+                EnviarEmailNet(destinatario, asunto, cuerpo);
+                return Json(new { success = true, message = "Correo enviado con éxito." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al enviar correo: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult ProgramarCorreo(string destinatario, string asunto, string cuerpo, string fechaProgramada)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(destinatario) || string.IsNullOrEmpty(asunto) || string.IsNullOrEmpty(cuerpo) || string.IsNullOrEmpty(fechaProgramada))
+                {
+                    return Json(new { success = false, message = "Por favor, complete todos los campos." });
+                }
+
+                DateTime fProg = DateTime.Parse(fechaProgramada);
+
+                db.Database.ExecuteSqlCommand(
+                    "INSERT INTO correos_programados (destinatario, asunto, cuerpo, fecha_envio, enviado) VALUES (@p0, @p1, @p2, @p3, 0)",
+                    destinatario, asunto, cuerpo, fProg
+                );
+
+                return Json(new { success = true, message = "Correo programado con éxito para el " + fProg.ToString("dd/MM/yyyy HH:mm") + "." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error al programar correo: " + ex.Message });
+            }
+        }
+
+        private void EnviarCorreosProgramados()
+        {
+            try
+            {
+                var ahora = DateTime.Now;
+                var list = db.Database.SqlQuery<CorreoProgramado>("SELECT * FROM correos_programados WHERE enviado = 0 AND fecha_envio <= @p0", ahora).ToList();
+                foreach (var c in list)
+                {
+                    try
+                    {
+                        EnviarEmailNet(c.destinatario, c.asunto, c.cuerpo);
+                        db.Database.ExecuteSqlCommand("UPDATE correos_programados SET enviado = 1 WHERE id_correo = @p0", c.id_correo);
+                    }
+                    catch
+                    {
+                        // Ignore single email failures
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore DB/query errors
+            }
+        }
+
+        private void EnviarEmailNet(string toEmail, string subject, string body)
+        {
+            var host = ConfigurationManager.AppSettings["SmtpHost"];
+            var portStr = ConfigurationManager.AppSettings["SmtpPort"];
+            var user = ConfigurationManager.AppSettings["SmtpUser"];
+            var pass = ConfigurationManager.AppSettings["SmtpPass"];
+            var from = ConfigurationManager.AppSettings["SmtpFrom"] ?? "no-reply@example.com";
+            var enableSslStr = ConfigurationManager.AppSettings["SmtpEnableSsl"];
+
+            int port = 587;
+            bool enableSsl = true;
+            int.TryParse(portStr, out port);
+            bool.TryParse(enableSslStr, out enableSsl);
+
+            using (var message = new MailMessage())
+            {
+                message.From = new MailAddress(from, "CRM RSG");
+                message.To.Add(new MailAddress(toEmail));
+                message.Subject = subject;
+                message.Body = body;
+                message.IsBodyHtml = false;
+
+                using (var client = new SmtpClient(host, port))
+                {
+                    if (!string.IsNullOrWhiteSpace(user))
+                    {
+                        client.Credentials = new NetworkCredential(user, pass);
+                    }
+                    client.EnableSsl = enableSsl;
+                    client.Send(message);
+                }
             }
         }
 

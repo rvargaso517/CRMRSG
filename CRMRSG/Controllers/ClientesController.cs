@@ -54,6 +54,25 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
+            // HU-022: Validación Automática de Datos de Clientes
+            if (string.IsNullOrWhiteSpace(nuevoCliente.nombre))
+            {
+                ModelState.AddModelError("nombre", "El nombre del contacto principal es obligatorio.");
+            }
+            if (string.IsNullOrWhiteSpace(nuevoCliente.correo) || !System.Text.RegularExpressions.Regex.IsMatch(nuevoCliente.correo, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                ModelState.AddModelError("correo", "Debe proporcionar un correo electrónico válido.");
+            }
+            else if (db.clientes.Any(c => c.correo == nuevoCliente.correo))
+            {
+                ModelState.AddModelError("correo", "Ya existe un cliente registrado con este correo electrónico.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(nuevoCliente.telefono) && !System.Text.RegularExpressions.Regex.IsMatch(nuevoCliente.telefono, @"^\+?[0-9\s\-]{8,15}$"))
+            {
+                ModelState.AddModelError("telefono", "El teléfono debe contener entre 8 y 15 dígitos (solo números, espacios, '+' o guiones).");
+            }
+
             if (ModelState.IsValid)
             {
                 nuevoCliente.fecha_registro = DateTime.Now;
@@ -62,6 +81,32 @@ namespace CRMRSG.Controllers
                     : 1;
 
                 db.clientes.Add(nuevoCliente);
+                db.SaveChanges();
+
+                // HU-030: Automatización de Tareas - Crear tarea de bienvenida automática al crear un cliente
+                var tareaAuto = new tarea
+                {
+                    titulo = $"Llamada de Bienvenida: {nuevoCliente.empresa}",
+                    descripcion = $"Realizar llamada de introducción al contacto principal {nuevoCliente.nombre}.",
+                    prioridad = "Media",
+                    estado = "Pendiente",
+                    fecha_limite = DateTime.Today.AddDays(2),
+                    id_cliente = nuevoCliente.id_cliente,
+                    id_usuario = nuevoCliente.id_usuario
+                };
+                db.tareas.Add(tareaAuto);
+                db.SaveChanges();
+
+                var notiCliente = new notificacione
+                {
+                    mensaje = $"Cliente Creado: Se ha registrado el cliente '{nuevoCliente.nombre}' de la empresa '{nuevoCliente.empresa}'.",
+                    fecha = DateTime.Now,
+                    leida = false,
+                    id_usuario = nuevoCliente.id_usuario ?? 1,
+                    tipo = "Cliente Creado",
+                    id_referencia = nuevoCliente.id_cliente
+                };
+                db.notificaciones.Add(notiCliente);
                 db.SaveChanges();
 
                 return RedirectToAction("Index");

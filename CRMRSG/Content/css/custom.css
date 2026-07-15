@@ -187,10 +187,6 @@ html, body, .wrapper {
     max-width: 100% !important;
 }
 
-.col-12, .col-lg-12, .col-md-12, .col-xl-12 {
-    flex: 0 0 100% !important;
-    max-width: 100% !important;
-}
 
 .box, .card {
     width: 100% !important;
@@ -247,4 +243,16 @@ h1, h2, h3, h4, h5, h6, .page-title {
         margin-left: 18.58rem !important;
         transition: margin-left 0.3s ease-in-out;
     }
+}
+
+/* Force notification menu to display when active/show is toggled */
+#notification-li.show #notification-menu,
+#notification-menu.show {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
 }

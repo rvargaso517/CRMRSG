@@ -51,19 +51,57 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <!-- Cliente Relacionado -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Relacionado con (Cliente)</label>
+                                <select class="form-select" name="id_cliente" id="id_cliente" required>
+                                    <option value="">-- Seleccione un Cliente --</option>
+                                    @if (ViewBag.Clientes != null)
+                                    {
+                                        foreach (var c in (List<CRMRSG.EntityFramework.cliente>)ViewBag.Clientes)
+                                        {
+                                            <option value="@c.id_cliente">@c.nombre (@c.empresa)</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- HU-016: Asignación de Responsables -->
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Responsable Asignado</label>
+                                <select class="form-select" name="id_usuario">
+                                    <option value="">-- Asignar al creador --</option>
+                                    @if (ViewBag.Responsables != null)
+                                    {
+                                        foreach (var u in (List<CRMRSG.EntityFramework.usuario>)ViewBag.Responsables)
+                                        {
+                                            <option value="@u.id_usuario">@u.nombre @u.apellido</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HU-021: Asociación de Contacto -->
                     <div class="form-group">
-                        <label class="form-label">Relacionado con (Cliente)</label>
-                        <select class="form-select" name="id_cliente">
-                            <option value="">Ninguno</option>
-                            @if (ViewBag.Clientes != null)
+                        <label class="form-label">Contacto Asociado</label>
+                        <select class="form-select" name="id_contacto" id="id_contacto">
+                            <option value="">-- Seleccione un Contacto --</option>
+                            @if (ViewBag.Contactos != null)
                             {
-                                foreach (var c in (List<CRMRSG.EntityFramework.cliente>)ViewBag.Clientes)
+                                foreach (var co in (List<CRMRSG.EntityFramework.contacto_cliente>)ViewBag.Contactos)
                                 {
-                                    <option value="@c.id_cliente">@c.nombre</option>
+                                    <option value="@co.id_contacto" data-cliente="@co.id_cliente">@co.nombre - @co.puesto</option>
                                 }
                             }
                         </select>
                     </div>
+
                     <div class="form-group">
                         <label class="form-label">Notas Adicionales</label>
                         <textarea rows="4" name="descripcion" class="form-control" placeholder="Escribe aquí los detalles..."></textarea>
@@ -77,6 +115,24 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#id_cliente').on('change', function() {
+            var selectedCliente = $(this).val();
+            $('#id_contacto option').each(function() {
+                var contactCliente = $(this).data('cliente');
+                if (!contactCliente || contactCliente == selectedCliente) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            $('#id_contacto').val('');
+        });
+    });
+</script>
 
 
 

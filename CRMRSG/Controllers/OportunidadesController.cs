@@ -84,6 +84,19 @@ namespace CRMRSG.Controllers
 
                 db.oportunidades.Add(op);
                 db.SaveChanges();
+
+                var notiOp = new notificacione
+                {
+                    mensaje = $"Nueva Oportunidad: Se ha creado la oportunidad '{op.nombre}' con probabilidad del {op.probabilidad}%.",
+                    fecha = DateTime.Now,
+                    leida = false,
+                    id_usuario = op.id_usuario ?? 1,
+                    tipo = "Oportunidad Creada",
+                    id_referencia = op.id_oportunidad
+                };
+                db.notificaciones.Add(notiOp);
+                db.SaveChanges();
+
                 return RedirectToAction("Index");
             }
 

@@ -157,6 +157,8 @@
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\cliente_extension.cs" />
+    <Compile Include="EntityFramework\tarea_extension.cs" />
+    <Compile Include="EntityFramework\cita_extension.cs" />
     <Compile Include="EntityFramework\contacto_cliente.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>

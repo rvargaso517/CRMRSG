@@ -1,4 +1,4 @@
-﻿@model CRMRSG.EntityFramework.cliente
+@model CRMRSG.EntityFramework.cliente
 
 
 @{
@@ -103,7 +103,7 @@
                         <div class="row mb-10">
                             <div class="col-md-3"><label class="form-label">Nombres</label>@Html.TextBoxFor(m => m.nombre, new { @class = "form-control" })</div>
                             <div class="col-md-2"><label class="form-label">Apellidos</label><input type="text" class="form-control" placeholder="Ej: P&eacute;rez" /></div>
-                            <div class="col-md-2"><label class="form-label">Tel&eacute;fono</label>@Html.TextBoxFor(m => m.telefono, new { @class = "form-control" })</div>
+                            <div class="col-md-2"><label class="form-label">Tel&eacute;fono</label>@Html.TextBoxFor(m => m.telefono, new { @class = "form-control", pattern = @"^\+?[0-9\s\-]{8,15}$", title = "El teléfono debe contener entre 8 y 15 dígitos (solo números, espacios, '+' o guiones)." })</div>
                             <div class="col-md-3"><label class="form-label">Correo</label>@Html.TextBoxFor(m => m.correo, new { @class = "form-control", type = "email" })</div>
                             <div class="col-md-2"><label class="form-label">Tipo Contacto</label>
                                 <select class="form-control">
