@@ -26,7 +26,8 @@ namespace CRMRSG.Controllers
                     {
                         id_cliente = id_cliente,
                         comentario = comentario,
-                        fecha_creacion = DateTime.Now
+                        fecha_creacion = DateTime.Now,
+                        id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1
                     };
 
                     db.nota_cliente.Add(nuevaNota);

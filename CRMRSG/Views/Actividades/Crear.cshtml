@@ -2,6 +2,7 @@
     ViewBag.Title = "Registrar Actividad";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var clientes = (List<CRMRSG.EntityFramework.cliente>)ViewBag.Clientes;
+    var contactos = ViewBag.Contactos as List<CRMRSG.EntityFramework.contacto_cliente> ?? new List<CRMRSG.EntityFramework.contacto_cliente>();
 }
 
 <div class="content-header">
@@ -63,15 +64,28 @@
                         </div>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label">Relacionado con Cliente / Empresa</label>
-                        <select name="id_cliente" class="form-select">
-                            <option value="">-- Ninguno / Particular --</option>
-                            @foreach (var c in clientes)
-                            {
-                                <option value="@c.id_cliente">@c.empresa (@c.nombre)</option>
-                            }
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Relacionado con Cliente / Empresa</label>
+                            <select name="id_cliente" id="act_id_cliente" class="form-select">
+                                <option value="">-- Ninguno / Particular --</option>
+                                @foreach (var c in clientes)
+                                {
+                                    <option value="@c.id_cliente">@c.empresa (@c.nombre)</option>
+                                }
+                            </select>
+                        </div>
+                        <!-- HU-021: Contacto Secundario -->
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="form-label">Contacto Secundario <small class="text-muted">(Opcional)</small></label>
+                            <select name="id_contacto" id="act_id_contacto" class="form-select">
+                                <option value="">-- Seleccione primero un cliente --</option>
+                                @foreach (var co in contactos)
+                                {
+                                    <option value="@co.id_contacto" data-cliente="@co.id_cliente">@co.nombre @(co.apellido ?? "") - @(co.puesto ?? "Sin puesto")</option>
+                                }
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group mb-3">
@@ -88,3 +102,32 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        var clienteSelect = document.getElementById('act_id_cliente');
+        var contactoSelect = document.getElementById('act_id_contacto');
+        var allOptions = Array.from(contactoSelect.options).slice(1); // skip placeholder
+
+        function filtrarContactos() {
+            var selectedCliente = clienteSelect.value;
+            // Remove all options except placeholder
+            while (contactoSelect.options.length > 1) {
+                contactoSelect.remove(1);
+            }
+            var found = false;
+            allOptions.forEach(function (opt) {
+                if (!selectedCliente || opt.getAttribute('data-cliente') == selectedCliente) {
+                    contactoSelect.appendChild(opt.cloneNode(true));
+                    found = true;
+                }
+            });
+            contactoSelect.options[0].text = found ? '-- Seleccione un Contacto (opcional) --' : '-- Sin contactos para este cliente --';
+            contactoSelect.value = '';
+        }
+
+        clienteSelect.addEventListener('change', filtrarContactos);
+        // Run on load in case client is preselected
+        filtrarContactos();
+    })();
+</script>

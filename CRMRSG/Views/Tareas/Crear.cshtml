@@ -116,22 +116,34 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#id_cliente').on('change', function() {
-            var selectedCliente = $(this).val();
-            $('#id_contacto option').each(function() {
-                var contactCliente = $(this).data('cliente');
-                if (!contactCliente || contactCliente == selectedCliente) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
+    (function () {
+        var clienteSelect = document.getElementById('id_cliente');
+        var contactoSelect = document.getElementById('id_contacto');
+        var allOptions = Array.from(contactoSelect.options).slice(1); // skip placeholder
+
+        function filtrarContactos() {
+            var selectedCliente = clienteSelect.value;
+            // Remove all options except placeholder
+            while (contactoSelect.options.length > 1) {
+                contactoSelect.remove(1);
+            }
+            var found = false;
+            allOptions.forEach(function (opt) {
+                if (!selectedCliente || opt.getAttribute('data-cliente') == selectedCliente) {
+                    contactoSelect.appendChild(opt.cloneNode(true));
+                    found = true;
                 }
             });
-            $('#id_contacto').val('');
-        });
-    });
+            contactoSelect.options[0].text = found
+                ? '-- Seleccione un Contacto (opcional) --'
+                : '-- Sin contactos para este cliente --';
+            contactoSelect.value = '';
+        }
+
+        clienteSelect.addEventListener('change', filtrarContactos);
+        filtrarContactos();
+    })();
 </script>
 
 

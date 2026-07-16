@@ -139,13 +139,16 @@ namespace CRMRSG.Controllers
                 ViewBag.Oportunidades = db.oportunidades.Where(o => o.id_usuario == usuarioId).ToList();
             }
 
+            // Cargar contactos secundarios (HU-021)
+            ViewBag.Contactos = db.contacto_cliente.ToList();
+
             return View();
         }
 
         // POST: Actividades/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Crear(string tipo_actividad, string fecha, string hora, int? id_cliente, string descripcion)
+        public ActionResult Crear(string tipo_actividad, string fecha, string hora, int? id_cliente, int? id_contacto, string descripcion)
         {
             if (!TienePermiso("Actividades:Gestionar"))
             {
@@ -174,6 +177,14 @@ namespace CRMRSG.Controllers
 
                 db.citas.Add(nuevaCita);
                 db.SaveChanges();
+
+                // HU-021: Guardar id_contacto via SQL crudo (no está en el EDMX)
+                if (id_contacto.HasValue && id_contacto.Value > 0)
+                {
+                    db.Database.ExecuteSqlCommand(
+                        "UPDATE citas SET id_contacto = @p0 WHERE id_cita = @p1",
+                        id_contacto.Value, nuevaCita.id_cita);
+                }
 
                 var notiAct = new notificacione
                 {

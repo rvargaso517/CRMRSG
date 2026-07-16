@@ -1,4 +1,4 @@
-﻿@model CRMRSG.EntityFramework.cliente
+@model CRMRSG.EntityFramework.cliente
 
 @{
     ViewBag.Title = "Detalle del Cliente";
@@ -177,7 +177,7 @@
                                 <div class="media-body">
                                     <p class="fs-14 text-dark mb-5">@nota.comentario</p>
                                     <span class="text-fade fs-11 d-block text-end">
-                                        <i class="ti-calendar me-5"></i> @nota.fecha_creacion.ToString("dd/MM/yyyy hh:mm tt")
+                                        <i class="ti-calendar me-5"></i> @(nota.fecha_creacion.HasValue ? nota.fecha_creacion.Value.ToString("dd/MM/yyyy hh:mm tt") : "")
                                     </span>
                                 </div>
                             </div>
@@ -240,6 +240,8 @@
     $(document).ready(function () {
         $("#formNuevoContacto").on("submit", function (e) {
             e.preventDefault();
+            var $btn = $(this).find('button[type="submit"]');
+            $btn.prop('disabled', true).text('Guardando...');
 
             $.ajax({
                 url: '@Url.Action("AgregarContacto", "Clientes")',
@@ -247,14 +249,20 @@
                 data: $(this).serialize(),
                 success: function (response) {
                     if (response.success) {
-                        alert(response.message);
-                        location.reload();
+                        // Mostrar mensaje de éxito en el modal y recargar
+                        var $msg = $('<div class="alert alert-success mt-2 mb-0"><i class="ti-check me-5"></i>' + response.message + '</div>');
+                        $('#formNuevoContacto .modal-body').prepend($msg);
+                        setTimeout(function () { location.reload(); }, 1200);
                     } else {
-                        alert(response.message);
+                        var $err = $('<div class="alert alert-danger mt-2 mb-0"><i class="ti-alert me-5"></i>' + response.message + '</div>');
+                        $('#formNuevoContacto .modal-body').prepend($err);
+                        $btn.prop('disabled', false).text('Guardar Contacto');
                     }
                 },
                 error: function () {
-                    alert("Ocurrio un error en el servidor al asociar el contacto.");
+                    var $err = $('<div class="alert alert-danger mt-2 mb-0"><i class="ti-alert me-5"></i>Error al conectar con el servidor.</div>');
+                    $('#formNuevoContacto .modal-body').prepend($err);
+                    $btn.prop('disabled', false).text('Guardar Contacto');
                 }
             });
         });

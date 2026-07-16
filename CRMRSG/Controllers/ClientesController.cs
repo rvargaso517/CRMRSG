@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
@@ -30,6 +31,33 @@ namespace CRMRSG.Controllers
 
             var listaClientes = db.clientes.ToList();
             return View(listaClientes);
+        }
+
+        // GET: Clientes/Detalle/5
+        public ActionResult Detalle(int? id)
+        {
+            if (!TienePermiso("Clientes:Ver"))
+            {
+                TempData["Error"] = "No tiene permisos para ver Clientes.";
+                return RedirectToAction("Index");
+            }
+
+            if (id == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var clienteDetalle = db.clientes
+                .Include(c => c.contacto_cliente)
+                .Include(c => c.nota_cliente)
+                .FirstOrDefault(c => c.id_cliente == id);
+
+            if (clienteDetalle == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(clienteDetalle);
         }
 
         // GET: Clientes/Crear
