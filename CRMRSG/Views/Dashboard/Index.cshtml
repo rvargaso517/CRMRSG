@@ -802,6 +802,26 @@
                     }
                 });
             });
+
+            
+            $('.btn-cambiar-color').on('click', function () {
+                const colorTema = $(this).data('color'); // Ej: '#4e73df', '#1cc88a', etc.
+                
+                // Cambia el color de fondo de las tarjetas o botones principales
+                $('.card-email-header').css('background-color', colorTema);
+                $('#btn-enviar-correo-now').css('background-color', colorTema);
+
+                // Guardar preferencia de color del usuario
+                localStorage.setItem('crm_email_theme_color', colorTema);
+            });
+
+            // Restaurar color guardado al cargar la página
+            const savedColor = localStorage.getItem('crm_email_theme_color');
+            if (savedColor) {
+                $('.card-email-header').css('background-color', savedColor);
+                $('#btn-enviar-correo-now').css('background-color', savedColor);
+            }
+
         });
     </script>
 }
