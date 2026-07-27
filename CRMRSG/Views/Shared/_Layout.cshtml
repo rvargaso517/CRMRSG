@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@ViewBag.Title - CRM</title>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     @Styles.Render("~/Content/css")
     <link rel="stylesheet" href="@Url.Content("~/Content/bootstrap.css")">
     <link rel="stylesheet" href="@Url.Content("~/Content/css/vendors_css.css")">
@@ -13,23 +14,215 @@
     <link rel="stylesheet" href="@Url.Content("~/Content/css/skin_color.css")?v=@DateTime.Now.Ticks">
     <link rel="stylesheet" href="@Url.Content("~/Content/css/custom.css")?v=@DateTime.Now.Ticks">
     @Scripts.Render("~/bundles/modernizr")
+    <script>
+        (function() {
+            var sidebarSkin = localStorage.getItem('crm_sidebar_skin') || 'light';
+            var savedColor = localStorage.getItem('crm_theme_color');
+            var savedBg = localStorage.getItem('crm_bg_color');
+            var savedSidebarBg = localStorage.getItem('crm_sidebar_bg_color');
+            var savedHeaderBg = localStorage.getItem('crm_header_bg_color');
+            var savedBoxBg = localStorage.getItem('crm_box_bg_color');
+            
+            if (sidebarSkin === 'dark') {
+                savedBg = '#121212';
+                savedBoxBg = '#1e1e1e';
+                savedSidebarBg = '#181818';
+                savedHeaderBg = '#1e1e1e';
+            }
+            
+            var cssText = '';
+            
+            if (savedColor) {
+                cssText += `
+                    :root {
+                        --theme-primary-custom: ` + savedColor + ` !important;
+                    }
+                    .btn-primary, .bg-primary, .btn-primary-light:hover {
+                        background-color: ` + savedColor + ` !important;
+                        border-color: ` + savedColor + ` !important;
+                        color: #fff !important;
+                    }
+                    .text-primary, .sidebar-menu > li.active > a, .sidebar-menu > li:hover > a {
+                        color: ` + savedColor + ` !important;
+                    }
+                    .badge-primary-light {
+                        background-color: ` + savedColor + `20 !important;
+                        color: ` + savedColor + ` !important;
+                    }
+                `;
+            }
+            if (savedBg) {
+                var rBg = parseInt(savedBg.substr(1, 2), 16);
+                var gBg = parseInt(savedBg.substr(3, 2), 16);
+                var bBg = parseInt(savedBg.substr(5, 2), 16);
+                var yiqBg = ((rBg * 299) + (gBg * 587) + (bBg * 114)) / 1000;
+                var textContrastColor = (yiqBg >= 128) ? '#1a1a2e' : '#ffffff';
+                var textMutedContrast = (yiqBg >= 128) ? '#5a6a85' : '#a8dadc';
+
+                cssText += `
+                    .content-wrapper, .wrapper {
+                        background-color: ` + savedBg + ` !important;
+                    }
+                    /* Adaptar texto general en la página de perfil/cuenta */
+                    .tab-pane, label.form-label, .box-title, h5, .nav-tabs .nav-link, .nav-tabs .nav-link.active {
+                        color: ` + textContrastColor + ` !important;
+                    }
+                    p.text-muted, .text-fade, .small, .text-muted {
+                        color: ` + textMutedContrast + ` !important;
+                    }
+                `;
+            }
+            if (savedSidebarBg) {
+                var r = parseInt(savedSidebarBg.substr(1, 2), 16);
+                var g = parseInt(savedSidebarBg.substr(3, 2), 16);
+                var b = parseInt(savedSidebarBg.substr(5, 2), 16);
+                var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                var contrastColor = (yiq >= 128) ? '#1a1a2e' : '#ffffff';
+                
+                cssText += `
+                    .main-sidebar, .left-side, .logo-box {
+                        background-color: ` + savedSidebarBg + ` !important;
+                    }
+                    .main-sidebar .sidebar-menu li a, 
+                    .main-sidebar .sidebar-menu li a i, 
+                    .main-sidebar .sidebar-menu li.treeview > a i,
+                    .main-sidebar .sidebar-menu > li > a {
+                        color: ` + contrastColor + ` !important;
+                    }
+                `;
+            }
+            if (savedHeaderBg) {
+                var r = parseInt(savedHeaderBg.substr(1, 2), 16);
+                var g = parseInt(savedHeaderBg.substr(3, 2), 16);
+                var b = parseInt(savedHeaderBg.substr(5, 2), 16);
+                var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                var contrastHeaderColor = (yiq >= 128) ? '#1a1a2e' : '#ffffff';
+                
+                cssText += `
+                    .main-header, .main-header .navbar, .main-header .logo-box {
+                        background-color: ` + savedHeaderBg + ` !important;
+                    }
+                    .main-header .navbar .nav > li > a,
+                    .main-header .navbar .nav > li > a i,
+                    .main-header .navbar .nav > li > a span,
+                    .main-header .navbar .push-btn {
+                        color: ` + contrastHeaderColor + ` !important;
+                    }
+                `;
+            }
+            if (savedBoxBg) {
+                var r = parseInt(savedBoxBg.substr(1, 2), 16);
+                var g = parseInt(savedBoxBg.substr(3, 2), 16);
+                var b = parseInt(savedBoxBg.substr(5, 2), 16);
+                var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                var contrastBoxColor = (yiq >= 128) ? '#1a1a2e' : '#ffffff';
+                var contrastBoxMuted = (yiq >= 128) ? '#5a6a85' : '#a8dadc';
+                
+                cssText += `
+                    .box, .card, .bg-white, .box-body, .box-header, .box-footer, .metric-card, 
+                    .list-group-item, .media, .timeline-event, .fc-theme-standard td, .fc-theme-standard th, 
+                    .fc, .fc-daygrid-day, .fc-col-header-cell, .fc-scrollgrid, .fc-list-event, 
+                    .fc-timegrid-slot, .fc-timegrid-col, .fc-list-day, .table, .table td, .table th,
+                    #clientes-table, #tareas-table, #oportunidades-table, #clientes-table td, #tareas-table td, #oportunidades-table td {
+                        background-color: ` + savedBoxBg + ` !important;
+                        color: ` + contrastBoxColor + ` !important;
+                    }
+                    .box-title, .card-title, h1, h2, h3, h4, h5, h6, .text-dark, td, th, 
+                    .metric-card .value, .timeline-title, .fc-event-title, .fc-col-header-cell-cushion, 
+                    .fc-daygrid-day-number, .fc-list-event-title, .list-group-item h6, .list-group-item p,
+                    .list-group-item .text-dark, .list-group-item strong {
+                        color: ` + contrastBoxColor + ` !important;
+                    }
+                    .box p, .card p, .text-fade, .text-muted, .small, .metric-card .label, 
+                    .timeline-time, .fc-event-time, .list-group-item small, .list-group-item .text-fade {
+                        color: ` + contrastBoxMuted + ` !important;
+                    }
+                    .btn {
+                        border-radius: 6px !important;
+                        font-weight: 500 !important;
+                        letter-spacing: 0.2px !important;
+                    }
+                    .table-responsive {
+                        width: 100% !important;
+                    }
+                `;
+            }
+            
+            // Global Layout optimizations, fonts unification and logo visibility
+            cssText += `
+                body, p, h1, h2, h3, h4, h5, h6, td, th, input, select, textarea, button, label {
+                    font-family: 'Outfit', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+                }
+                /* Eliminate browser list bullets / markers in the sidebar menu */
+                .sidebar-menu, .sidebar-menu li, .sidebar-menu ul, .sidebar-menu ul li, .treeview-menu, .treeview-menu li {
+                    list-style: none !important;
+                    list-style-type: none !important;
+                }
+                .sidebar-menu li a::before, 
+                .sidebar-menu li a::after, 
+                .sidebar-menu li a span::before, 
+                .sidebar-menu li a span::after {
+                    display: none !important;
+                    content: "" !important;
+                }
+                /* Force safe Segoe UI font on sidebar text & anchors to prevent spaces from rendering as dots/dashes */
+                .sidebar-menu li a, 
+                .sidebar-menu li a span {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+                }
+                .sidebar-menu li a i, 
+                .sidebar-menu li a svg {
+                    margin-right: 8px !important;
+                }
+                .content-wrapper {
+                    min-height: calc(100vh - 60px) !important;
+                }
+                #clientes-box, #oportunidades-box, #tareas-box, #actividades-box, #redactor-box,
+                body:not(.dashboard-page) .content-wrapper .col-12 > .box,
+                body:not(.dashboard-page) .content-wrapper .col-lg-8 > .box,
+                body:not(.dashboard-page) .content-wrapper .col-xxl-12 > .box {
+                    min-height: 75vh !important;
+                }
+                /* Ensure logo is always correctly displayed in the sidebar header */
+                .logo-box .logo-mini span:last-child, .logo-box .logo-lg span:last-child {
+                    display: none !important;
+                }
+                .logo-box .logo-mini span:first-child, .logo-box .logo-lg span:first-child {
+                    display: inline-block !important;
+                }
+                .logo-box img {
+                    display: block !important;
+                    max-height: 45px !important;
+                }
+            `;
+
+            if (cssText) {
+                var styleEl = document.createElement('style');
+                styleEl.id = 'custom-theme-styles-runtime';
+                styleEl.innerHTML = cssText;
+                document.head.appendChild(styleEl);
+            }
+        })();
+    </script>
 </head>
 
-<body class="hold-transition light-skin sidebar-mini theme-primary fixed">
+<body class="hold-transition light-skin sidebar-mini theme-primary fixed @ViewBag.BodyClass">
+    <script>
+        (function() {
+            var savedSkin = localStorage.getItem('crm_sidebar_skin');
+            if (savedSkin === 'dark') {
+                document.body.classList.remove('light-skin');
+                document.body.classList.add('dark-skin');
+            }
+        })();
+    </script>
     <div class="wrapper">
         <div id="loader"></div>
 
         <header class="main-header">
-            <div class="d-flex align-items-center logo-box justify-content-start">
-                <a href="@Url.Action("Index", "Dashboard")" class="logo">
-                    <div class="logo-mini">
-                        <span class="light-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-mini-img"></span>
-                        <span class="dark-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-mini-img"></span>
-                    </div>
-                    <div class="logo-lg d-none d-sm-block">
-                        <span class="light-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-lg-img"></span>
-                        <span class="dark-logo"><img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="logo" class="img-fluid logo-lg-img"></span>
-                    </div>
+            <div class="d-flex align-items-center logo-box justify-content-start" style="display: flex !important; width: 260px !important; height: 60px !important; background-color: transparent !important; position: relative !important; z-index: 9999 !important; opacity: 1 !important; visibility: visible !important;">
+                <a href="@Url.Action("Index", "Dashboard")" class="logo" style="display: block !important; width: 100% !important; height: 100% !important; line-height: 60px !important; padding: 0 15px !important; opacity: 1 !important; visibility: visible !important; text-decoration: none !important;">
+                    <img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="RSG Logo" style="max-height: 45px !important; width: auto !important; display: inline-block !important; vertical-align: middle !important; visibility: visible !important; opacity: 1 !important; border: none !important; filter: invert(1) !important; mix-blend-mode: screen !important;">
                 </a>
             </div>
 
@@ -119,6 +312,7 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <li><a href="@Url.Action("Index", "Dashboard")"><i data-feather="home"></i><span>Dashboard</span></a></li>
                             <li><a href="@Url.Action("Calendar", "Dashboard")"><i data-feather="calendar"></i><span>Calendario</span></a></li>
+                            <li><a href="@Url.Action("RedactorCorreos", "Dashboard")"><i data-feather="mail"></i><span>Redactor de Correos</span></a></li>
 
                             @if (puedeVerClientes)
                             {
@@ -201,20 +395,6 @@
                                 </ul>
                             </li>
 
-                            <li class="treeview">
-                                <a href="#">
-                                    <i data-feather="headphones"></i>
-                                    <span>Soporte</span>
-                                    <span class="pull-right-container">
-                                        <i class="fa fa-angle-right pull-right"></i>
-                                    </span>
-                                </a>
-                                <ul class="treeview-menu">
-                                    <li><a href="#"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Tickets</a></li>
-                                    <li><a href="#"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Chat</a></li>
-                                </ul>
-                            </li>
-
                             @if (Session["RolId"] != null && (int)Session["RolId"] == 1)
                             {
                                 <li class="treeview">
@@ -234,13 +414,7 @@
                             }
                         </ul>
 
-                        <div class="sidebar-widgets">
-                            <div class="mx-25 mb-30 pb-20 bg-primary-light rounded20">
-                                <div class="text-center">
-                                    <img src="@Url.Content("~/Content/images/trophy.png")" class="sideimg p-5" alt="">
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </section>
@@ -319,6 +493,15 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center mb-20">
+                                <div class="me-15 bg-info-light rounded text-center d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                    <i data-feather="sliders" class="text-info"></i>
+                                </div>
+                                <div class="d-flex flex-column fw-500">
+                                    <a href="~/Perfil?tab=visual" class="text-dark hover-info mb-1 fs-15">Personalizar Interfaz</a>
+                                    <small class="text-fade">Ajustar colores y temas</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mb-20">
                                 <div class="me-15 bg-danger-light rounded text-center d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
                                     <i data-feather="log-out" class="text-danger"></i>
                                 </div>
@@ -345,6 +528,23 @@
     <script src="@Url.Content("~/Content/js/template.js")"></script>
     <script>
         $(document).ready(function() {
+            // Sincronizar Sidebar Skin con LocalStorage
+            var initialSkin = localStorage.getItem('crm_sidebar_skin') || 'light';
+            if (initialSkin === 'dark') {
+                $('#toggle_left_sidebar_skin').prop('checked', true);
+            }
+
+            $('#toggle_left_sidebar_skin').on('change', function() {
+                var skin = $(this).is(':checked') ? 'dark' : 'light';
+                localStorage.setItem('crm_sidebar_skin', skin);
+                if (skin === 'dark') {
+                    $('body').removeClass('light-skin').addClass('dark-skin');
+                } else {
+                    $('body').removeClass('dark-skin').addClass('light-skin');
+                }
+                location.reload();
+            });
+
             // Manejador manual de dropdown para evitar conflictos de Bootstrap
             $('#notificationDropdown').on('click', function(e) {
                 e.preventDefault();
@@ -401,30 +601,36 @@
                                 $('#no-notifications-msg').show();
                             }
 
-                            // Mostrar alertas emergentes de SweetAlert2 para las no leídas
+                            // Mostrar alertas emergentes de SweetAlert2 para las no leídas (solo una vez por notificación)
                             if (mostrarPopups && unreadCount > 0) {
-                                unreadNotifications.forEach(function(noti, index) {
-                                    setTimeout(function() {
-                                        Swal.fire({
-                                            title: '🔔 Alerta de CRM',
-                                            text: noti.mensaje,
-                                            icon: 'info',
-                                            toast: true,
-                                            position: 'top-end',
-                                            showConfirmButton: false,
-                                            showCloseButton: true,
-                                            timer: 8000,
-                                            timerProgressBar: true,
-                                            didOpen: (toast) => {
-                                                toast.addEventListener('mouseenter', Swal.stopTimer);
-                                                toast.addEventListener('mouseleave', Swal.resumeTimer);
-                                                // Marcar como leída automáticamente al mostrarse
-                                                $.post('@Url.Action("MarcarComoLeida", "Notificaciones")', { id: noti.id_notificacion });
-                                            }
-                                        }).then(() => {
-                                            cargarNotificacionesGlobales(false);
-                                        });
-                                    }, index * 1200);
+                                if (!window.shownNotificationIds) {
+                                    window.shownNotificationIds = [];
+                                }
+                                var indexDelay = 0;
+                                unreadNotifications.forEach(function(noti) {
+                                    if (window.shownNotificationIds.indexOf(noti.id_notificacion) === -1) {
+                                        window.shownNotificationIds.push(noti.id_notificacion);
+                                        setTimeout(function() {
+                                            Swal.fire({
+                                                title: '🔔 Alerta de CRM',
+                                                text: noti.mensaje,
+                                                icon: 'info',
+                                                toast: true,
+                                                position: 'top-end',
+                                                showConfirmButton: false,
+                                                showCloseButton: true,
+                                                timer: 8000,
+                                                timerProgressBar: true,
+                                                didOpen: (toast) => {
+                                                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                                                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                                                }
+                                            }).then(() => {
+                                                cargarNotificacionesGlobales(false);
+                                            });
+                                        }, indexDelay * 1200);
+                                        indexDelay++;
+                                    }
                                 });
                             }
                         }
@@ -456,9 +662,101 @@
                     }
                 });
             });
+
+            // Aggressive text node cleaner for the entire sidebar menu to remove dots, dashes, and underscores
+            $('.sidebar-menu, .sidebar-menu *').contents().each(function() {
+                if (this.nodeType === 3) { // Text node
+                    var val = this.nodeValue;
+                    if (/[._-]/.test(val)) {
+                        // 1. Remove leading/trailing spaces, dots, dashes, or underscores
+                        var cleaned = val.replace(/^[ ._-]+|[ ._-]+$/g, '');
+                        // 2. Replace middle underscores or dashes with spaces
+                        cleaned = cleaned.replace(/[_-]+/g, ' ');
+                        this.nodeValue = cleaned;
+                    }
+                }
+            });
         });
     </script>
     @RenderSection("scripts", required: false)
 
+    <!-- Static Override Stylesheet to force clean sidebar layout and typography -->
+    <style>
+        /* Force Segoe UI font using high-specificity selectors to guarantee override of the broken theme font */
+        .sidebar-menu li a, 
+        .sidebar-menu li a span,
+        .sidebar-menu li.treeview > a,
+        .sidebar-menu li.treeview > a > span,
+        .sidebar-menu .treeview-menu li a,
+        .sidebar-menu .treeview-menu li a span,
+        .sidebar-menu *:not(.fa):not([class^="fa-"]):not([class*=" fa-"]) {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+        /* Add breathable vertical spacing between sidebar menu items */
+        .sidebar-menu > li {
+            margin-bottom: 12px !important;
+        }
+        .sidebar-menu li a i, 
+        .sidebar-menu li a svg {
+            margin-right: 8px !important;
+        }
+        /* Eliminate browser list bullets / markers / pseudo-elements in the sidebar menu */
+        .sidebar-menu, .sidebar-menu li, .sidebar-menu ul, .sidebar-menu ul li, .treeview-menu, .treeview-menu li {
+            list-style: none !important;
+            list-style-type: none !important;
+        }
+        .sidebar-menu *::marker,
+        .sidebar-menu li::marker,
+        .sidebar-menu li a::marker {
+            display: none !important;
+            content: "" !important;
+        }
+        /* Highly explicit specific selector list to completely hide any pseudo-element bullets */
+        .sidebar-menu li::before,
+        .sidebar-menu li::after,
+        .sidebar-menu li a::before,
+        .sidebar-menu li a::after,
+        .sidebar-menu li a span::before,
+        .sidebar-menu li a span::after,
+        .sidebar-menu li.treeview > a::before,
+        .sidebar-menu li.treeview > a::after,
+        .sidebar-menu li.treeview > a > span::before,
+        .sidebar-menu li.treeview > a > span::after,
+        .sidebar-menu .treeview-menu li a::before,
+        .sidebar-menu .treeview-menu li a::after,
+        .sidebar-menu .treeview-menu li a span::before,
+        .sidebar-menu .treeview-menu li a span::after,
+        .main-sidebar .sidebar-menu li a::before,
+        .main-sidebar .sidebar-menu li a::after,
+        .main-sidebar .sidebar-menu li a span::before,
+        .main-sidebar .sidebar-menu li a span::after,
+        .sidebar-menu svg::before,
+        .sidebar-menu svg::after,
+        .sidebar-menu li a svg::before,
+        .sidebar-menu li a svg::after,
+        .sidebar-menu *:not(.fa-angle-left):not(.fa-angle-right)::before, 
+        .sidebar-menu *:not(.fa-angle-left):not(.fa-angle-right)::after {
+            display: none !important;
+            content: "" !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        /* Eliminate any background images on any sidebar elements to prevent bullet image rendering */
+        .sidebar-menu, .sidebar-menu * {
+            background-image: none !important;
+            text-decoration: none !important;
+            text-decoration-line: none !important;
+        }
+        /* Force header on top of the sidebar to prevent sidebar container from covering the logo box */
+        .main-header {
+            z-index: 1050 !important;
+        }
+        /* Let inline styles on the new simplified logo structure handle it completely */
+        .logo-box, .logo-box * {
+            border: none !important;
+        }
+    </style>
 </body>
 </html>

@@ -1,0 +1,445 @@
+@{
+    ViewBag.Title = "Reasignación Masiva de Cartera";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var usuarios = ViewBag.Usuarios as List<CRMRSG.EntityFramework.usuario> ?? new List<CRMRSG.EntityFramework.usuario>();
+}
+
+@Html.AntiForgeryToken()
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Reasignación Masiva de Cartera</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item"><a href="~/Clientes">Clientes</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Reasignación Masiva</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title"><i class="fa fa-exchange me-2 text-primary"></i> Métodos de Reasignación</h3>
+                <p class="text-muted mb-0">Seleccione el método preferido para transferir la propiedad de sus clientes en lote.</p>
+            </div>
+            <div class="box-body">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs customtab2" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#manual-tab" role="tab" aria-selected="true">
+                            <span class="hidden-sm-up"><i class="ion-person"></i></span>
+                            <span class="hidden-xs-down"><i class="fa fa-hand-pointer-o me-2"></i>Reasignación Interactiva</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#file-tab" role="tab" aria-selected="false">
+                            <span class="hidden-sm-up"><i class="ion-document"></i></span>
+                            <span class="hidden-xs-down"><i class="fa fa-file-excel-o me-2"></i>Cargar Archivo (CSV / Excel)</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content p-20">
+                    
+                    <!-- TAB MANUAL/INTERACTIVE -->
+                    <div class="tab-pane active" id="manual-tab" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6 form-group mb-3">
+                                <label class="form-label fw-bold">Asesor de Origen (Propietario Actual)</label>
+                                <select id="select-origen" class="form-select border-primary">
+                                    <option value="0">-- Clientes sin Asesor Asignado (Huérfanos) --</option>
+                                    @foreach (var u in usuarios)
+                                    {
+                                        <option value="@u.id_usuario">@u.nombre @u.apellido (@u.correo)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6 form-group mb-3">
+                                <label class="form-label fw-bold">Asesor de Destino (Nuevo Propietario)</label>
+                                <select id="select-destino" class="form-select border-success">
+                                    <option value="">-- Seleccionar Asesor de Destino --</option>
+                                    @foreach (var u in usuarios)
+                                    {
+                                        <option value="@u.id_usuario">@u.nombre @u.apellido (@u.correo)</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="my-4" id="clientes-container" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold">Clientes Disponibles para Reasignar:</h5>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-select-all">Seleccionar Todos</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-deselect-all">Deseleccionar Todos</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee;">
+                                <table class="table table-hover table-striped mb-0" id="table-clientes-manual">
+                                    <thead class="bg-light sticky-top">
+                                        <tr>
+                                            <th width="40" class="text-center">#</th>
+                                            <th>Empresa / Cliente</th>
+                                            <th>Contacto Principal</th>
+                                            <th>Correo</th>
+                                            <th>Teléfono</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-clientes-manual">
+                                        <!-- Carga dinámica por JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="text-end mt-4">
+                                <button type="button" class="btn btn-success px-4" id="btn-confirmar-reasignacion-manual">
+                                    <i class="fa fa-save me-2"></i> Ejecutar Reasignación Masiva
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="no-clientes-alert" class="alert alert-info mt-4 text-center" style="display: none;">
+                            No se encontraron clientes asignados a este asesor.
+                        </div>
+                    </div>
+
+                    <!-- TAB FILE UPLOAD -->
+                    <div class="tab-pane" id="file-tab" role="tabpanel">
+                        <div class="card border border-dashed border-primary p-5 text-center bg-light rounded-3" id="drop-zone" style="cursor: pointer;">
+                            <i class="fa fa-cloud-upload text-primary fs-50 mb-3"></i>
+                            <h4 class="fw-bold">Arrastre su archivo CSV o Excel aquí</h4>
+                            <p class="text-fade">O haga clic para explorar en sus archivos locales (.csv o .txt delimitado)</p>
+                            <input type="file" id="file-input" accept=".csv,.txt" style="display: none;" />
+                            
+                            <div class="alert alert-warning text-start mx-auto mt-4" style="max-width: 600px;">
+                                <h6 class="fw-bold mb-2"><i class="fa fa-info-circle me-1"></i> Formato Esperado del Archivo:</h6>
+                                <p class="small mb-1">Para una carga directa rápida, el archivo debe contener cabeceras. Ejemplo:</p>
+                                <code class="d-block bg-white p-2 rounded mb-2 border">id_cliente;id_usuario<br />12;3<br />o<br />correo_cliente;correo_usuario<br />cliente@empresa.com;asesor@crm.com</code>
+                                <p class="small text-muted mb-0"><strong>Nota:</strong> Si el formato no coincide, se le pedirá confirmación explícita para procesarlo asociando las columnas en orden físico.</p>
+                            </div>
+                        </div>
+
+                        <div id="file-preview-card" class="card mt-4 p-4 border" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold" id="selected-file-name"><i class="fa fa-file-text-o me-2"></i> Archivo cargado</h5>
+                                <button type="button" class="btn btn-sm btn-danger-light" id="btn-remove-file"><i class="fa fa-trash"></i> Quitar</button>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-primary" id="btn-subir-archivo">
+                                    <i class="fa fa-upload me-2"></i> Procesar Reasignaciones
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Reporte de Resultados de Carga -->
+                        <div id="resultado-carga-card" class="card mt-4 p-4 border" style="display: none; background: #fafafa;">
+                            <h5 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="fa fa-bar-chart me-2"></i> Resumen de Procesamiento:</h5>
+                            <div class="row text-center mb-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 border rounded bg-white">
+                                        <h3 class="fw-bold text-success mb-0" id="report-exitos">0</h3>
+                                        <small class="text-muted">Éxitos</small>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="p-2 border rounded bg-white">
+                                        <h3 class="fw-bold text-danger mb-0" id="report-errores">0</h3>
+                                        <small class="text-muted">Errores / Advertencias</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="report-detalles-container" style="display: none;">
+                                <h6 class="fw-bold text-danger">Detalle de Conflictos / Advertencias:</h6>
+                                <div class="bg-white p-3 border rounded text-danger font-monospace small" style="max-height: 200px; overflow-y: auto;" id="report-detalles">
+                                    <!-- Errores dinámicos -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function() {
+            var selectedFile = null;
+
+            // ==========================================
+            // LOGICA REASIGNACION MANUAL
+            // ==========================================
+
+            $('#select-origen').on('change', function() {
+                var val = $(this).val();
+                cargarClientes(val);
+            });
+
+            function cargarClientes(idUsuario) {
+                $('#clientes-container').hide();
+                $('#no-clientes-alert').hide();
+
+                $.ajax({
+                    url: '@Url.Action("ObtenerClientesPorAsesor", "Clientes")',
+                    type: 'GET',
+                    data: { idUsuario: idUsuario },
+                    success: function(res) {
+                        if (res.success) {
+                            var tbody = $('#tbody-clientes-manual');
+                            tbody.empty();
+
+                            if (res.clientes && res.clientes.length > 0) {
+                                res.clientes.forEach(function(c) {
+                                    var row = `
+                                        <tr>
+                                            <td class="text-center">
+                                                <input type="checkbox" id="chk-cliente-${c.id_cliente}" value="${c.id_cliente}" class="chk-cliente-manual form-check-input" />
+                                                <label for="chk-cliente-${c.id_cliente}" class="mb-0"></label>
+                                            </td>
+                                            <td class="fw-bold text-dark">${c.empresa}</td>
+                                            <td>${c.nombre}</td>
+                                            <td>${c.correo}</td>
+                                            <td>${c.telefono}</td>
+                                            <td><span class="badge badge-success-light">${c.estado}</span></td>
+                                        </tr>
+                                    `;
+                                    tbody.append(row);
+                                });
+                                $('#clientes-container').fadeIn(200);
+                            } else {
+                                $('#no-clientes-alert').fadeIn(200);
+                            }
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Error al consultar clientes.', 'error');
+                    }
+                });
+            }
+
+            $('#btn-select-all').on('click', function() {
+                $('.chk-cliente-manual').prop('checked', true);
+            });
+
+            $('#btn-deselect-all').on('click', function() {
+                $('.chk-cliente-manual').prop('checked', false);
+            });
+
+            $('#btn-confirmar-reasignacion-manual').on('click', function() {
+                var idOrigen = $('#select-origen').val();
+                var idDestino = $('#select-destino').val();
+                
+                if (!idDestino) {
+                    Swal.fire('Campos faltantes', 'Por favor, elija un asesor de destino.', 'warning');
+                    return;
+                }
+
+                if (idOrigen === idDestino) {
+                    Swal.fire('Conflicto', 'El asesor de origen y destino no pueden ser el mismo.', 'warning');
+                    return;
+                }
+
+                var seleccionados = [];
+                $('.chk-cliente-manual:checked').each(function() {
+                    seleccionados.push($(this).val());
+                });
+
+                if (seleccionados.length === 0) {
+                    Swal.fire('Sin selección', 'Por favor, seleccione al menos un cliente para reasignar.', 'warning');
+                    return;
+                }
+
+                Swal.fire({
+                    title: '¿Confirmar Reasignación?',
+                    text: `¿Desea transferir los ${seleccionados.length} clientes seleccionados al nuevo asesor?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, reasignar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Reasignando...',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        var token = $('input[name="__RequestVerificationToken"]').val();
+
+                        $.ajax({
+                            url: '@Url.Action("ReasignarMasiva", "Clientes")',
+                            type: 'POST',
+                            data: {
+                                __RequestVerificationToken: token,
+                                idUsuarioOrigen: idOrigen,
+                                idUsuarioDestino: idDestino,
+                                idsClientes: seleccionados
+                            },
+                            success: function(res) {
+                                Swal.close();
+                                if (res.success) {
+                                    Swal.fire('¡Éxito!', res.message, 'success').then(() => {
+                                        cargarClientes(idOrigen);
+                                    });
+                                } else {
+                                    Swal.fire('Error', res.message, 'error');
+                                }
+                            },
+                            error: function() {
+                                Swal.close();
+                                Swal.fire('Error', 'Ocurrió un error en el servidor al intentar reasignar.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+
+            // ==========================================
+            // LOGICA REASIGNACION POR ARCHIVO
+            // ==========================================
+
+            $('#drop-zone').on('click', function() {
+                $('#file-input').click();
+            });
+
+            $('#file-input').on('change', function(e) {
+                if (e.target.files.length > 0) {
+                    setFile(e.target.files[0]);
+                }
+            });
+
+            $('#drop-zone').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('bg-primary-light');
+            });
+
+            $('#drop-zone').on('dragleave', function() {
+                $(this).removeClass('bg-primary-light');
+            });
+
+            $('#drop-zone').on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('bg-primary-light');
+                if (e.originalEvent.dataTransfer.files.length > 0) {
+                    setFile(e.originalEvent.dataTransfer.files[0]);
+                }
+            });
+
+            function setFile(file) {
+                selectedFile = file;
+                $('#selected-file-name').html(`<i class="fa fa-file-excel-o text-success me-2"></i> ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+                $('#drop-zone').hide();
+                $('#file-preview-card').fadeIn(200);
+                $('#resultado-carga-card').hide();
+            }
+
+            $('#btn-remove-file').on('click', function() {
+                selectedFile = null;
+                $('#file-input').val('');
+                $('#file-preview-card').hide();
+                $('#drop-zone').fadeIn(200);
+                $('#resultado-carga-card').hide();
+            });
+
+            $('#btn-subir-archivo').on('click', function() {
+                if (!selectedFile) return;
+                enviarArchivo(false);
+            });
+
+            function enviarArchivo(forzar) {
+                var formData = new FormData();
+                formData.append('archivo', selectedFile);
+                formData.append('forzarProceso', forzar);
+
+                Swal.fire({
+                    title: 'Procesando archivo...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: '@Url.Action("ProcesarReasignacionArchivo", "Clientes")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        Swal.close();
+                        if (res.needsConfirmation) {
+                            var cabecerasStr = res.columnasDetectadas ? res.columnasDetectadas.join(', ') : 'Ninguna';
+                            Swal.fire({
+                                title: 'Aviso: Formato no ideal',
+                                html: `
+                                    <div class="text-start">
+                                        <p>El archivo cargado no posee los nombres de columnas recomendados.</p>
+                                        <p><strong>Columnas encontradas:</strong> <span class="text-danger">[${cabecerasStr}]</span></p>
+                                        <p><strong>Columnas deseadas:</strong> <span class="text-success">[${res.camposNecesarios.join(', ')}]</span></p>
+                                        <p class="mb-0">Si continúa, el sistema intentará mapear las columnas por orden de posición física (Columna 1: Identificador del Cliente, Columna 2: Identificador del Asesor).</p>
+                                    </div>
+                                `,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Entendido y Aceptar',
+                                cancelButtonText: 'Corregir Archivo',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary',
+                                    cancelButton: 'btn btn-secondary'
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    enviarArchivo(true);
+                                }
+                            });
+                        } else if (res.success) {
+                            $('#report-exitos').text(res.exitos);
+                            $('#report-errores').text(res.errores);
+
+                            var detallesDiv = $('#report-detalles');
+                            detallesDiv.empty();
+
+                            if (res.detallesErrores && res.detallesErrores.length > 0) {
+                                res.detallesErrores.forEach(function(err) {
+                                    detallesDiv.append(`<div>• ${err}</div>`);
+                                });
+                                $('#report-detalles-container').show();
+                            } else {
+                                $('#report-detalles-container').hide();
+                            }
+
+                            $('#resultado-carga-card').fadeIn(200);
+
+                            Swal.fire({
+                                title: 'Proceso Finalizado',
+                                text: res.message,
+                                icon: res.errores > 0 ? 'warning' : 'success'
+                            });
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.close();
+                        Swal.fire('Error', 'Ocurrió un error en el servidor al enviar el archivo.', 'error');
+                    }
+                });
+            }
+
+        });
+    </script>
+}

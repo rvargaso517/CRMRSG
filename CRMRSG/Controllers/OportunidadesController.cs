@@ -35,11 +35,11 @@ namespace CRMRSG.Controllers
             List<oportunidade> lista;
             if (rolId == 1) // Admin
             {
-                lista = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).ToList();
+                lista = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).OrderByDescending(o => o.id_oportunidad).ToList();
             }
             else
             {
-                lista = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).Where(o => o.id_usuario == usuarioId).ToList();
+                lista = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).Where(o => o.id_usuario == usuarioId).OrderByDescending(o => o.id_oportunidad).ToList();
             }
             return View(lista);
         }

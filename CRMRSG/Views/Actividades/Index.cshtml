@@ -47,7 +47,7 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="box">
+        <div class="box" id="actividades-box">
             <div class="box-header with-border">
                 <h3 class="box-title">Historial de Actividades Comerciales</h3>
             </div>
@@ -382,6 +382,66 @@
                     }
                 });
             });
+
+            // Inicializar paginación de la línea de tiempo (5 por página)
+            paginarTimeline('.timeline', 5);
         });
+
+        function paginarTimeline(timelineSelector, itemsPerPage) {
+            const $timeline = $(timelineSelector);
+            if ($timeline.length === 0) return;
+            
+            const $items = $timeline.find('.timeline-item');
+            const totalItems = $items.length;
+            if (totalItems <= itemsPerPage) return;
+            
+            let currentPage = 1;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            const $navContainer = $('<div class="d-flex justify-content-between align-items-center mt-4 px-3 flex-wrap gap-2" id="timeline-pagination"></div>');
+            const $infoText = $('<span class="text-muted small"></span>');
+            const $paginationUl = $('<ul class="pagination pagination-sm mb-0"></ul>');
+            $navContainer.append($infoText).append($paginationUl);
+            $timeline.after($navContainer);
+            
+            function showPage(page) {
+                currentPage = page;
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                
+                $items.hide();
+                $timeline.find('.timeline-label').hide();
+                
+                const $pageItems = $items.slice(start, end);
+                $pageItems.show();
+                
+                $pageItems.each(function() {
+                    $(this).prevAll('.timeline-label').first().show();
+                });
+                
+                const shownCount = Math.min(end, totalItems);
+                $infoText.text('Mostrando del ' + (start + 1) + ' al ' + shownCount + ' de ' + totalItems + ' actividades.');
+                
+                $paginationUl.empty();
+                const $prevLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&laquo;</a></li>');
+                if (currentPage === 1) $prevLi.addClass('disabled');
+                else $prevLi.on('click', () => showPage(currentPage - 1));
+                $paginationUl.append($prevLi);
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    const $pageLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>');
+                    if (i === currentPage) $pageLi.addClass('active');
+                    else $pageLi.on('click', () => showPage(i));
+                    $paginationUl.append($pageLi);
+                }
+                
+                const $nextLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&raquo;</a></li>');
+                if (currentPage === totalPages) $nextLi.addClass('disabled');
+                else $nextLi.on('click', () => showPage(currentPage + 1));
+                $paginationUl.append($nextLi);
+            }
+            
+            showPage(1);
+        }
     </script>
 }

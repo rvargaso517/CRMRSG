@@ -1,6 +1,7 @@
 @{
     ViewBag.Title = "Dashboard - CRM";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.BodyClass = "dashboard-page";
     int rolId = Session["RolId"] != null ? (int)Session["RolId"] : 2;
     bool isAdmin = rolId == 1;
 
@@ -67,7 +68,7 @@
     }
 </style>
 
-<div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between">
+<div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between" style="margin-bottom: 30px !important;">
     <h1>
         Dashboard CRM
         <small>@(isAdmin ? "Panel de Administrador" : "Panel de Empleado")</small>
@@ -441,6 +442,58 @@
                 window.location.href = '@Url.Action("Index", "Dashboard")?filtro=' + $(this).val();
             });
 
+            // Obtener paleta de colores para gráficos desde localStorage (HU-038)
+            var chartPalette = localStorage.getItem('crm_chart_palette') || 'classic';
+            var palettes = {
+                classic: {
+                    line: ['#1d3557'],
+                    donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557'],
+                    bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261']
+                },
+                ocean: {
+                    line: ['#0077b6'],
+                    donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef'],
+                    bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8']
+                },
+                neon: {
+                    line: ['#7209b7'],
+                    donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0'],
+                    bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9']
+                },
+                sunset: {
+                    line: ['#d90429'],
+                    donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7'],
+                    bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7']
+                },
+                forest: {
+                    line: ['#2c6e49'],
+                    donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157'],
+                    bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d']
+                }
+            };
+            var selectedColors = palettes[chartPalette] || palettes.classic;
+            if (chartPalette === 'custom') {
+                var customColorsStr = localStorage.getItem('crm_custom_chart_colors');
+                var customColors = ['#2a9d8f', '#f4a261', '#e63946'];
+                if (customColorsStr) {
+                    try { customColors = JSON.parse(customColorsStr); } catch(e) {}
+                }
+                selectedColors = {
+                    line: [customColors[0]],
+                    donut: customColors,
+                    bar: customColors
+                };
+            }
+
+            // Determinar si el tema es oscuro para ApexCharts (HU-038)
+            var boxBgColor = localStorage.getItem('crm_box_bg_color') || '#ffffff';
+            var r = parseInt(boxBgColor.substr(1, 2), 16);
+            var g = parseInt(boxBgColor.substr(3, 2), 16);
+            var b = parseInt(boxBgColor.substr(5, 2), 16);
+            var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            var chartThemeMode = (yiq < 128) ? 'dark' : 'light';
+            var chartLabelColor = (yiq < 128) ? '#ffffff' : '#5a6a85';
+
             // Gráfico de Citas por Fecha - ApexCharts
             if ($('#eventos-line-chart').length > 0) {
                 var fechas = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartFechas));
@@ -448,10 +501,11 @@
 
                 var optionsLine = {
                     series: [{ name: 'Citas', data: cantidades }],
-                    chart: { type: 'area', height: 220, toolbar: { show: false } },
+                    chart: { type: 'area', height: 220, toolbar: { show: false }, background: 'transparent' },
+                    theme: { mode: chartThemeMode },
                     stroke: { curve: 'smooth', width: 2 },
                     xaxis: { categories: fechas },
-                    colors: ['#1d3557'], // RSG Blue
+                    colors: selectedColors.line,
                     fill: {
                         type: 'gradient',
                         gradient: {
@@ -475,11 +529,12 @@
 
                 var optionsDonut = {
                     series: [completados, pendientes, cancelados, aplazados],
-                    chart: { type: 'donut', height: 220 },
+                    chart: { type: 'donut', height: 220, background: 'transparent' },
+                    theme: { mode: chartThemeMode },
                     labels: ['Completadas', 'Pendientes', 'Canceladas', 'Aplazadas'],
-                    colors: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557'], // Teal, Warm Peach, RSG Red, RSG Blue
+                    colors: selectedColors.donut,
                     legend: { position: 'bottom' },
-                    stroke: { colors: ['#ffffff'], width: 2 }
+                    stroke: { colors: [boxBgColor], width: 2 }
                 };
                 new ApexCharts(document.querySelector("#estados-donut-chart"), optionsDonut).render();
             }
@@ -497,8 +552,10 @@
                     chart: {
                         type: 'bar',
                         height: 240,
-                        toolbar: { show: false }
+                        toolbar: { show: false },
+                        background: 'transparent'
                     },
+                    theme: { mode: chartThemeMode },
                     plotOptions: {
                         bar: {
                             borderRadius: 6,
@@ -516,12 +573,12 @@
                             colors: ['#FFFFFF']
                         }
                     },
-                    colors: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261'], // RSG Blue, RSG Red, Steel Blue, RSG Gray, Warm Peach
+                    colors: selectedColors.bar,
                     xaxis: {
                         categories: clientesGanancias,
                         labels: {
                             style: {
-                                colors: '#000000',
+                                colors: chartLabelColor,
                                 fontWeight: 500
                             }
                         }
@@ -550,15 +607,15 @@
             const baseTemplates = {
                 bienvenida: {
                     asunto: "¡Le damos la bienvenida, {nombre}! - Alianza Comercial",
-                    cuerpo: "Estimado(a) {nombre},\n\nEs un placer saludarle de parte de nuestro equipo. Nos complace enormemente iniciar relaciones comerciales con {empresa} y quedamos a su completa disposición para potenciar su crecimiento.\n\nAtentamente,\nAsesor de Cuentas CRM"
+                    cuerpo: "Estimado(a) {nombre},\n\nEs un verdadero honor darle la bienvenida a nuestra familia empresarial. En nombre de todo nuestro equipo, le extendemos un cordial saludo a usted y a todo el personal de {empresa}.\n\nNos entusiasma enormemente comenzar esta alianza estratégica. Nuestro principal objetivo es colaborar estrechamente con {empresa} para optimizar sus procesos comerciales y potenciar sus metas de negocio de manera integral.\n\nPronto uno de nuestros directores comerciales le estará contactando para programar una llamada de inducción y alinear nuestras próximas acciones de trabajo. Mientras tanto, quedamos a su entera disposición ante cualquier duda o requerimiento técnico."
                 },
                 seguimiento: {
                     asunto: "Seguimiento de propuesta comercial - {empresa}",
-                    cuerpo: "Hola {nombre},\n\nEspero que se encuentre muy bien. Le escribo para dar seguimiento a la propuesta que enviamos recientemente a {empresa}. Estaremos encantados de responder a sus dudas o ajustar los detalles según sus necesidades.\n\nQuedo atento(a) a sus comentarios.\n\nSaludos cordiales."
+                    cuerpo: "Estimado(a) {nombre},\n\nEspero que este mensaje le encuentre excelente.\n\nLe escribo para dar seguimiento a la propuesta comercial que compartimos recientemente con {empresa}. En nuestro último contacto, conversamos sobre las áreas de oportunidad de su departamento de ventas, y cómo nuestras herramientas personalizadas pueden ayudarle a acelerar su conversión comercial.\n\n¿Ha tenido oportunidad de revisar la propuesta técnica? Estaremos encantados de agendar una breve llamada de 10 minutos esta semana para resolver sus preguntas o ajustar el alcance del proyecto según sus prioridades."
                 },
                 reunion: {
                     asunto: "Confirmación de nuestra próxima sesión - {empresa}",
-                    cuerpo: "Estimado(a) {nombre},\n\nLe escribo para confirmar los detalles de nuestra próxima sesión de seguimiento. Estaremos analizando las soluciones comerciales que diseñamos para {empresa}.\n\nQue tenga un excelente día."
+                    cuerpo: "Estimado(a) {nombre},\n\nConfirmamos por este medio los detalles de nuestra próxima sesión de trabajo de consultoría y seguimiento comercial para {empresa}:\n\n📅 Fecha: En los próximos días\n📍 Modalidad: Videoconferencia en línea\n📋 Agenda básica: Revisión del lead scoring de clientes, prioridades en cartera, y demostración del nuevo redactor de correos inteligente del CRM.\n\nLe agradecemos de antemano su puntualidad y valioso tiempo. Si surge algún imprevisto que requiera reprogramar la cita, por favor háganoslo saber con anticipación."
                 }
             };
 

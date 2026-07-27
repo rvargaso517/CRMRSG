@@ -1,0 +1,339 @@
+@{
+    ViewBag.Title = "Redactor de Correos Inteligente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex align-items-center">
+        <div class="me-auto">
+            <h4 class="page-title">Redactor de Correos Inteligente</h4>
+            <div class="d-inline-block align-items-center">
+                <nav>
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="~/Dashboard"><i class="mdi mdi-home-outline"></i></a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Redactor de Correos</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="box" id="redactor-box">
+            <div class="box-header with-border d-flex justify-content-between align-items-center">
+                <h3 class="box-title"><i class="fa fa-magic me-2 text-primary"></i> Redactor de Correos Inteligente</h3>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-xs btn-success" id="btn-nueva-plantilla" title="Nueva Plantilla"><i class="fa fa-plus"></i> Nueva</button>
+                    <button type="button" class="btn btn-xs btn-primary" id="btn-guardar-plantilla" title="Guardar Plantilla"><i class="fa fa-save"></i> Guardar</button>
+                    <button type="button" class="btn btn-xs btn-danger" id="btn-eliminar-plantilla" title="Eliminar Plantilla"><i class="fa fa-trash"></i> Eliminar</button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="row mb-15">
+                    <div class="col-md-4">
+                        <label class="form-label">Cliente</label>
+                        <select id="email-cliente" class="form-select">
+                            <option value="">-- Seleccionar --</option>
+                            @if (ViewBag.ClientesEmail != null)
+                            {
+                                foreach (var c in (List<CRMRSG.EntityFramework.cliente>)ViewBag.ClientesEmail)
+                                {
+                                    <option value="@c.id_cliente" data-nombre="@c.nombre" data-empresa="@c.empresa" data-email="@c.correo">@c.nombre (@c.empresa)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Correo Destinatario</label>
+                        <input type="email" id="email-destinatario" class="form-control" placeholder="ejemplo@correo.com" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Plantilla</label>
+                        <select id="email-plantilla" class="form-select">
+                            <option value="bienvenida">Bienvenida Comercial</option>
+                            <option value="seguimiento">Seguimiento Comercial</option>
+                            <option value="reunion">Recordatorio de Reunión</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group mb-15">
+                    <label class="form-label">Asunto del Correo</label>
+                    <input type="text" id="email-asunto" class="form-control" placeholder="Escriba el asunto aquí..." />
+                </div>
+                <div class="form-group mb-10">
+                    <label class="form-label">Cuerpo del Correo</label>
+                    <textarea id="email-cuerpo" class="form-control" rows="18" placeholder="Escriba el cuerpo aquí..."></textarea>
+                </div>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-info text-white" id="btn-copiar-correo">
+                            <i class="fa fa-copy me-1"></i> Copiar
+                        </button>
+                        <button type="button" class="btn btn-sm btn-success text-white" id="btn-enviar-correo-now" style="background-color: #10c469; border-color: #10c469;">
+                            <i class="fa fa-send me-1"></i> Enviar Ahora
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-toggle-programar">
+                            <i class="fa fa-clock-o me-1"></i> Programar Envío
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Collapse para programar envío -->
+                <div class="card bg-light mt-3 p-3 border-0 rounded" id="programar-collapse" style="display: none;">
+                    <h6 class="fw-bold mb-2">Programar fecha y hora de envío:</h6>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="datetime-local" id="programar-fecha-hora" class="form-control form-control-sm" style="max-width: 250px;" />
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-confirmar-programar">Confirmar Programación</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const baseTemplates = {
+            bienvenida: {
+                asunto: "¡Le damos la bienvenida, {nombre}! - Alianza Comercial",
+                cuerpo: "Estimado(a) {nombre},\n\nEs un verdadero honor darle la bienvenida a nuestra familia empresarial. En nombre de todo nuestro equipo, le extendemos un cordial saludo a usted y a todo el personal de {empresa}.\n\nNos entusiasma enormemente comenzar esta alianza estratégica. Nuestro principal objetivo es colaborar estrechamente con {empresa} para optimizar sus procesos comerciales y potenciar sus metas de negocio de manera integral.\n\nPronto uno de nuestros directores comerciales le estará contactando para programar una llamada de inducción y alinear nuestras próximas acciones de trabajo. Mientras tanto, quedamos a su entera disposición ante cualquier duda o requerimiento técnico."
+            },
+            seguimiento: {
+                asunto: "Seguimiento de propuesta comercial - {empresa}",
+                cuerpo: "Estimado(a) {nombre},\n\nEspero que este mensaje le encuentre excelente.\n\nLe escribo para dar seguimiento a la propuesta comercial que compartimos recientemente con {empresa}. En nuestro último contacto, conversamos sobre las áreas de oportunidad de su departamento de ventas, y cómo nuestras herramientas personalizadas pueden ayudarle a acelerar su conversión comercial.\n\n¿Ha tenido oportunidad de revisar la propuesta técnica? Estaremos encantados de agendar una breve llamada de 10 minutos esta semana para resolver sus preguntas o ajustar el alcance del proyecto según sus prioridades."
+            },
+            reunion: {
+                asunto: "Confirmación de nuestra próxima sesión - {empresa}",
+                cuerpo: "Estimado(a) {nombre},\n\nConfirmamos por este medio los detalles de nuestra próxima sesión de trabajo de consultoría y seguimiento comercial para {empresa}:\n\n📅 Fecha: En los próximos días\n📍 Modalidad: Videoconferencia en línea\n📋 Agenda básica: Revisión del lead scoring de clientes, prioridades en cartera, y demostración del nuevo redactor de correos inteligente del CRM.\n\nLe agradecemos de antemano su puntualidad y valioso tiempo. Si surge algún imprevisto que requiera reprogramar la cita, por favor háganoslo saber con anticipación."
+            }
+        };
+
+        function getTemplates() {
+            let custom = localStorage.getItem('crm_custom_templates');
+            let templates = {...baseTemplates};
+            if (custom) {
+                try {
+                    let parsed = JSON.parse(custom);
+                    Object.assign(templates, parsed);
+                } catch(e) {}
+            }
+            return templates;
+        }
+
+        function renderTemplateDropdown() {
+            const templates = getTemplates();
+            const $select = $('#email-plantilla');
+            const val = $select.val() || 'bienvenida';
+            $select.empty();
+            for (const [key, t] of Object.entries(templates)) {
+                let label = key === 'bienvenida' ? 'Bienvenida Comercial' :
+                            key === 'seguimiento' ? 'Seguimiento Comercial' :
+                            key === 'reunion' ? 'Recordatorio de Reunión' : key;
+                $select.append(`<option value="${key}">${label}</option>`);
+            }
+            $select.val(val);
+        }
+
+        function cargarTemplateSeleccionada() {
+            const templates = getTemplates();
+            const key = $('#email-plantilla').val();
+            const opt = $('#email-cliente option:selected');
+            const nombre = opt.data('nombre') || '{nombre}';
+            const empresa = opt.data('empresa') || '{empresa}';
+            
+            if (key && templates[key]) {
+                let t = templates[key];
+                let subject = t.asunto.replace(/{nombre}/g, nombre).replace(/{empresa}/g, empresa);
+                let body = t.cuerpo.replace(/{nombre}/g, nombre).replace(/{empresa}/g, empresa);
+                $('#email-asunto').val(subject);
+                $('#email-cuerpo').val(body);
+            }
+        }
+
+        renderTemplateDropdown();
+        cargarTemplateSeleccionada();
+
+        $('#email-cliente').on('change', function() {
+            const opt = $('option:selected', this);
+            $('#email-destinatario').val(opt.data('email') || '');
+            cargarTemplateSeleccionada();
+        });
+
+        $('#email-plantilla').on('change', cargarTemplateSeleccionada);
+
+        $('#btn-nueva-plantilla').on('click', function() {
+            Swal.fire({
+                title: 'Nueva Plantilla Personalizada',
+                input: 'text',
+                inputLabel: 'Nombre de la Plantilla',
+                placeholder: 'Ej: Recordatorio de Pago',
+                showCancelButton: true,
+                confirmButtonText: 'Crear',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) return '¡Debe escribir un nombre!';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const name = result.value.trim();
+                    $('#email-asunto').val('');
+                    $('#email-cuerpo').val('');
+                    $('#email-plantilla').append(`<option value="${name}">${name}</option>`).val(name);
+                    Swal.fire('Plantilla Creada', 'Escriba el asunto y cuerpo de su plantilla, luego pulse el botón azul "Guardar".', 'info');
+                }
+            });
+        });
+
+        $('#btn-guardar-plantilla').on('click', function() {
+            const key = $('#email-plantilla').val();
+            const asunto = $('#email-asunto').val();
+            const cuerpo = $('#email-cuerpo').val();
+            if (!key) {
+                Swal.fire('Error', 'Seleccione o cree una plantilla primero.', 'error');
+                return;
+            }
+            
+            let custom = localStorage.getItem('crm_custom_templates');
+            let customObj = {};
+            if (custom) {
+                try { customObj = JSON.parse(custom); } catch(e) {}
+            }
+            
+            customObj[key] = { asunto: asunto, cuerpo: cuerpo };
+            localStorage.setItem('crm_custom_templates', JSON.stringify(customObj));
+            Swal.fire('Guardada', 'Plantilla guardada con éxito.', 'success');
+            renderTemplateDropdown();
+        });
+
+        $('#btn-eliminar-plantilla').on('click', function() {
+            const key = $('#email-plantilla').val();
+            if (key === 'bienvenida' || key === 'seguimiento' || key === 'reunion') {
+                Swal.fire('No permitido', 'No puede eliminar las plantillas base.', 'warning');
+                return;
+            }
+            
+            Swal.fire({
+                title: '¿Eliminar plantilla?',
+                text: `¿Desea borrar permanentemente "${key}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, borrar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let custom = localStorage.getItem('crm_custom_templates');
+                    if (custom) {
+                        try {
+                            let customObj = JSON.parse(custom);
+                            delete customObj[key];
+                            localStorage.setItem('crm_custom_templates', JSON.stringify(customObj));
+                        } catch(e) {}
+                    }
+                    Swal.fire('Eliminada', 'La plantilla ha sido borrada.', 'success');
+                    $('#email-plantilla').val('bienvenida');
+                    renderTemplateDropdown();
+                    cargarTemplateSeleccionada();
+                }
+            });
+        });
+
+        $('#btn-copiar-correo').on('click', function() {
+            const asunto = $('#email-asunto').val();
+            const cuerpo = $('#email-cuerpo').val();
+            if (!asunto || !cuerpo) {
+                Swal.fire('Error', 'No hay contenido para copiar.', 'error');
+                return;
+            }
+            const textoCompleto = `Asunto: ${asunto}\n\n${cuerpo}`;
+            navigator.clipboard.writeText(textoCompleto).then(() => {
+                Swal.fire({
+                    title: '¡Copiado!',
+                    text: 'El correo se copió al portapapeles con éxito.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            });
+        });
+
+        $('#btn-toggle-programar').on('click', function() {
+            $('#programar-collapse').slideToggle();
+        });
+
+        $('#btn-enviar-correo-now').on('click', function() {
+            const dest = $('#email-destinatario').val();
+            const asun = $('#email-asunto').val();
+            const cuer = $('#email-cuerpo').val();
+
+            if (!dest || !asun || !cuer) {
+                Swal.fire('Campos requeridos', 'Debe ingresar el destinatario, asunto y cuerpo.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Enviando correo...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: '@Url.Action("EnviarCorreo", "Dashboard")',
+                type: 'POST',
+                data: { destinatario: dest, asunto: asun, cuerpo: cuer },
+                success: function(res) {
+                    Swal.close();
+                    if (res.success) {
+                        Swal.fire('¡Enviado!', res.message, 'success');
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Error', 'Error al enviar.', 'error');
+                }
+            });
+        });
+
+        $('#btn-confirmar-programar').on('click', function() {
+            const dest = $('#email-destinatario').val();
+            const asun = $('#email-asunto').val();
+            const cuer = $('#email-cuerpo').val();
+            const fecha = $('#programar-fecha-hora').val();
+
+            if (!dest || !asun || !cuer || !fecha) {
+                Swal.fire('Campos requeridos', 'Complete todos los datos.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Programando correo...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: '@Url.Action("ProgramarCorreo", "Dashboard")',
+                type: 'POST',
+                data: { destinatario: dest, asunto: asun, cuerpo: cuer, fechaProgramada: fecha },
+                success: function(res) {
+                    Swal.close();
+                    if (res.success) {
+                        Swal.fire('¡Programado!', res.message, 'success');
+                        $('#programar-collapse').slideUp();
+                        $('#programar-fecha-hora').val('');
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.close();
+                    Swal.fire('Error', 'Error al programar.', 'error');
+                }
+            });
+        });
+    });
+</script>

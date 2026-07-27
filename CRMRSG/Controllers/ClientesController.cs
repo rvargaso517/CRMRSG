@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Web;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
 
@@ -29,7 +30,7 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            var listaClientes = db.clientes.ToList();
+            var listaClientes = db.clientes.OrderByDescending(c => c.id_cliente).ToList();
             return View(listaClientes);
         }
 
@@ -320,6 +321,395 @@ namespace CRMRSG.Controllers
             {
                 return Json(new { success = false, message = "Error en el servidor: " + ex.Message });
             }
+        }
+
+        // GET: Clientes/ReasignacionMasiva
+        public ActionResult ReasignacionMasiva()
+        {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                TempData["Error"] = "No tiene permisos para reasignar la cartera de clientes.";
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.Usuarios = db.usuarios.Where(u => u.estado == true).ToList();
+            return View();
+        }
+
+        // GET: Clientes/ObtenerClientesPorAsesor
+        [HttpGet]
+        public JsonResult ObtenerClientesPorAsesor(int? idUsuario)
+        {
+            if (!TienePermiso("Clientes:Ver"))
+            {
+                return Json(new { success = false, message = "No autorizado" }, JsonRequestBehavior.AllowGet);
+            }
+
+            var clientesQuery = db.clientes.AsQueryable();
+            if (idUsuario.HasValue && idUsuario.Value > 0)
+            {
+                clientesQuery = clientesQuery.Where(c => c.id_usuario == idUsuario.Value);
+            }
+            else
+            {
+                clientesQuery = clientesQuery.Where(c => c.id_usuario == null);
+            }
+
+            var lista = clientesQuery.ToList().Select(c => new {
+                id_cliente = c.id_cliente,
+                nombre = c.nombre ?? "",
+                empresa = c.empresa ?? "",
+                correo = c.correo ?? "",
+                telefono = c.telefono ?? "",
+                estado = c.estado ?? "Activo"
+            }).ToList();
+
+            return Json(new { success = true, clientes = lista }, JsonRequestBehavior.AllowGet);
+        }
+
+        // POST: Clientes/ReasignarMasiva
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ReasignarMasiva(int? idUsuarioOrigen, int idUsuarioDestino, List<int> idsClientes)
+        {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                return Json(new { success = false, message = "No autorizado" });
+            }
+
+            if (idsClientes == null || !idsClientes.Any())
+            {
+                return Json(new { success = false, message = "Debe seleccionar al menos un cliente." });
+            }
+
+            var destino = db.usuarios.Find(idUsuarioDestino);
+            if (destino == null)
+            {
+                return Json(new { success = false, message = "El asesor de destino no existe." });
+            }
+
+            int exitos = 0;
+            int total = idsClientes.Count;
+            int? currentUserId = Session["UsuarioId"] != null ? (int?)Session["UsuarioId"] : null;
+            string ipAddress = Request.UserHostAddress;
+
+            foreach (var idC in idsClientes)
+            {
+                var cli = db.clientes.Find(idC);
+                if (cli != null)
+                {
+                    int? prevVal = cli.id_usuario;
+                    if (prevVal != idUsuarioDestino)
+                    {
+                        cli.id_usuario = idUsuarioDestino;
+                        
+                        // Bitácora
+                        var log = new bitacora
+                        {
+                            accion = "Reasignación",
+                            tabla_afectada = "clientes",
+                            id_registro_afectado = cli.id_cliente,
+                            valor_anterior = prevVal.HasValue ? prevVal.Value.ToString() : "NULL",
+                            valor_nuevo = idUsuarioDestino.ToString(),
+                            fecha_hora = DateTime.Now,
+                            direccion_ip = ipAddress,
+                            id_usuario = currentUserId
+                        };
+                        db.bitacoras.Add(log);
+                        exitos++;
+                    }
+                }
+            }
+
+            db.SaveChanges();
+
+            return Json(new { success = true, message = $"Se han reasignado con éxito {exitos} de {total} clientes." });
+        }
+
+        // POST: Clientes/ProcesarReasignacionArchivo
+        [HttpPost]
+        public JsonResult ProcesarReasignacionArchivo(HttpPostedFileBase archivo, bool? forzarProceso)
+        {
+            if (!TienePermiso("Clientes:Gestionar"))
+            {
+                return Json(new { success = false, message = "No autorizado" });
+            }
+
+            if (archivo == null || archivo.ContentLength == 0)
+            {
+                return Json(new { success = false, message = "Por favor, seleccione un archivo válido." });
+            }
+
+            List<string> lineas = new List<string>();
+            using (var reader = new System.IO.StreamReader(archivo.InputStream))
+            {
+                string linea;
+                while ((linea = reader.ReadLine()) != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(linea))
+                    {
+                        lineas.Add(linea);
+                    }
+                }
+            }
+
+            if (lineas.Count < 2)
+            {
+                return Json(new { success = false, message = "El archivo debe tener al menos una cabecera y una fila de datos." });
+            }
+
+            string cabecera = lineas[0];
+            char delimitador = ';';
+            if (cabecera.Contains(',')) delimitador = ',';
+            else if (cabecera.Contains('\t')) delimitador = '\t';
+
+            string[] columnas = cabecera.Split(delimitador).Select(c => c.Trim().ToLower()).ToArray();
+
+            int indexCliente = -1;
+            int indexUsuario = -1;
+            int indexNombre = -1;
+            int indexEmpresa = -1;
+            int indexCorreo = -1;
+            int indexTelefono = -1;
+            int indexDireccion = -1;
+
+            int indexContactoNombre = -1;
+            int indexContactoCorreo = -1;
+            int indexContactoTelefono = -1;
+            int indexContactoPuesto = -1;
+            int indexTarea = -1;
+            int indexOportunidad = -1;
+            int indexOportunidadValor = -1;
+
+            for (int i = 0; i < columnas.Length; i++)
+            {
+                string col = columnas[i];
+                if (col.Contains("id_cliente") || col.Contains("id cliente") || col.Contains("idcliente")) indexCliente = i;
+                else if (col.Contains("id_usuario") || col.Contains("id usuario") || col.Contains("idusuario") || col.Contains("vendedor_id")) indexUsuario = i;
+                else if (col.Contains("empresa") || col.Contains("compañia") || col.Contains("compania")) indexEmpresa = i;
+                else if (col.Contains("correo_cliente") || col.Contains("cliente_correo") || col.Contains("cliente_email")) indexCorreo = i;
+                else if (col.Contains("telefono_cliente") || col.Contains("cliente_telefono")) indexTelefono = i;
+                else if (col.Contains("direccion")) indexDireccion = i;
+                else if (col.Contains("contacto_nombre") || col.Contains("contacto_secundario") || col.Contains("nombre_contacto")) indexContactoNombre = i;
+                else if (col.Contains("contacto_correo") || col.Contains("correo_contacto")) indexContactoCorreo = i;
+                else if (col.Contains("contacto_telefono") || col.Contains("telefono_contacto")) indexContactoTelefono = i;
+                else if (col.Contains("contacto_puesto") || col.Contains("puesto_contacto") || col.Contains("puesto")) indexContactoPuesto = i;
+                else if (col.Contains("tarea") || col.Contains("actividad") || col.Contains("titulo_tarea")) indexTarea = i;
+                else if (col.Contains("oportunidad") || col.Contains("nombre_oportunidad")) indexOportunidad = i;
+                else if (col.Contains("valor") || col.Contains("monto") || col.Contains("precio")) indexOportunidadValor = i;
+                else if (col.Contains("nombre") || col.Contains("cliente") || col.Contains("contacto_principal"))
+                {
+                    if (indexNombre == -1) indexNombre = i;
+                }
+                else if (col.Contains("correo") || col.Contains("email") || col.Contains("mail"))
+                {
+                    if (col.Contains("usuario") || col.Contains("vendedor") || col.Contains("asesor"))
+                    {
+                        if (indexUsuario == -1) indexUsuario = i;
+                    }
+                    else
+                    {
+                        if (indexCorreo == -1) indexCorreo = i;
+                    }
+                }
+                else if (col.Contains("usuario") || col.Contains("vendedor") || col.Contains("asesor"))
+                {
+                    if (indexUsuario == -1) indexUsuario = i;
+                }
+                else if (col.Contains("telefono") || col.Contains("tel"))
+                {
+                    if (indexTelefono == -1) indexTelefono = i;
+                }
+            }
+
+            bool formatoValido = (indexCliente != -1 || indexNombre != -1 || indexEmpresa != -1) && indexUsuario != -1;
+
+            if (!formatoValido && (forzarProceso == null || forzarProceso == false))
+            {
+                return Json(new
+                {
+                    success = false,
+                    needsConfirmation = true,
+                    message = "El archivo no tiene el formato de cabeceras de reasignación esperado. ¿Desea intentar procesarlo asociando las columnas físicamente?",
+                    columnasDetectadas = columnas,
+                    camposNecesarios = new string[] { "cliente (o nombre/empresa)", "usuario (o asesor/vendedor)" }
+                });
+            }
+
+            if (indexCliente == -1)
+            {
+                if (indexNombre != -1) indexCliente = indexNombre;
+                else if (indexEmpresa != -1) indexCliente = indexEmpresa;
+                else indexCliente = 0;
+            }
+            if (indexUsuario == -1) indexUsuario = columnas.Length > 1 ? 1 : 0;
+
+            int exitos = 0;
+            int errores = 0;
+            List<string> detallesErrores = new List<string>();
+            int? currentUserId = Session["UsuarioId"] != null ? (int?)Session["UsuarioId"] : null;
+            string ipAddress = Request.UserHostAddress;
+
+            for (int i = 1; i < lineas.Count; i++)
+            {
+                string[] fila = lineas[i].Split(delimitador).Select(f => f.Trim()).ToArray();
+                if (fila.Length <= Math.Max(indexCliente, indexUsuario))
+                {
+                    errores++;
+                    detallesErrores.Add($"Fila {i + 1}: Columnas insuficientes.");
+                    continue;
+                }
+
+                string valCliente = fila[indexCliente];
+                string valUsuario = fila[indexUsuario];
+
+                if (string.IsNullOrWhiteSpace(valCliente) || string.IsNullOrWhiteSpace(valUsuario))
+                {
+                    errores++;
+                    detallesErrores.Add($"Fila {i + 1}: Datos del cliente o asesor vacíos.");
+                    continue;
+                }
+
+                usuario usr = null;
+                if (int.TryParse(valUsuario, out int idU))
+                {
+                    usr = db.usuarios.Find(idU);
+                }
+                else
+                {
+                    usr = db.usuarios.FirstOrDefault(u => u.correo == valUsuario || (u.nombre + " " + u.apellido) == valUsuario || u.nombre == valUsuario);
+                }
+
+                if (usr == null)
+                {
+                    int fallbackId = currentUserId ?? 1;
+                    usr = db.usuarios.Find(fallbackId);
+                }
+
+                cliente cli = null;
+                if (int.TryParse(valCliente, out int idC))
+                {
+                    cli = db.clientes.Find(idC);
+                }
+                else
+                {
+                    cli = db.clientes.FirstOrDefault(c => c.correo == valCliente || c.nombre == valCliente || c.empresa == valCliente);
+                }
+
+                bool esNuevo = false;
+                if (cli == null)
+                {
+                    cli = new cliente
+                    {
+                        nombre = valCliente,
+                        empresa = valCliente,
+                        estado = "Activo",
+                        fecha_registro = DateTime.Now,
+                        id_usuario = usr.id_usuario
+                    };
+
+                    if (indexNombre != -1 && indexNombre < fila.Length && !string.IsNullOrWhiteSpace(fila[indexNombre])) cli.nombre = fila[indexNombre];
+                    if (indexEmpresa != -1 && indexEmpresa < fila.Length && !string.IsNullOrWhiteSpace(fila[indexEmpresa])) cli.empresa = fila[indexEmpresa];
+                    if (indexCorreo != -1 && indexCorreo < fila.Length && !string.IsNullOrWhiteSpace(fila[indexCorreo])) cli.correo = fila[indexCorreo];
+                    if (indexTelefono != -1 && indexTelefono < fila.Length && !string.IsNullOrWhiteSpace(fila[indexTelefono])) cli.telefono = fila[indexTelefono];
+                    if (indexDireccion != -1 && indexDireccion < fila.Length && !string.IsNullOrWhiteSpace(fila[indexDireccion])) cli.direccion = fila[indexDireccion];
+
+                    db.clientes.Add(cli);
+                    esNuevo = true;
+                }
+
+                try
+                {
+                    int? prevVal = cli.id_usuario;
+                    if (prevVal != usr.id_usuario)
+                    {
+                        cli.id_usuario = usr.id_usuario;
+
+                        var log = new bitacora
+                        {
+                            accion = esNuevo ? "Importación y Asignación" : "Reasignación Masiva Archivo",
+                            tabla_afectada = "clientes",
+                            id_registro_afectado = cli.id_cliente,
+                            valor_anterior = prevVal.HasValue ? prevVal.Value.ToString() : "NULL",
+                            valor_nuevo = usr.id_usuario.ToString(),
+                            fecha_hora = DateTime.Now,
+                            direccion_ip = ipAddress,
+                            id_usuario = currentUserId
+                        };
+                        db.bitacoras.Add(log);
+                    }
+
+                    db.SaveChanges();
+
+                    if (indexContactoNombre != -1 && indexContactoNombre < fila.Length && !string.IsNullOrWhiteSpace(fila[indexContactoNombre]))
+                    {
+                        var secContacto = new contacto_cliente
+                        {
+                            id_cliente = cli.id_cliente,
+                            nombre = fila[indexContactoNombre]
+                        };
+                        if (indexContactoCorreo != -1 && indexContactoCorreo < fila.Length) secContacto.correo = fila[indexContactoCorreo];
+                        if (indexContactoTelefono != -1 && indexContactoTelefono < fila.Length) secContacto.telefono = fila[indexContactoTelefono];
+                        if (indexContactoPuesto != -1 && indexContactoPuesto < fila.Length) secContacto.puesto = fila[indexContactoPuesto];
+
+                        db.contacto_cliente.Add(secContacto);
+                    }
+
+                    if (indexTarea != -1 && indexTarea < fila.Length && !string.IsNullOrWhiteSpace(fila[indexTarea]))
+                    {
+                        var nuevaTarea = new tarea
+                        {
+                            id_cliente = cli.id_cliente,
+                            titulo = fila[indexTarea],
+                            descripcion = "Creada automáticamente mediante importación masiva.",
+                            prioridad = "Media",
+                            estado = "Pendiente",
+                            fecha_limite = DateTime.Today.AddDays(7),
+                            id_usuario = usr.id_usuario
+                        };
+                        db.tareas.Add(nuevaTarea);
+                    }
+
+                    if (indexOportunidad != -1 && indexOportunidad < fila.Length && !string.IsNullOrWhiteSpace(fila[indexOportunidad]))
+                    {
+                        decimal valor = 0;
+                        if (indexOportunidadValor != -1 && indexOportunidadValor < fila.Length)
+                        {
+                            decimal.TryParse(fila[indexOportunidadValor], out valor);
+                        }
+                        var nuevaOp = new oportunidade
+                        {
+                            id_cliente = cli.id_cliente,
+                            nombre = fila[indexOportunidad],
+                            valor_estimado = valor,
+                            etapa = "Nuevo",
+                            estado = "Activo",
+                            fecha_creacion = DateTime.Now,
+                            id_usuario = usr.id_usuario
+                        };
+                        db.oportunidades.Add(nuevaOp);
+                    }
+
+                    db.SaveChanges();
+                    exitos++;
+                }
+                catch (Exception ex)
+                {
+                    errores++;
+                    detallesErrores.Add($"Fila {i + 1}: Error al registrar. {ex.Message}");
+                }
+            }
+
+            db.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                exitos = exitos,
+                errores = errores,
+                detallesErrores = detallesErrores,
+                message = $"Procesamiento completo. Éxitos: {exitos}, Errores: {errores}."
+            });
         }
     }
 }

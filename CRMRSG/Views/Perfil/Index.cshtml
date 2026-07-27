@@ -24,79 +24,592 @@
         </div>
     </div>
 
-    <!-- Formulario de Edición Directa -->
+    <!-- Formulario de Edición con Pestañas -->
     <div class="col-lg-8 col-12">
         <div class="box">
-            <div class="box-header with-border">
-                <h4 class="box-title">Información Personal</h4>
+            <div class="box-header with-border p-0">
+                <ul class="nav nav-tabs customtab2" id="profileTabs" role="tablist" style="border-bottom: none;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-15 px-20 border-0" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-pane" type="button" role="tab" aria-controls="info-pane" aria-selected="true">
+                            <i class="fa fa-user me-2"></i> Información Personal
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-15 px-20 border-0" id="visual-tab" data-bs-toggle="tab" data-bs-target="#visual-pane" type="button" role="tab" aria-controls="visual-pane" aria-selected="false">
+                            <i class="fa fa-paint-brush me-2"></i> Apariencia Visual
+                        </button>
+                    </li>
+                </ul>
             </div>
 
-            @if (TempData["MensajeExito"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show m-20" role="alert">
-                    <i class="ti-check me-10"></i> @TempData["MensajeExito"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="tab-content">
+                <!-- PANEL: INFORMACION PERSONAL -->
+                <div class="tab-pane fade show active p-20" id="info-pane" role="tabpanel" aria-labelledby="info-tab">
+                    @if (TempData["MensajeExito"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show mb-20" role="alert">
+                            <i class="ti-check me-10"></i> @TempData["MensajeExito"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["MensajeError"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show mb-20" role="alert">
+                            <i class="ti-alert me-10"></i> @TempData["MensajeError"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @using (Html.BeginForm("Actualizar", "Perfil", FormMethod.Post, new { @class = "form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.id_usuario)
+
+                        <div class="box-body p-0">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="form-label">Nombre</label>
+                                    @Html.TextBoxFor(m => m.nombre, new { @class = "form-control", required = "required" })
+                                    @Html.ValidationMessageFor(m => m.nombre, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="form-label">Apellido</label>
+                                    @Html.TextBoxFor(m => m.apellido, new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(m => m.apellido, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="form-label">Correo Electrónico</label>
+                                    @Html.TextBoxFor(m => m.correo, new { @class = "form-control", type = "email", required = "required" })
+                                    @Html.ValidationMessageFor(m => m.correo, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="col-md-6 form-group mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    @Html.TextBoxFor(m => m.telefono, new { @class = "form-control", placeholder = "Ej: +506 8888-8888" })
+                                    @Html.ValidationMessageFor(m => m.telefono, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Nueva Contraseña (Dejar en blanco si no desea cambiarla)</label>
+                                <input type="password" name="nuevaPassword" class="form-control" placeholder="Mínimo 8 caracteres" />
+                            </div>
+                        </div>
+
+                        <div class="box-footer text-end px-0 pb-0 pt-20">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti-save-alt me-5"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    }
                 </div>
-            }
 
-            @if (TempData["MensajeError"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show m-20" role="alert">
-                    <i class="ti-alert me-10"></i> @TempData["MensajeError"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-
-            @using (Html.BeginForm("Actualizar", "Perfil", FormMethod.Post, new { @class = "form" }))
-            {
-                @Html.AntiForgeryToken()
-                @Html.HiddenFor(m => m.id_usuario)
-
-                <div class="box-body">
-                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-
+                <!-- PANEL: APARIENCIA VISUAL (HU-038) -->
+                <div class="tab-pane fade p-20" id="visual-pane" role="tabpanel" aria-labelledby="visual-tab">
                     <div class="row">
-                        <div class="col-md-6 form-group mb-3">
-                            <label class="form-label">Nombre</label>
-                            @Html.TextBoxFor(m => m.nombre, new { @class = "form-control", required = "required" })
-                            @Html.ValidationMessageFor(m => m.nombre, "", new { @class = "text-danger" })
+                        <!-- COLUMNA IZQUIERDA: CONTROLES -->
+                        <div class="col-md-7 col-12">
+                            <h5 class="fw-bold mb-4 text-dark"><i class="fa fa-sliders text-primary me-2"></i>Ajustes de Interfaz de Usuario</h5>
+                            
+                            <!-- Color de Acento -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold d-block">Color de Énfasis / Tema Principal</label>
+                                <p class="text-muted small">Selecciona un color predefinido o elige uno personalizado para los botones y elementos destacados.</p>
+                                
+                                <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                                    <button type="button" class="btn border border-2 color-swatch rounded-circle p-0" style="width: 32px; height: 32px; background-color: #1d3557;" data-color="#1d3557" title="RSG Classic"></button>
+                                    <button type="button" class="btn border border-2 color-swatch rounded-circle p-0" style="width: 32px; height: 32px; background-color: #6610f2;" data-color="#6610f2" title="Violeta Real"></button>
+                                    <button type="button" class="btn border border-2 color-swatch rounded-circle p-0" style="width: 32px; height: 32px; background-color: #2dce89;" data-color="#2dce89" title="Verde Esmeralda"></button>
+                                    <button type="button" class="btn border border-2 color-swatch rounded-circle p-0" style="width: 32px; height: 32px; background-color: #ff9f43;" data-color="#ff9f43" title="Naranja Cálido"></button>
+                                    <button type="button" class="btn border border-2 color-swatch rounded-circle p-0" style="width: 32px; height: 32px; background-color: #f5365c;" data-color="#f5365c" title="Carmesí"></button>
+                                    <button type="button" class="btn border border-2 color-swatch rounded-circle p-0" style="width: 32px; height: 32px; background-color: #17a2b8;" data-color="#17a2b8" title="Cyan Moderno"></button>
+                                    
+                                    <div class="d-flex align-items-center ms-md-2">
+                                        <input type="color" id="theme-color-picker" class="form-control form-control-color border p-0" style="width: 35px; height: 35px;" value="#1d3557" title="Personalizado" />
+                                    </div>
+                                </div>
+                                
+                                <!-- Fondo de la interfaz -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold d-block">Tono del Fondo</label>
+                                    <p class="text-muted small">Ajusta el fondo general de las tarjetas y contenedores de la aplicación.</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="color" id="bg-color-picker" class="form-control form-control-color border p-0" style="width: 45px; height: 45px; cursor: pointer;" value="#f4f6f9" title="Color de Fondo" />
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#bg-color-picker').val('#ffffff').trigger('change')">☀️ Blanco</button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#bg-color-picker').val('#f4f6f9').trigger('change')">🏢 Gris Suave</button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#bg-color-picker').val('#1a1a2e').trigger('change')">🌌 Oscuro Profundo</button>
+                                    </div>
+                                </div>
+
+                                <!-- Barra Superior (Header) -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold d-block">Color de la Barra Superior</label>
+                                    <p class="text-muted small">Personaliza el fondo de la barra de herramientas y buscador de arriba.</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="color" id="header-bg-color-picker" class="form-control form-control-color border p-0" style="width: 45px; height: 45px; cursor: pointer;" value="#ffffff" title="Fondo de Barra Superior" />
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#header-bg-color-picker').val('#ffffff').trigger('change')">☀️ Blanco</button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#header-bg-color-picker').val('#1a1a2e').trigger('change')">🌌 Oscuro</button>
+                                    </div>
+                                </div>
+
+                                <!-- Tarjetas y Gráficos (Contenedores/Cards) -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold d-block">Fondo de las Tarjetas y Gráficos</label>
+                                    <p class="text-muted small">Cambia el color de los recuadros blancos que contienen los gráficos e información comercial.</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="color" id="box-bg-color-picker" class="form-control form-control-color border p-0" style="width: 45px; height: 45px; cursor: pointer;" value="#ffffff" title="Fondo de Tarjetas" />
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#box-bg-color-picker').val('#ffffff').trigger('change')">☀️ Blanco</button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#box-bg-color-picker').val('#252542').trigger('change')">🌌 Oscuro</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tema de Barra Lateral -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Tema de la Barra Lateral</label>
+                                <div class="d-flex gap-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sidebarSkin" id="sidebar-skin-light" value="light">
+                                        <label class="form-check-input-label" for="sidebar-skin-light">☀️ Claro</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="sidebarSkin" id="sidebar-skin-dark" value="dark">
+                                        <label class="form-check-input-label" for="sidebar-skin-dark">🌙 Oscuro</label>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mt-2">
+                                    <label class="small text-muted">Color de Fondo Libre:</label>
+                                    <input type="color" id="sidebar-bg-color-picker" class="form-control form-control-color border p-0" style="width: 35px; height: 35px; cursor: pointer;" value="#ffffff" title="Fondo de Barra Lateral" />
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#sidebar-bg-color-picker').val('#ffffff').trigger('change')">Claro</button>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" onclick="$('#sidebar-bg-color-picker').val('#1a1a2e').trigger('change')">Oscuro</button>
+                                </div>
+                            </div>
+
+                            <!-- Paleta de Colores de Gráficos (Predefinida o Personalizada) -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Paleta de Colores de Gráficos (Charts)</label>
+                                <select id="chart-palette" class="form-select border-primary mb-3">
+                                    <option value="classic">📊 Clásica RSG (Azul, Peach, Rojo)</option>
+                                    <option value="ocean">🌊 Brisa Marina (Azules y Verdes suaves)</option>
+                                    <option value="neon">⚡ Neón Vibrante (Morado, Cyan, Naranja)</option>
+                                    <option value="sunset">🌅 Atardecer Cálido (Rojos, Naranjas, Amarillos)</option>
+                                    <option value="forest">🌲 Bosque Natural (Tonos Verdes y Tierra)</option>
+                                    <option value="custom">🎨 Paleta Personalizada (Elegir colores abajo)</option>
+                                </select>
+
+                                <!-- Color Pickers para Paleta Personalizada -->
+                                <div id="custom-chart-colors-section" class="border p-3 rounded bg-light" style="display: none;">
+                                    <h6 class="fw-bold mb-2 text-dark small">Elige tus colores personalizados:</h6>
+                                    <div class="row g-2">
+                                        <div class="col text-center">
+                                            <label class="small text-fade d-block mb-1">C1</label>
+                                            <input type="color" id="chart-color-1" class="form-control form-control-color mx-auto border" value="#2a9d8f" />
+                                        </div>
+                                        <div class="col text-center">
+                                            <label class="small text-fade d-block mb-1">C2</label>
+                                            <input type="color" id="chart-color-2" class="form-control form-control-color mx-auto border" value="#f4a261" />
+                                        </div>
+                                        <div class="col text-center">
+                                            <label class="small text-fade d-block mb-1">C3</label>
+                                            <input type="color" id="chart-color-3" class="form-control form-control-color mx-auto border" value="#e63946" />
+                                        </div>
+                                        <div class="col text-center">
+                                            <label class="small text-fade d-block mb-1">C4</label>
+                                            <input type="color" id="chart-color-4" class="form-control form-control-color mx-auto border" value="#1d3557" />
+                                        </div>
+                                        <div class="col text-center">
+                                            <label class="small text-fade d-block mb-1">C5</label>
+                                            <input type="color" id="chart-color-5" class="form-control form-control-color mx-auto border" value="#a8dadc" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="col-md-6 form-group mb-3">
-                            <label class="form-label">Apellido</label>
-                            @Html.TextBoxFor(m => m.apellido, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.apellido, "", new { @class = "text-danger" })
+                        <!-- COLUMNA DERECHA: PREVIEW EN VIVO MINIMIZADO -->
+                        <div class="col-md-5 col-12 border-start ps-md-4">
+                            <h5 class="fw-bold mb-4 text-dark text-center"><i class="fa fa-eye text-success me-2"></i>Vista Previa en Vivo</h5>
+                            
+                            <!-- UI Mockup Frame -->
+                            <div id="mockup-frame" class="border rounded-3 shadow-sm overflow-hidden" style="width: 100%; min-height: 380px; background: #f4f6f9; transition: background 0.3s; position: relative;">
+                                <!-- Top Navbar mockup -->
+                                <div id="mockup-header" class="p-10 d-flex justify-content-between align-items-center" style="background: #ffffff; height: 35px; border-bottom: 1px solid #eef2f5; position: relative; z-index: 10;">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <div class="rounded-circle bg-secondary-light" style="width: 8px; height: 8px;"></div>
+                                        <div class="bg-secondary-light rounded" style="width: 30px; height: 6px;"></div>
+                                    </div>
+                                    <div class="rounded-circle" id="mockup-user-avatar" style="width: 16px; height: 16px; background-color: #1d3557;"></div>
+                                </div>
+                                
+                                <div class="d-flex" style="height: calc(100% - 35px); position: relative; z-index: 1;">
+                                    <!-- Sidebar mockup -->
+                                    <div id="mockup-sidebar" class="p-10 border-end" style="width: 60px; min-height: 345px; background: #ffffff; transition: background 0.3s, border-color 0.3s;">
+                                        <div class="rounded mb-2" id="mockup-sidebar-active" style="width: 100%; height: 12px; background-color: #1d3557;"></div>
+                                        <div class="bg-secondary-light rounded mb-2" style="width: 100%; height: 12px;"></div>
+                                        <div class="bg-secondary-light rounded mb-2" style="width: 100%; height: 12px;"></div>
+                                    </div>
+
+                                    <!-- Main Panel content mockup -->
+                                    <div class="p-15 flex-grow-1">
+                                        <!-- Card container mockup -->
+                                        <div id="mockup-card" class="card p-10 border-0 shadow-none mb-3 bg-white" style="transition: background 0.3s; border-radius: 8px;">
+                                            <div class="d-flex justify-content-between align-items-center mb-10">
+                                                <div class="rounded" style="width: 60px; height: 10px; background-color: #a8dadc;"></div>
+                                                <button class="btn btn-xs p-5" id="mockup-button" style="background-color: #1d3557; color: #fff; font-size: 8px; border-radius: 4px; border: none; padding: 2px 6px;">Boton</button>
+                                            </div>
+
+                                            <div class="row">
+                                                <!-- Minimized Donut Graphic -->
+                                                <div class="col-6 text-center">
+                                                    <div class="fw-bold mb-5" style="font-size: 8px; color: #5a6a85;">Donut</div>
+                                                    <svg width="60" height="60" viewBox="0 0 36 36" class="mx-auto">
+                                                        <circle cx="18" cy="18" r="15.91" fill="none" stroke="#e0e0e0" stroke-width="4.2"></circle>
+                                                        <circle cx="18" cy="18" r="15.91" fill="none" id="mockup-donut-1" stroke="#2a9d8f" stroke-width="4.5" stroke-dasharray="40 100" stroke-dashoffset="0"></circle>
+                                                        <circle cx="18" cy="18" r="15.91" fill="none" id="mockup-donut-2" stroke="#f4a261" stroke-width="4.5" stroke-dasharray="35 100" stroke-dashoffset="-40"></circle>
+                                                        <circle cx="18" cy="18" r="15.91" fill="none" id="mockup-donut-3" stroke="#e63946" stroke-width="4.5" stroke-dasharray="25 100" stroke-dashoffset="-75"></circle>
+                                                    </svg>
+                                                </div>
+
+                                                <!-- Minimized Bar Graphic -->
+                                                <div class="col-6 text-center">
+                                                    <div class="fw-bold mb-5" style="font-size: 8px; color: #5a6a85;">Barras</div>
+                                                    <div class="d-flex align-items-end justify-content-center gap-2" style="height: 55px; border-bottom: 1px solid #ddd; padding-bottom: 2px;">
+                                                        <div id="mockup-bar-1" class="rounded-top" style="width: 8px; height: 35px; background-color: #2a9d8f; transition: background 0.3s;"></div>
+                                                        <div id="mockup-bar-2" class="rounded-top" style="width: 8px; height: 45px; background-color: #f4a261; transition: background 0.3s;"></div>
+                                                        <div id="mockup-bar-3" class="rounded-top" style="width: 8px; height: 20px; background-color: #e63946; transition: background 0.3s;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 form-group mb-3">
-                            <label class="form-label">Correo Electrónico</label>
-                            @Html.TextBoxFor(m => m.correo, new { @class = "form-control", type = "email", required = "required" })
-                            @Html.ValidationMessageFor(m => m.correo, "", new { @class = "text-danger" })
-                        </div>
-
-                        <div class="col-md-6 form-group mb-3">
-                            <label class="form-label">Teléfono</label>
-                            @Html.TextBoxFor(m => m.telefono, new { @class = "form-control", placeholder = "Ej: +506 8888-8888" })
-                            @Html.ValidationMessageFor(m => m.telefono, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-
-                    <hr />
-
-                    <div class="form-group mb-3">
-                        <label class="form-label">Nueva Contraseña (Dejar en blanco si no desea cambiarla)</label>
-                        <input type="password" name="nuevaPassword" class="form-control" placeholder="Mínimo 8 caracteres" />
+                    <div class="box-footer text-end px-0 pb-0 pt-20 border-top mt-4">
+                        <button type="button" class="btn btn-success" id="btn-save-visuals">
+                            <i class="ti-save-alt me-5"></i> Aplicar Apariencia
+                        </button>
                     </div>
                 </div>
-
-                <div class="box-footer text-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ti-save-alt me-5"></i> Guardar Cambios
-                    </button>
-                </div>
-            }
+            </div>
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tab') === 'visual') {
+            $('#visual-tab').click();
+        }
+
+        var activeColor = localStorage.getItem('crm_theme_color') || '#1d3557';
+        var activeBg = localStorage.getItem('crm_bg_color') || '#f4f6f9';
+        var activeSidebarBg = localStorage.getItem('crm_sidebar_bg_color') || '#ffffff';
+        var activeHeaderBg = localStorage.getItem('crm_header_bg_color') || '#ffffff';
+        var activeBoxBg = localStorage.getItem('crm_box_bg_color') || '#ffffff';
+        var activeSkin = localStorage.getItem('crm_sidebar_skin') || 'light';
+        var activePalette = localStorage.getItem('crm_chart_palette') || 'classic';
+
+        var customColorsStr = localStorage.getItem('crm_custom_chart_colors');
+        if (customColorsStr) {
+            try {
+                var colors = JSON.parse(customColorsStr);
+                $('#chart-color-1').val(colors[0] || '#2a9d8f');
+                $('#chart-color-2').val(colors[1] || '#f4a261');
+                $('#chart-color-3').val(colors[2] || '#e63946');
+                $('#chart-color-4').val(colors[3] || '#1d3557');
+                $('#chart-color-5').val(colors[4] || '#a8dadc');
+            } catch(e) {}
+        }
+
+        markSelectedColor(activeColor);
+        $('#theme-color-picker').val(activeColor);
+        $('#bg-color-picker').val(activeBg);
+        $('#sidebar-bg-color-picker').val(activeSidebarBg);
+        $('#header-bg-color-picker').val(activeHeaderBg);
+        $('#box-bg-color-picker').val(activeBoxBg);
+
+        if (activeSkin === 'dark') {
+            $('#sidebar-skin-dark').prop('checked', true);
+        } else {
+            $('#sidebar-skin-light').prop('checked', true);
+        }
+
+        $('#chart-palette').val(activePalette);
+
+        actualizarMockup();
+
+        $('.color-swatch').on('click', function() {
+            var color = $(this).data('color');
+            $('#theme-color-picker').val(color);
+            markSelectedColor(color);
+            actualizarMockup();
+        });
+
+        $('#theme-color-picker, #bg-color-picker, #sidebar-bg-color-picker, #header-bg-color-picker, #box-bg-color-picker, #chart-palette, #chart-color-1, #chart-color-2, #chart-color-3, #chart-color-4, #chart-color-5').on('input change', function() {
+            actualizarMockup();
+        });
+
+        $('input[name="sidebarSkin"]').on('change', function() {
+            actualizarMockup();
+        });
+
+        function markSelectedColor(color) {
+            $('.color-swatch').removeClass('border-dark').addClass('border-2');
+            $(`.color-swatch[data-color="${color}"]`).addClass('border-dark');
+        }
+
+        function actualizarMockup() {
+            var colorAcento = $('#theme-color-picker').val();
+            var colorFondo = $('#bg-color-picker').val();
+            var colorSidebarBg = $('#sidebar-bg-color-picker').val();
+            var colorHeaderBg = $('#header-bg-color-picker').val();
+            var colorBoxBg = $('#box-bg-color-picker').val();
+            var paleta = $('#chart-palette').val();
+
+            // 1. Acento
+            $('#mockup-user-avatar, #mockup-sidebar-active, #mockup-button').css('background-color', colorAcento);
+            
+            // 2. Fondo general
+            $('#mockup-frame').css('background-color', colorFondo);
+            
+            // 3. Barra lateral
+            $('#mockup-sidebar').css('background-color', colorSidebarBg);
+
+            // 4. Barra Superior (Header)
+            $('#mockup-header').css('background-color', colorHeaderBg);
+
+            // 5. Tarjetas (Cards)
+            $('#mockup-card').css('background-color', colorBoxBg);
+
+            // Contraste para textos en las tarjetas del mockup
+            var rBox = parseInt(colorBoxBg.substr(1, 2), 16);
+            var gBox = parseInt(colorBoxBg.substr(3, 2), 16);
+            var bBox = parseInt(colorBoxBg.substr(5, 2), 16);
+            var yiqBox = ((rBox * 299) + (gBox * 587) + (bBox * 114)) / 1000;
+            var textContrast = (yiqBox >= 128) ? '#1a1a2e' : '#ffffff';
+            $('#mockup-card').css('color', textContrast);
+
+            var coloresGraficos = [];
+            if (paleta === 'custom') {
+                coloresGraficos = [
+                    $('#chart-color-1').val(),
+                    $('#chart-color-2').val(),
+                    $('#chart-color-3').val(),
+                    $('#chart-color-4').val(),
+                    $('#chart-color-5').val()
+                ];
+                $('#custom-chart-colors-section').slideDown(200);
+            } else {
+                $('#custom-chart-colors-section').slideUp(200);
+                var coloresPredefinidos = {
+                    classic: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc'],
+                    ocean: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef', '#03045e'],
+                    neon: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0', '#b5179e'],
+                    sunset: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7', '#ef233c'],
+                    forest: ['#2c6e49', '#4c956c', '#a3b18a', '#588157', '#1b4332']
+                };
+                coloresGraficos = coloresPredefinidos[paleta] || coloresPredefinidos.classic;
+            }
+
+            $('#mockup-donut-1').attr('stroke', coloresGraficos[0]);
+            $('#mockup-donut-2').attr('stroke', coloresGraficos[1]);
+            $('#mockup-donut-3').attr('stroke', coloresGraficos[2]);
+
+            $('#mockup-bar-1').css('background-color', coloresGraficos[0]);
+            $('#mockup-bar-2').css('background-color', coloresGraficos[1]);
+            $('#mockup-bar-3').css('background-color', coloresGraficos[2]);
+        }
+
+        $('#btn-save-visuals').on('click', function() {
+            var selectedColor = $('#theme-color-picker').val();
+            var selectedBg = $('#bg-color-picker').val();
+            var selectedSidebarBg = $('#sidebar-bg-color-picker').val();
+            var selectedHeaderBg = $('#header-bg-color-picker').val();
+            var selectedBoxBg = $('#box-bg-color-picker').val();
+            var selectedSkin = $('input[name="sidebarSkin"]:checked').val() || 'light';
+            var selectedPalette = $('#chart-palette').val();
+
+            localStorage.setItem('crm_theme_color', selectedColor);
+            localStorage.setItem('crm_bg_color', selectedBg);
+            localStorage.setItem('crm_sidebar_bg_color', selectedSidebarBg);
+            localStorage.setItem('crm_header_bg_color', selectedHeaderBg);
+            localStorage.setItem('crm_box_bg_color', selectedBoxBg);
+            localStorage.setItem('crm_sidebar_skin', selectedSkin);
+            localStorage.setItem('crm_chart_palette', selectedPalette);
+
+            var colors = [
+                $('#chart-color-1').val(),
+                $('#chart-color-2').val(),
+                $('#chart-color-3').val(),
+                $('#chart-color-4').val(),
+                $('#chart-color-5').val()
+            ];
+            localStorage.setItem('crm_custom_chart_colors', JSON.stringify(colors));
+
+            if (selectedSkin === 'dark') {
+                $('body').removeClass('light-skin').addClass('dark-skin');
+                $('#toggle_left_sidebar_skin').prop('checked', true);
+            } else {
+                $('body').removeClass('dark-skin').addClass('light-skin');
+                $('#toggle_left_sidebar_skin').prop('checked', false);
+            }
+
+            aplicarTemaDinamico(selectedColor, selectedBg, selectedSidebarBg, selectedHeaderBg, selectedBoxBg);
+
+            Swal.fire({
+                title: '¡Preferencias Guardadas!',
+                text: 'La apariencia visual del espacio de trabajo se ha actualizado con éxito.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload(); // Recargar para aplicar cambios del layout completamente
+            });
+        });
+
+        function aplicarTemaDinamico(color, fondo, sidebarBg, headerBg, boxBg) {
+            var styleEl = document.getElementById('custom-theme-styles-runtime');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'custom-theme-styles-runtime';
+                document.head.appendChild(styleEl);
+            }
+            
+            var r = parseInt(sidebarBg.substr(1, 2), 16);
+            var g = parseInt(sidebarBg.substr(3, 2), 16);
+            var b = parseInt(sidebarBg.substr(5, 2), 16);
+            var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            var contrastColor = (yiq >= 128) ? '#1a1a2e' : '#ffffff';
+
+            var rBg = parseInt(fondo.substr(1, 2), 16);
+            var gBg = parseInt(fondo.substr(3, 2), 16);
+            var bBg = parseInt(fondo.substr(5, 2), 16);
+            var yiqBg = ((rBg * 299) + (gBg * 587) + (bBg * 114)) / 1000;
+            var textContrastColor = (yiqBg >= 128) ? '#1a1a2e' : '#ffffff';
+            var textMutedContrast = (yiqBg >= 128) ? '#5a6a85' : '#a8dadc';
+
+            styleEl.innerHTML = `
+                :root {
+                    --theme-primary-custom: ${color} !important;
+                }
+                .btn-primary, .bg-primary, .btn-primary-light:hover {
+                    background-color: ${color} !important;
+                    border-color: ${color} !important;
+                    color: #fff !important;
+                }
+                .text-primary, .sidebar-menu > li.active > a, .sidebar-menu > li:hover > a {
+                    color: ${color} !important;
+                }
+                .badge-primary-light {
+                    background-color: ${color}20 !important;
+                    color: ${color} !important;
+                }
+                .content-wrapper, .wrapper {
+                    background-color: ${fondo} !important;
+                }
+                .tab-pane, label.form-label, .box-title, h5, .nav-tabs .nav-link, .nav-tabs .nav-link.active {
+                    color: ${textContrastColor} !important;
+                }
+                p.text-muted, .text-fade, .small, .text-muted {
+                    color: ${textMutedContrast} !important;
+                }
+                .main-header .navbar {
+                    background-color: ${headerBg} !important;
+                }
+                .card, .box, .metric-card, .bg-white, .box-body, .box-header, .box-footer,
+                .list-group-item, .media, .timeline-event, .fc-theme-standard td, .fc-theme-standard th, 
+                .fc, .fc-daygrid-day, .fc-col-header-cell, .fc-scrollgrid, .fc-list-event, 
+                .fc-timegrid-slot, .fc-timegrid-col, .fc-list-day, .table, .table td, .table th,
+                #clientes-table, #tareas-table, #oportunidades-table, #clientes-table td, #tareas-table td, #oportunidades-table td {
+                    background-color: ${boxBg} !important;
+                    color: ${textContrastColor} !important;
+                }
+                .box-title, .card-title, h1, h2, h3, h4, h5, h6, .text-dark, td, th, 
+                .metric-card .value, .timeline-title, .fc-event-title, .fc-col-header-cell-cushion, 
+                .fc-daygrid-day-number, .fc-list-event-title, .list-group-item h6, .list-group-item p,
+                .list-group-item .text-dark, .list-group-item strong {
+                    color: ${textContrastColor} !important;
+                }
+                .box p, .card p, .text-fade, .text-muted, .small, .metric-card .label,
+                .timeline-time, .fc-event-time, .list-group-item small, .list-group-item .text-fade {
+                    color: ${textMutedContrast} !important;
+                }
+                body, p, h1, h2, h3, h4, h5, h6, td, th, input, select, textarea, button, label {
+                    font-family: 'Outfit', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+                }
+                /* Eliminate browser list bullets / markers in the sidebar menu */
+                .sidebar-menu, .sidebar-menu li, .sidebar-menu ul, .sidebar-menu ul li, .treeview-menu, .treeview-menu li {
+                    list-style: none !important;
+                    list-style-type: none !important;
+                }
+                .sidebar-menu li a::before, 
+                .sidebar-menu li a::after, 
+                .sidebar-menu li a span::before, 
+                .sidebar-menu li a span::after {
+                    display: none !important;
+                    content: "" !important;
+                }
+                /* Force safe Segoe UI font on sidebar text & anchors to prevent spaces from rendering as dots/dashes */
+                .sidebar-menu li a, 
+                .sidebar-menu li a span {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+                }
+                .sidebar-menu li a i, 
+                .sidebar-menu li a svg {
+                    margin-right: 8px !important;
+                }
+                .content-wrapper {
+                    min-height: calc(100vh - 60px) !important;
+                }
+                #clientes-box, #oportunidades-box, #tareas-box, #actividades-box, #redactor-box,
+                body:not(.dashboard-page) .content-wrapper .col-12 > .box,
+                body:not(.dashboard-page) .content-wrapper .col-lg-8 > .box,
+                body:not(.dashboard-page) .content-wrapper .col-xxl-12 > .box {
+                    min-height: 75vh !important;
+                }
+                /* Ensure logo is always correctly displayed in the sidebar header */
+                .logo-box .logo-mini span:last-child, .logo-box .logo-lg span:last-child {
+                    display: none !important;
+                }
+                .logo-box .logo-mini span:first-child, .logo-box .logo-lg span:first-child {
+                    display: inline-block !important;
+                }
+                .logo-box img {
+                    display: block !important;
+                    max-height: 45px !important;
+                }
+                .btn {
+                    border-radius: 6px !important;
+                    font-weight: 500 !important;
+                    letter-spacing: 0.2px !important;
+                }
+                .table-responsive {
+                    width: 100% !important;
+                }
+                .main-sidebar, .left-side, .logo-box {
+                    background-color: ${sidebarBg} !important;
+                }
+                .main-sidebar .sidebar-menu li a, 
+                .main-sidebar .sidebar-menu li a i, 
+                .main-sidebar .sidebar-menu li.treeview > a i,
+                .main-sidebar .sidebar-menu > li > a {
+                    color: ${contrastColor} !important;
+                }
+            `;
+        }
+    });
+</script>

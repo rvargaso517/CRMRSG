@@ -83,7 +83,7 @@ namespace CRMRSG.Controllers
                 query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) >= today && DbFunctions.TruncateTime(t.fecha_limite.Value) <= endOfMonth);
             }
 
-            var tareas = query.ToList();
+            var tareas = query.OrderByDescending(t => t.id_tarea).ToList();
             foreach (var t in tareas)
             {
                 t.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM tareas WHERE id_tarea = " + t.id_tarea).FirstOrDefault();

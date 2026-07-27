@@ -359,6 +359,22 @@ namespace CRMRSG.Controllers
             return View();
         }
 
+        // GET: Dashboard/RedactorCorreos
+        public ActionResult RedactorCorreos()
+        {
+            if (Session["UsuarioId"] == null)
+            {
+                return RedirectToAction("Login", "Autenticacion");
+            }
+
+            EnviarCorreosProgramados();
+
+            ViewBag.ClientesEmail = db.clientes.ToList();
+            ViewBag.ContactosEmail = db.contacto_cliente.ToList();
+
+            return View();
+        }
+
         private void VerificarYGenerarAlertasTareasDashboard(int currentUserId, bool isAdmin)
         {
             DateTime limiteAlerta = DateTime.Today.AddDays(2);
@@ -602,13 +618,36 @@ namespace CRMRSG.Controllers
             int.TryParse(portStr, out port);
             bool.TryParse(enableSslStr, out enableSsl);
 
+            if (!body.Contains("<div") && !body.Contains("<html>"))
+            {
+                body = $@"
+<div style=""background-color:#f4f6f9; padding:30px; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#2b354f; line-height:1.6; max-width:600px; margin:0 auto; border-radius:12px; border:1px solid #eef2f5; box-shadow:0 4px 20px rgba(0,0,0,0.04);"">
+  <div style=""text-align:center; padding-bottom:20px; border-bottom:2px solid #1d3557;"">
+    <h2 style=""color:#1d3557; margin:0; font-size:24px; letter-spacing:0.5px;"">Gestión Comercial CRM</h2>
+  </div>
+  <div style=""background-color:#ffffff; padding:25px; border-radius:0 0 8px 8px; margin-top:2px;"">
+    <h3 style=""color:#2b354f; margin-top:0; font-size:18px;"">{subject}</h3>
+    <div style=""white-space: pre-wrap; font-size:15px; color:#5a6a85;"">
+      {body}
+    </div>
+    <div style=""margin-top:30px; border-top:1px solid #ededed; padding-top:20px; font-size:13px; color:#8898aa;"">
+      <p style=""margin:0 0 5px 0; font-weight:bold;"">Cordialmente,</p>
+      <p style=""margin:0 0 15px 0;"">El equipo de Relaciones Comerciales</p>
+      <p style=""margin:0; font-size:11px; color:#b5c2d5; border-top:1px dashed #ededed; padding-top:10px;"">
+        Este es un mensaje institucional automatizado. Por favor no responda directamente a esta dirección.
+      </p>
+    </div>
+  </div>
+</div>";
+            }
+
             using (var message = new MailMessage())
             {
                 message.From = new MailAddress(from, "CRM RSG");
                 message.To.Add(new MailAddress(toEmail));
                 message.Subject = subject;
                 message.Body = body;
-                message.IsBodyHtml = false;
+                message.IsBodyHtml = true;
 
                 using (var client = new SmtpClient(host, port))
                 {

@@ -23,7 +23,7 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="box">
+        <div class="box" id="oportunidades-box">
             <div class="box-header with-border d-flex justify-content-between align-items-center">
                 <h3 class="box-title">Todas las Oportunidades</h3>
                 <a href="~/Oportunidades/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nueva Oportunidad</a>
@@ -38,7 +38,7 @@
                 }
 
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="oportunidades-table">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
@@ -195,6 +195,66 @@
                     }
                 });
             }
+        }
+
+        $(document).ready(function() {
+            paginarTabla('oportunidades-table', 5);
+        });
+
+        function paginarTabla(tableId, recordsPerPage) {
+            const $table = $('#' + tableId);
+            if ($table.length === 0) return;
+            
+            $('#' + tableId + '-pagination').remove();
+            
+            const $tbody = $table.find('tbody');
+            const $rows = $tbody.find('tr');
+            
+            const totalRows = $rows.length;
+            if (totalRows === 0) return;
+            if (totalRows <= recordsPerPage) return;
+            
+            let currentPage = 1;
+            const totalPages = Math.ceil(totalRows / recordsPerPage);
+            
+            const $navContainer = $('<div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3 flex-wrap gap-2" id="' + tableId + '-pagination"></div>');
+            const $infoText = $('<span class="text-muted small"></span>');
+            const $paginationUl = $('<ul class="pagination pagination-sm mb-0"></ul>');
+            
+            $navContainer.append($infoText).append($paginationUl);
+            $table.after($navContainer);
+            
+            function showPage(page) {
+                currentPage = page;
+                const start = (page - 1) * recordsPerPage;
+                const end = start + recordsPerPage;
+                
+                $rows.hide();
+                $rows.slice(start, end).show();
+                
+                const shownCount = Math.min(end, totalRows);
+                $infoText.text('Mostrando del ' + (start + 1) + ' al ' + shownCount + ' de ' + totalRows + ' registros.');
+                
+                $paginationUl.empty();
+                const $prevLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&laquo;</a></li>');
+                if (currentPage === 1) $prevLi.addClass('disabled');
+                else $prevLi.on('click', () => showPage(currentPage - 1));
+                $paginationUl.append($prevLi);
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    const $pageLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>');
+                    if (i === currentPage) $pageLi.addClass('active');
+                    else $pageLi.on('click', () => showPage(i));
+                    $paginationUl.append($pageLi);
+                }
+                
+                const $nextLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&raquo;</a></li>');
+                if (currentPage === totalPages) $nextLi.addClass('disabled');
+                else $nextLi.on('click', () => showPage(currentPage + 1));
+                $paginationUl.append($nextLi);
+            }
+            
+            showPage(1);
         }
     </script>
 }

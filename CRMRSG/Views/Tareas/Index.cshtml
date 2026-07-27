@@ -167,7 +167,7 @@
 <!-- Listado de Tareas -->
 <div class="row">
     <div class="col-12">
-        <div class="box">
+        <div class="box" id="tareas-box">
             <div class="box-header with-border d-flex justify-content-between align-items-center">
                 <h3 class="box-title">Listado General de Tareas</h3>
                 <a href="~/Tareas/Crear" class="btn btn-primary">
@@ -178,7 +178,7 @@
             <div class="box-body p-0">
                 <div class="table-responsive">
                     @Html.AntiForgeryToken()
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="tareas-table">
                         <thead class="bg-light">
                             <tr>
                                 <th>Responsable</th>
@@ -389,6 +389,57 @@
                 });
             });
 
+            // Obtener paleta de colores para gráficos desde localStorage (HU-038)
+            var chartPalette = localStorage.getItem('crm_chart_palette') || 'classic';
+            var palettes = {
+                classic: {
+                    line: ['#1d3557'],
+                    donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557'],
+                    bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261']
+                },
+                ocean: {
+                    line: ['#0077b6'],
+                    donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef'],
+                    bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8']
+                },
+                neon: {
+                    line: ['#7209b7'],
+                    donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0'],
+                    bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9']
+                },
+                sunset: {
+                    line: ['#d90429'],
+                    donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7'],
+                    bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7']
+                },
+                forest: {
+                    line: ['#2c6e49'],
+                    donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157'],
+                    bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d']
+                }
+            };
+            var selectedColors = palettes[chartPalette] || palettes.classic;
+            if (chartPalette === 'custom') {
+                var customColorsStr = localStorage.getItem('crm_custom_chart_colors');
+                var customColors = ['#2a9d8f', '#f4a261', '#e63946'];
+                if (customColorsStr) {
+                    try { customColors = JSON.parse(customColorsStr); } catch(e) {}
+                }
+                selectedColors = {
+                    line: [customColors[0]],
+                    donut: customColors,
+                    bar: customColors
+                };
+            }
+
+            var boxBgColor = localStorage.getItem('crm_box_bg_color') || '#ffffff';
+            var r = parseInt(boxBgColor.substr(1, 2), 16);
+            var g = parseInt(boxBgColor.substr(3, 2), 16);
+            var b = parseInt(boxBgColor.substr(5, 2), 16);
+            var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            var chartThemeMode = (yiq < 128) ? 'dark' : 'light';
+            var chartLabelColor = (yiq < 128) ? '#ffffff' : '#5a6a85';
+
             // Tareas por Usuario (Pie Chart)
             if($('#user-task-chart').length > 0) {
                 var userLabels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(userLabels));
@@ -401,10 +452,11 @@
 
                 var optionsUser = {
                     series: userValues,
-                    chart: { type: 'pie', height: 280 },
+                    chart: { type: 'pie', height: 280, background: 'transparent' },
+                    theme: { mode: chartThemeMode },
                     labels: userLabels,
-                    colors: ['#040A2D', '#970000', '#10c469', '#ff9920', '#188ae2'],
-                    stroke: { colors: ['#ffffff'], width: 1 },
+                    colors: selectedColors.bar,
+                    stroke: { colors: [boxBgColor], width: 1 },
                     legend: { position: 'bottom' }
                 };
                 new ApexCharts(document.querySelector("#user-task-chart"), optionsUser).render();
@@ -422,10 +474,11 @@
 
                 var optionsCategory = {
                     series: catValues,
-                    chart: { type: 'donut', height: 280 },
+                    chart: { type: 'donut', height: 280, background: 'transparent' },
+                    theme: { mode: chartThemeMode },
                     labels: catLabels,
-                    colors: ['#ff9920', '#188ae2', '#10c469'],
-                    stroke: { colors: ['#ffffff'], width: 1 },
+                    colors: selectedColors.donut,
+                    stroke: { colors: [boxBgColor], width: 1 },
                     legend: { position: 'bottom' }
                 };
                 new ApexCharts(document.querySelector("#category-task-chart"), optionsCategory).render();
@@ -443,15 +496,82 @@
 
                 var optionsPriority = {
                     series: [{ name: 'Tareas', data: prioValues }],
-                    chart: { type: 'bar', height: 280, toolbar: { show: false } },
+                    chart: { type: 'bar', height: 280, toolbar: { show: false }, background: 'transparent' },
+                    theme: { mode: chartThemeMode },
                     plotOptions: { bar: { columnWidth: '40%', borderRadius: 4, distributed: true } },
-                    xaxis: { categories: prioLabels },
-                    colors: ['#970000', '#040A2D', '#9e9e9e'],
+                    xaxis: { 
+                        categories: prioLabels,
+                        labels: {
+                            style: {
+                                colors: chartLabelColor
+                            }
+                        }
+                    },
+                    colors: selectedColors.bar,
                     legend: { show: false },
                     dataLabels: { enabled: false }
                 };
                 new ApexCharts(document.querySelector("#priority-task-chart"), optionsPriority).render();
             }
+
+            // Inicializar paginación de tareas
+            paginarTabla('tareas-table', 5);
         });
+
+        function paginarTabla(tableId, recordsPerPage) {
+            const $table = $('#' + tableId);
+            if ($table.length === 0) return;
+            
+            $('#' + tableId + '-pagination').remove();
+            
+            const $tbody = $table.find('tbody');
+            const $rows = $tbody.find('tr');
+            
+            const totalRows = $rows.length;
+            if (totalRows === 0) return;
+            if (totalRows <= recordsPerPage) return;
+            
+            let currentPage = 1;
+            const totalPages = Math.ceil(totalRows / recordsPerPage);
+            
+            const $navContainer = $('<div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3 flex-wrap gap-2" id="' + tableId + '-pagination"></div>');
+            const $infoText = $('<span class="text-muted small"></span>');
+            const $paginationUl = $('<ul class="pagination pagination-sm mb-0"></ul>');
+            
+            $navContainer.append($infoText).append($paginationUl);
+            $table.after($navContainer);
+            
+            function showPage(page) {
+                currentPage = page;
+                const start = (page - 1) * recordsPerPage;
+                const end = start + recordsPerPage;
+                
+                $rows.hide();
+                $rows.slice(start, end).show();
+                
+                const shownCount = Math.min(end, totalRows);
+                $infoText.text('Mostrando del ' + (start + 1) + ' al ' + shownCount + ' de ' + totalRows + ' registros.');
+                
+                $paginationUl.empty();
+                const $prevLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&laquo;</a></li>');
+                if (currentPage === 1) $prevLi.addClass('disabled');
+                else $prevLi.on('click', () => showPage(currentPage - 1));
+                $paginationUl.append($prevLi);
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    const $pageLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>');
+                    if (i === currentPage) $pageLi.addClass('active');
+                    else $pageLi.on('click', () => showPage(i));
+                    $paginationUl.append($pageLi);
+                }
+                
+                const $nextLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&raquo;</a></li>');
+                if (currentPage === totalPages) $nextLi.addClass('disabled');
+                else $nextLi.on('click', () => showPage(currentPage + 1));
+                $paginationUl.append($nextLi);
+            }
+            
+            showPage(1);
+        }
     </script>
 }
