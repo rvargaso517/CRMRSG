@@ -1,4 +1,4 @@
-@model IEnumerable<CRMRSG.EntityFramework.citas>
+@model IEnumerable<CRMRSG.EntityFramework.cita>
 
 @{
     ViewBag.Title = "Agenda de Citas";
@@ -32,8 +32,8 @@
                                 {
                                     <tr>
                                         <td class="fw-bold">@(item.cliente != null ? item.cliente.empresa : "No especificado")</td>
-                                        <td>@item.asunto</td>
-                                        <td><i class="ti-time me-5 text-info"></i> @item.fecha_cita.ToString("dd/MM/yyyy hh:mm tt")</td>
+                                        <td>@item.descripcion</td>
+                                        <td><i class="ti-time me-5 text-info"></i> @(item.fecha.ToString("dd/MM/yyyy")) @(item.hora.ToString(@"hh\:mm"))</td>
                                     </tr>
                                 }
                             }

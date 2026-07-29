@@ -1,8 +1,10 @@
-﻿using System;
-using System.Data.Entity;
+using System;
 using System.Linq;
 using System.Web.Mvc;
-using CRMRSG.EntityFramework; 
+using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
@@ -11,10 +13,18 @@ namespace CRMRSG.Controllers
         // GET: Contactos
         public ActionResult Index()
         {
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                // Jalamos los contactos e incluimos la empresa a la que pertenecen
-                var contactos = db.contacto_cliente.Include(c => c.cliente).ToList();
+                var contactos = db.Query<contacto_cliente, cliente, contacto_cliente>(
+                    "sp_contactos_listar_con_cliente",
+                    (co, cl) => {
+                        co.cliente = cl;
+                        return co;
+                    },
+                    splitOn: "id_cliente",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
                 return View(contactos);
             }
         }
@@ -25,16 +35,13 @@ namespace CRMRSG.Controllers
         {
             try
             {
-                using (CRM_RSGEntities db = new CRM_RSGEntities())
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    var contacto = db.contacto_cliente.Find(id);
-                    if (contacto == null)
-                    {
-                        return Json(new { success = false, message = "Contacto no encontrado." });
-                    }
-
-                    db.contacto_cliente.Remove(contacto);
-                    db.SaveChanges();
+                    db.Execute(
+                        "sp_contactos_eliminar",
+                        new { p_id_contacto = id },
+                        commandType: CommandType.StoredProcedure
+                    );
                     return Json(new { success = true, message = "Contacto eliminado correctamente." });
                 }
             }

@@ -5,10 +5,12 @@ namespace CRMRSG.EntityFramework
 {
     public partial class cliente
     {
+        private int? _leadScore;
         public int LeadScore
         {
             get
             {
+                if (_leadScore.HasValue) return _leadScore.Value;
                 int score = 0;
                 
                 // 1. Oportunidades: +20 puntos por cada una (Máximo 40)
@@ -36,16 +38,26 @@ namespace CRMRSG.EntityFramework
                 // Ajustar entre 0 y 100
                 return Math.Max(0, Math.Min(score, 100));
             }
+            set
+            {
+                _leadScore = value;
+            }
         }
 
+        private string _clasificacion;
         public string Clasificacion
         {
             get
             {
+                if (!string.IsNullOrEmpty(_clasificacion)) return _clasificacion;
                 int score = this.LeadScore;
                 if (score >= 70) return "VIP";
                 if (score >= 35) return "Medio";
                 return "Bajo";
+            }
+            set
+            {
+                _clasificacion = value;
             }
         }
     }

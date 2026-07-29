@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
     ViewBag.Title = "Iniciar Sesi&oacute;n";
 }
@@ -39,16 +39,16 @@
                                 <p class="mb-0 text-fade">Inicie sesi&oacute;n para continuar.</p>
                             </div>
                             <div class="p-40">
-                                @if (ViewBag.Error != null)
+                                @if (ViewBag.Error != null || TempData["Error"] != null)
                                 {
                                     <div class="alert alert-danger" role="alert">
-                                        @ViewBag.Error
+                                        @(ViewBag.Error ?? TempData["Error"])
                                     </div>
                                 }
-                                @if (ViewBag.Success != null)
+                                @if (ViewBag.Success != null || TempData["Success"] != null)
                                 {
                                     <div class="alert alert-success" role="alert">
-                                        @ViewBag.Success
+                                        @(ViewBag.Success ?? TempData["Success"])
                                     </div>
                                 }
                                 <form action="@Url.Action("Login", "Autenticacion")" method="post">

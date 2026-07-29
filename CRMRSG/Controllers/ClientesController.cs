@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class ClientesController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         private bool TienePermiso(string permiso)
         {
             if (Session["UsuarioId"] == null) return false;
@@ -30,8 +30,14 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            var listaClientes = db.clientes.OrderByDescending(c => c.id_cliente).ToList();
-            return View(listaClientes);
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                var listaClientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+                return View(listaClientes);
+            }
         }
 
         // GET: Clientes/Detalle/5
@@ -48,17 +54,33 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            var clienteDetalle = db.clientes
-                .Include(c => c.contacto_cliente)
-                .Include(c => c.nota_cliente)
-                .FirstOrDefault(c => c.id_cliente == id);
-
-            if (clienteDetalle == null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return HttpNotFound();
-            }
+                var clienteDetalle = db.QueryFirstOrDefault<cliente>(
+                    "sp_clientes_obtener_por_id",
+                    new { p_id_cliente = id.Value },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            return View(clienteDetalle);
+                if (clienteDetalle == null)
+                {
+                    return HttpNotFound();
+                }
+
+                clienteDetalle.contacto_cliente = db.Query<contacto_cliente>(
+                    "sp_contactos_listar_por_cliente",
+                    new { p_id_cliente = id.Value },
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                clienteDetalle.nota_cliente = db.Query<nota_cliente>(
+                    "sp_notas_listar_por_cliente",
+                    new { p_id_cliente = id.Value },
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return View(clienteDetalle);
+            }
         }
 
         // GET: Clientes/Crear
@@ -83,7 +105,6 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            // HU-022: Validación Automática de Datos de Clientes
             if (string.IsNullOrWhiteSpace(nuevoCliente.nombre))
             {
                 ModelState.AddModelError("nombre", "El nombre del contacto principal es obligatorio.");
@@ -92,9 +113,19 @@ namespace CRMRSG.Controllers
             {
                 ModelState.AddModelError("correo", "Debe proporcionar un correo electrónico válido.");
             }
-            else if (db.clientes.Any(c => c.correo == nuevoCliente.correo))
+            else
             {
-                ModelState.AddModelError("correo", "Ya existe un cliente registrado con este correo electrónico.");
+                using (var db = DbConnectionFactory.GetConnection())
+                {
+                    var existing = db.QueryFirstOrDefault<cliente>(
+                        "SELECT * FROM clientes WHERE correo = @Correo",
+                        new { Correo = nuevoCliente.correo }
+                    );
+                    if (existing != null)
+                    {
+                        ModelState.AddModelError("correo", "Ya existe un cliente registrado con este correo electrónico.");
+                    }
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(nuevoCliente.telefono) && !System.Text.RegularExpressions.Regex.IsMatch(nuevoCliente.telefono, @"^\+?[0-9\s\-]{8,15}$"))
@@ -109,34 +140,51 @@ namespace CRMRSG.Controllers
                     ? (int)Session["UsuarioId"]
                     : 1;
 
-                db.clientes.Add(nuevoCliente);
-                db.SaveChanges();
-
-                // HU-030: Automatización de Tareas - Crear tarea de bienvenida automática al crear un cliente
-                var tareaAuto = new tarea
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    titulo = $"Llamada de Bienvenida: {nuevoCliente.empresa}",
-                    descripcion = $"Realizar llamada de introducción al contacto principal {nuevoCliente.nombre}.",
-                    prioridad = "Media",
-                    estado = "Pendiente",
-                    fecha_limite = DateTime.Today.AddDays(2),
-                    id_cliente = nuevoCliente.id_cliente,
-                    id_usuario = nuevoCliente.id_usuario
-                };
-                db.tareas.Add(tareaAuto);
-                db.SaveChanges();
+                    // Insertar cliente
+                    var id_cliente = db.QuerySingle<int>(
+                        "sp_clientes_insertar",
+                        new {
+                            p_nombre = nuevoCliente.nombre,
+                            p_empresa = nuevoCliente.empresa,
+                            p_telefono = nuevoCliente.telefono,
+                            p_correo = nuevoCliente.correo,
+                            p_direccion = nuevoCliente.direccion,
+                            p_estado = nuevoCliente.estado ?? "Activo",
+                            p_id_usuario = nuevoCliente.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    nuevoCliente.id_cliente = id_cliente;
 
-                var notiCliente = new notificacione
-                {
-                    mensaje = $"Cliente Creado: Se ha registrado el cliente '{nuevoCliente.nombre}' de la empresa '{nuevoCliente.empresa}'.",
-                    fecha = DateTime.Now,
-                    leida = false,
-                    id_usuario = nuevoCliente.id_usuario ?? 1,
-                    tipo = "Cliente Creado",
-                    id_referencia = nuevoCliente.id_cliente
-                };
-                db.notificaciones.Add(notiCliente);
-                db.SaveChanges();
+                    // Crear tarea de bienvenida automática
+                    db.Execute(
+                        "sp_tareas_insertar",
+                        new {
+                            p_titulo = $"Llamada de Bienvenida: {nuevoCliente.empresa}",
+                            p_descripcion = $"Realizar llamada de introducción al contacto principal {nuevoCliente.nombre}.",
+                            p_prioridad = "Media",
+                            p_estado = "Pendiente",
+                            p_fecha_limite = DateTime.Today.AddDays(2),
+                            p_id_cliente = nuevoCliente.id_cliente,
+                            p_id_usuario = nuevoCliente.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    // Insertar notificación
+                    db.Execute(
+                        "sp_notificaciones_insertar",
+                        new {
+                            p_mensaje = $"Cliente Creado: Se ha registrado el cliente '{nuevoCliente.nombre}' de la empresa '{nuevoCliente.empresa}'.",
+                            p_id_usuario = nuevoCliente.id_usuario ?? 1,
+                            p_tipo = "Cliente Creado",
+                            p_id_referencia = nuevoCliente.id_cliente
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                }
 
                 return RedirectToAction("Index");
             }
@@ -158,14 +206,21 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            var clienteEditar = db.clientes.Find(id);
-
-            if (clienteEditar == null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return HttpNotFound();
-            }
+                var clienteEditar = db.QueryFirstOrDefault<cliente>(
+                    "sp_clientes_obtener_por_id",
+                    new { p_id_cliente = id.Value },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            return View(clienteEditar);
+                if (clienteEditar == null)
+                {
+                    return HttpNotFound();
+                }
+
+                return View(clienteEditar);
+            }
         }
 
         // POST: Clientes/Editar/5
@@ -181,20 +236,33 @@ namespace CRMRSG.Controllers
 
             if (ModelState.IsValid)
             {
-                var clienteDb = db.clientes.Find(clienteModificado.id_cliente);
-
-                if (clienteDb != null)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    clienteDb.nombre = clienteModificado.nombre;
-                    clienteDb.empresa = clienteModificado.empresa;
-                    clienteDb.telefono = clienteModificado.telefono;
-                    clienteDb.correo = clienteModificado.correo;
-                    clienteDb.direccion = clienteModificado.direccion;
-                    clienteDb.estado = clienteModificado.estado;
+                    var clienteDb = db.QueryFirstOrDefault<cliente>(
+                        "sp_clientes_obtener_por_id",
+                        new { p_id_cliente = clienteModificado.id_cliente },
+                        commandType: CommandType.StoredProcedure
+                    );
 
-                    db.SaveChanges();
+                    if (clienteDb != null)
+                    {
+                        db.Execute(
+                            "sp_clientes_actualizar",
+                            new {
+                                p_id_cliente = clienteModificado.id_cliente,
+                                p_nombre = clienteModificado.nombre,
+                                p_empresa = clienteModificado.empresa,
+                                p_telefono = clienteModificado.telefono,
+                                p_correo = clienteModificado.correo,
+                                p_direccion = clienteModificado.direccion,
+                                p_estado = clienteModificado.estado,
+                                p_id_usuario = clienteDb.id_usuario
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
 
-                    return RedirectToAction("Index");
+                        return RedirectToAction("Index");
+                    }
                 }
             }
 
@@ -210,18 +278,28 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var clienteEliminar = db.clientes.Find(id);
-
-            if (clienteEliminar != null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                db.clientes.Remove(clienteEliminar);
-                db.SaveChanges();
+                var clienteEliminar = db.QueryFirstOrDefault<cliente>(
+                    "sp_clientes_obtener_por_id",
+                    new { p_id_cliente = id },
+                    commandType: CommandType.StoredProcedure
+                );
 
-                return Json(new
+                if (clienteEliminar != null)
                 {
-                    success = true,
-                    message = "Cliente eliminado correctamente."
-                });
+                    db.Execute(
+                        "sp_clientes_eliminar",
+                        new { p_id_cliente = id },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Cliente eliminado correctamente."
+                    });
+                }
             }
 
             return Json(new
@@ -231,7 +309,7 @@ namespace CRMRSG.Controllers
             });
         }
 
-        // GET: clientes/ExportarClientesCSV (HU-034)
+        // GET: clientes/ExportarClientesCSV
         public void ExportarClientesCSV()
         {
             if (!TienePermiso("Clientes:Ver"))
@@ -242,46 +320,42 @@ namespace CRMRSG.Controllers
                 return;
             }
 
-            var listaClientes = db.clientes.ToList();
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.AppendLine("ID Cliente;Nombre Completo;Empresa;Telefono;Correo;Direccion;Estado;Fecha Registro");
-
-            foreach (var c in listaClientes)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                sb.AppendLine(string.Format("{0};{1};{2};{3};{4};{5};{6};{7}",
-                    c.id_cliente,
-                    c.nombre ?? "N/A",
-                    c.empresa ?? "N/A",
-                    c.telefono ?? "N/A",
-                    c.correo ?? "N/A",
-                    c.direccion ?? "N/A",
-                    c.estado ?? "Activo",
-                    c.fecha_registro.HasValue ? c.fecha_registro.Value.ToString("dd/MM/yyyy") : "N/A"
-                ));
+                var listaClientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.AppendLine("ID Cliente;Nombre Completo;Empresa;Telefono;Correo;Direccion;Estado;Fecha Registro");
+
+                foreach (var c in listaClientes)
+                {
+                    sb.AppendLine(string.Format("{0};{1};{2};{3};{4};{5};{6};{7}",
+                        c.id_cliente,
+                        c.nombre ?? "N/A",
+                        c.empresa ?? "N/A",
+                        c.telefono ?? "N/A",
+                        c.correo ?? "N/A",
+                        c.direccion ?? "N/A",
+                        c.estado ?? "Activo",
+                        c.fecha_registro.HasValue ? c.fecha_registro.Value.ToString("dd/MM/yyyy") : "N/A"
+                    ));
+                }
+
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+                byte[] bom = new byte[] { 0xEF, 0xBB, 0xBF };
+                byte[] archivoFinal = bom.Concat(buffer).ToArray();
+
+                Response.Clear();
+                Response.Buffer = true;
+                Response.AddHeader("content-disposition", "attachment;filename=Reporte_Clientes_CRM.csv");
+                Response.Charset = "UTF-8";
+                Response.ContentType = "text/csv";
+                Response.BinaryWrite(archivoFinal);
+                Response.End();
             }
-
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
-            byte[] bom = new byte[] { 0xEF, 0xBB, 0xBF };
-            byte[] archivoFinal = bom.Concat(buffer).ToArray();
-
-            Response.Clear();
-            Response.Buffer = true;
-            Response.AddHeader("content-disposition", "attachment;filename=Reporte_Clientes_CRM.csv");
-            Response.Charset = "UTF-8";
-            Response.ContentType = "text/csv";
-            Response.BinaryWrite(archivoFinal);
-            Response.End();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-
-            base.Dispose(disposing);
         }
 
         // POST: Clientes/AgregarContacto
@@ -300,19 +374,20 @@ namespace CRMRSG.Controllers
                     return Json(new { success = false, message = "El nombre del contacto es obligatorio, mae." });
                 }
 
-                using (CRM_RSGEntities db = new CRM_RSGEntities())
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    var nuevoContacto = new contacto_cliente
-                    {
-                        id_cliente = id_cliente,
-                        nombre = nombre,
-                        telefono = telefono,
-                        correo = correo,
-                        puesto = puesto
-                    };
-
-                    db.contacto_cliente.Add(nuevoContacto);
-                    db.SaveChanges();
+                    db.Execute(
+                        "sp_contactos_insertar",
+                        new {
+                            p_id_cliente = id_cliente,
+                            p_nombre = nombre,
+                            p_apellido = (string)null,
+                            p_puesto = puesto,
+                            p_telefono = telefono,
+                            p_correo = correo
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
 
                     return Json(new { success = true, message = "Contacto secundario agregado con éxito." });
                 }
@@ -332,8 +407,16 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Usuarios = db.usuarios.Where(u => u.estado == true).ToList();
-            return View();
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                var usuarios = db.Query<usuario>(
+                    "sp_usuarios_listar",
+                    commandType: CommandType.StoredProcedure
+                ).Where(u => u.estado == true).ToList();
+
+                ViewBag.Usuarios = usuarios;
+                return View();
+            }
         }
 
         // GET: Clientes/ObtenerClientesPorAsesor
@@ -345,26 +428,23 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" }, JsonRequestBehavior.AllowGet);
             }
 
-            var clientesQuery = db.clientes.AsQueryable();
-            if (idUsuario.HasValue && idUsuario.Value > 0)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                clientesQuery = clientesQuery.Where(c => c.id_usuario == idUsuario.Value);
-            }
-            else
-            {
-                clientesQuery = clientesQuery.Where(c => c.id_usuario == null);
-            }
+                var lista = db.Query<cliente>(
+                    "sp_clientes_listar_por_usuario",
+                    new { p_id_usuario = idUsuario },
+                    commandType: CommandType.StoredProcedure
+                ).Select(c => new {
+                    id_cliente = c.id_cliente,
+                    nombre = c.nombre ?? "",
+                    empresa = c.empresa ?? "",
+                    correo = c.correo ?? "",
+                    telefono = c.telefono ?? "",
+                    estado = c.estado ?? "Activo"
+                }).ToList();
 
-            var lista = clientesQuery.ToList().Select(c => new {
-                id_cliente = c.id_cliente,
-                nombre = c.nombre ?? "",
-                empresa = c.empresa ?? "",
-                correo = c.correo ?? "",
-                telefono = c.telefono ?? "",
-                estado = c.estado ?? "Activo"
-            }).ToList();
-
-            return Json(new { success = true, clientes = lista }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, clientes = lista }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         // POST: Clientes/ReasignarMasiva
@@ -382,48 +462,74 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "Debe seleccionar al menos un cliente." });
             }
 
-            var destino = db.usuarios.Find(idUsuarioDestino);
-            if (destino == null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return Json(new { success = false, message = "El asesor de destino no existe." });
-            }
+                var destino = db.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_id",
+                    new { p_id_usuario = idUsuarioDestino },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            int exitos = 0;
-            int total = idsClientes.Count;
-            int? currentUserId = Session["UsuarioId"] != null ? (int?)Session["UsuarioId"] : null;
-            string ipAddress = Request.UserHostAddress;
-
-            foreach (var idC in idsClientes)
-            {
-                var cli = db.clientes.Find(idC);
-                if (cli != null)
+                if (destino == null)
                 {
-                    int? prevVal = cli.id_usuario;
-                    if (prevVal != idUsuarioDestino)
+                    return Json(new { success = false, message = "El asesor de destino no existe." });
+                }
+
+                int exitos = 0;
+                int total = idsClientes.Count;
+                int? currentUserId = Session["UsuarioId"] != null ? (int?)Session["UsuarioId"] : null;
+                string ipAddress = Request.UserHostAddress;
+
+                foreach (var idC in idsClientes)
+                {
+                    var cli = db.QueryFirstOrDefault<cliente>(
+                        "sp_clientes_obtener_por_id",
+                        new { p_id_cliente = idC },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    if (cli != null)
                     {
-                        cli.id_usuario = idUsuarioDestino;
-                        
-                        // Bitácora
-                        var log = new bitacora
+                        int? prevVal = cli.id_usuario;
+                        if (prevVal != idUsuarioDestino)
                         {
-                            accion = "Reasignación",
-                            tabla_afectada = "clientes",
-                            id_registro_afectado = cli.id_cliente,
-                            valor_anterior = prevVal.HasValue ? prevVal.Value.ToString() : "NULL",
-                            valor_nuevo = idUsuarioDestino.ToString(),
-                            fecha_hora = DateTime.Now,
-                            direccion_ip = ipAddress,
-                            id_usuario = currentUserId
-                        };
-                        db.bitacoras.Add(log);
-                        exitos++;
+                            // Actualizar cliente
+                            db.Execute(
+                                "sp_clientes_actualizar",
+                                new {
+                                    p_id_cliente = cli.id_cliente,
+                                    p_nombre = cli.nombre,
+                                    p_empresa = cli.empresa,
+                                    p_telefono = cli.telefono,
+                                    p_correo = cli.correo,
+                                    p_direccion = cli.direccion,
+                                    p_estado = cli.estado,
+                                    p_id_usuario = idUsuarioDestino
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+
+                            // Registrar en bitácora
+                            db.Execute(
+                                "sp_bitacora_insertar",
+                                new {
+                                    p_accion = "Reasignación",
+                                    p_tabla_afectada = "clientes",
+                                    p_id_registro_afectado = cli.id_cliente,
+                                    p_valor_anterior = prevVal.HasValue ? prevVal.Value.ToString() : "NULL",
+                                    p_valor_nuevo = idUsuarioDestino.ToString(),
+                                    p_direccion_ip = ipAddress,
+                                    p_id_usuario = currentUserId
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+                            exitos++;
+                        }
                     }
                 }
+
+                return Json(new { success = true, message = $"Se han reasignado con éxito {exitos} de {total} clientes." });
             }
-
-            db.SaveChanges();
-
-            return Json(new { success = true, message = $"Se han reasignado con éxito {exitos} de {total} clientes." });
         }
 
         // POST: Clientes/ProcesarReasignacionArchivo
@@ -550,157 +656,213 @@ namespace CRMRSG.Controllers
             int? currentUserId = Session["UsuarioId"] != null ? (int?)Session["UsuarioId"] : null;
             string ipAddress = Request.UserHostAddress;
 
-            for (int i = 1; i < lineas.Count; i++)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                string[] fila = lineas[i].Split(delimitador).Select(f => f.Trim()).ToArray();
-                if (fila.Length <= Math.Max(indexCliente, indexUsuario))
+                for (int i = 1; i < lineas.Count; i++)
                 {
-                    errores++;
-                    detallesErrores.Add($"Fila {i + 1}: Columnas insuficientes.");
-                    continue;
-                }
-
-                string valCliente = fila[indexCliente];
-                string valUsuario = fila[indexUsuario];
-
-                if (string.IsNullOrWhiteSpace(valCliente) || string.IsNullOrWhiteSpace(valUsuario))
-                {
-                    errores++;
-                    detallesErrores.Add($"Fila {i + 1}: Datos del cliente o asesor vacíos.");
-                    continue;
-                }
-
-                usuario usr = null;
-                if (int.TryParse(valUsuario, out int idU))
-                {
-                    usr = db.usuarios.Find(idU);
-                }
-                else
-                {
-                    usr = db.usuarios.FirstOrDefault(u => u.correo == valUsuario || (u.nombre + " " + u.apellido) == valUsuario || u.nombre == valUsuario);
-                }
-
-                if (usr == null)
-                {
-                    int fallbackId = currentUserId ?? 1;
-                    usr = db.usuarios.Find(fallbackId);
-                }
-
-                cliente cli = null;
-                if (int.TryParse(valCliente, out int idC))
-                {
-                    cli = db.clientes.Find(idC);
-                }
-                else
-                {
-                    cli = db.clientes.FirstOrDefault(c => c.correo == valCliente || c.nombre == valCliente || c.empresa == valCliente);
-                }
-
-                bool esNuevo = false;
-                if (cli == null)
-                {
-                    cli = new cliente
+                    string[] fila = lineas[i].Split(delimitador).Select(f => f.Trim()).ToArray();
+                    if (fila.Length <= Math.Max(indexCliente, indexUsuario))
                     {
-                        nombre = valCliente,
-                        empresa = valCliente,
-                        estado = "Activo",
-                        fecha_registro = DateTime.Now,
-                        id_usuario = usr.id_usuario
-                    };
-
-                    if (indexNombre != -1 && indexNombre < fila.Length && !string.IsNullOrWhiteSpace(fila[indexNombre])) cli.nombre = fila[indexNombre];
-                    if (indexEmpresa != -1 && indexEmpresa < fila.Length && !string.IsNullOrWhiteSpace(fila[indexEmpresa])) cli.empresa = fila[indexEmpresa];
-                    if (indexCorreo != -1 && indexCorreo < fila.Length && !string.IsNullOrWhiteSpace(fila[indexCorreo])) cli.correo = fila[indexCorreo];
-                    if (indexTelefono != -1 && indexTelefono < fila.Length && !string.IsNullOrWhiteSpace(fila[indexTelefono])) cli.telefono = fila[indexTelefono];
-                    if (indexDireccion != -1 && indexDireccion < fila.Length && !string.IsNullOrWhiteSpace(fila[indexDireccion])) cli.direccion = fila[indexDireccion];
-
-                    db.clientes.Add(cli);
-                    esNuevo = true;
-                }
-
-                try
-                {
-                    int? prevVal = cli.id_usuario;
-                    if (prevVal != usr.id_usuario)
-                    {
-                        cli.id_usuario = usr.id_usuario;
-
-                        var log = new bitacora
-                        {
-                            accion = esNuevo ? "Importación y Asignación" : "Reasignación Masiva Archivo",
-                            tabla_afectada = "clientes",
-                            id_registro_afectado = cli.id_cliente,
-                            valor_anterior = prevVal.HasValue ? prevVal.Value.ToString() : "NULL",
-                            valor_nuevo = usr.id_usuario.ToString(),
-                            fecha_hora = DateTime.Now,
-                            direccion_ip = ipAddress,
-                            id_usuario = currentUserId
-                        };
-                        db.bitacoras.Add(log);
+                        errores++;
+                        detallesErrores.Add($"Fila {i + 1}: Columnas insuficientes.");
+                        continue;
                     }
 
-                    db.SaveChanges();
+                    string valCliente = fila[indexCliente];
+                    string valUsuario = fila[indexUsuario];
 
-                    if (indexContactoNombre != -1 && indexContactoNombre < fila.Length && !string.IsNullOrWhiteSpace(fila[indexContactoNombre]))
+                    if (string.IsNullOrWhiteSpace(valCliente) || string.IsNullOrWhiteSpace(valUsuario))
                     {
-                        var secContacto = new contacto_cliente
-                        {
-                            id_cliente = cli.id_cliente,
-                            nombre = fila[indexContactoNombre]
-                        };
-                        if (indexContactoCorreo != -1 && indexContactoCorreo < fila.Length) secContacto.correo = fila[indexContactoCorreo];
-                        if (indexContactoTelefono != -1 && indexContactoTelefono < fila.Length) secContacto.telefono = fila[indexContactoTelefono];
-                        if (indexContactoPuesto != -1 && indexContactoPuesto < fila.Length) secContacto.puesto = fila[indexContactoPuesto];
-
-                        db.contacto_cliente.Add(secContacto);
+                        errores++;
+                        detallesErrores.Add($"Fila {i + 1}: Datos del cliente o asesor vacíos.");
+                        continue;
                     }
 
-                    if (indexTarea != -1 && indexTarea < fila.Length && !string.IsNullOrWhiteSpace(fila[indexTarea]))
+                    usuario usr = null;
+                    if (int.TryParse(valUsuario, out int idU))
                     {
-                        var nuevaTarea = new tarea
-                        {
-                            id_cliente = cli.id_cliente,
-                            titulo = fila[indexTarea],
-                            descripcion = "Creada automáticamente mediante importación masiva.",
-                            prioridad = "Media",
-                            estado = "Pendiente",
-                            fecha_limite = DateTime.Today.AddDays(7),
-                            id_usuario = usr.id_usuario
-                        };
-                        db.tareas.Add(nuevaTarea);
+                        usr = db.QueryFirstOrDefault<usuario>(
+                            "sp_usuarios_obtener_por_id",
+                            new { p_id_usuario = idU },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
+                    else
+                    {
+                        usr = db.QueryFirstOrDefault<usuario>(
+                            "SELECT * FROM usuarios WHERE correo = @Correo OR CONCAT(nombre, ' ', apellido) = @Val OR nombre = @Val",
+                            new { Correo = valUsuario, Val = valUsuario }
+                        );
                     }
 
-                    if (indexOportunidad != -1 && indexOportunidad < fila.Length && !string.IsNullOrWhiteSpace(fila[indexOportunidad]))
+                    if (usr == null)
                     {
-                        decimal valor = 0;
-                        if (indexOportunidadValor != -1 && indexOportunidadValor < fila.Length)
+                        int fallbackId = currentUserId ?? 1;
+                        usr = db.QueryFirstOrDefault<usuario>(
+                            "sp_usuarios_obtener_por_id",
+                            new { p_id_usuario = fallbackId },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
+
+                    cliente cli = null;
+                    if (int.TryParse(valCliente, out int idC))
+                    {
+                        cli = db.QueryFirstOrDefault<cliente>(
+                            "sp_clientes_obtener_por_id",
+                            new { p_id_cliente = idC },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
+                    else
+                    {
+                        cli = db.QueryFirstOrDefault<cliente>(
+                            "SELECT * FROM clientes WHERE correo = @Val OR nombre = @Val OR empresa = @Val",
+                            new { Val = valCliente }
+                        );
+                    }
+
+                    bool esNuevo = false;
+                    if (cli == null)
+                    {
+                        cli = new cliente
                         {
-                            decimal.TryParse(fila[indexOportunidadValor], out valor);
-                        }
-                        var nuevaOp = new oportunidade
-                        {
-                            id_cliente = cli.id_cliente,
-                            nombre = fila[indexOportunidad],
-                            valor_estimado = valor,
-                            etapa = "Nuevo",
+                            nombre = valCliente,
+                            empresa = valCliente,
                             estado = "Activo",
-                            fecha_creacion = DateTime.Now,
+                            fecha_registro = DateTime.Now,
                             id_usuario = usr.id_usuario
                         };
-                        db.oportunidades.Add(nuevaOp);
+
+                        if (indexNombre != -1 && indexNombre < fila.Length && !string.IsNullOrWhiteSpace(fila[indexNombre])) cli.nombre = fila[indexNombre];
+                        if (indexEmpresa != -1 && indexEmpresa < fila.Length && !string.IsNullOrWhiteSpace(fila[indexEmpresa])) cli.empresa = fila[indexEmpresa];
+                        if (indexCorreo != -1 && indexCorreo < fila.Length && !string.IsNullOrWhiteSpace(fila[indexCorreo])) cli.correo = fila[indexCorreo];
+                        if (indexTelefono != -1 && indexTelefono < fila.Length && !string.IsNullOrWhiteSpace(fila[indexTelefono])) cli.telefono = fila[indexTelefono];
+                        if (indexDireccion != -1 && indexDireccion < fila.Length && !string.IsNullOrWhiteSpace(fila[indexDireccion])) cli.direccion = fila[indexDireccion];
+
+                        var newId = db.QuerySingle<int>(
+                            "sp_clientes_insertar",
+                            new {
+                                p_nombre = cli.nombre,
+                                p_empresa = cli.empresa,
+                                p_telefono = cli.telefono,
+                                p_correo = cli.correo,
+                                p_direccion = cli.direccion,
+                                p_estado = cli.estado,
+                                p_id_usuario = cli.id_usuario
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+                        cli.id_cliente = newId;
+                        esNuevo = true;
                     }
 
-                    db.SaveChanges();
-                    exitos++;
-                }
-                catch (Exception ex)
-                {
-                    errores++;
-                    detallesErrores.Add($"Fila {i + 1}: Error al registrar. {ex.Message}");
+                    try
+                    {
+                        int? prevVal = cli.id_usuario;
+                        if (prevVal != usr.id_usuario)
+                        {
+                            db.Execute(
+                                "sp_clientes_actualizar",
+                                new {
+                                    p_id_cliente = cli.id_cliente,
+                                    p_nombre = cli.nombre,
+                                    p_empresa = cli.empresa,
+                                    p_telefono = cli.telefono,
+                                    p_correo = cli.correo,
+                                    p_direccion = cli.direccion,
+                                    p_estado = cli.estado,
+                                    p_id_usuario = usr.id_usuario
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+
+                            db.Execute(
+                                "sp_bitacora_insertar",
+                                new {
+                                    p_accion = esNuevo ? "Importación y Asignación" : "Reasignación Masiva Archivo",
+                                    p_tabla_afectada = "clientes",
+                                    p_id_registro_afectado = cli.id_cliente,
+                                    p_valor_anterior = prevVal.HasValue ? prevVal.Value.ToString() : "NULL",
+                                    p_valor_nuevo = usr.id_usuario.ToString(),
+                                    p_direccion_ip = ipAddress,
+                                    p_id_usuario = currentUserId
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+                        }
+
+                        if (indexContactoNombre != -1 && indexContactoNombre < fila.Length && !string.IsNullOrWhiteSpace(fila[indexContactoNombre]))
+                        {
+                            string sNombre = fila[indexContactoNombre];
+                            string sCorreo = (indexContactoCorreo != -1 && indexContactoCorreo < fila.Length) ? fila[indexContactoCorreo] : null;
+                            string sTelefono = (indexContactoTelefono != -1 && indexContactoTelefono < fila.Length) ? fila[indexContactoTelefono] : null;
+                            string sPuesto = (indexContactoPuesto != -1 && indexContactoPuesto < fila.Length) ? fila[indexContactoPuesto] : null;
+
+                            db.Execute(
+                                "sp_contactos_insertar",
+                                new {
+                                    p_id_cliente = cli.id_cliente,
+                                    p_nombre = sNombre,
+                                    p_apellido = (string)null,
+                                    p_puesto = sPuesto,
+                                    p_telefono = sTelefono,
+                                    p_correo = sCorreo
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+                        }
+
+                        if (indexTarea != -1 && indexTarea < fila.Length && !string.IsNullOrWhiteSpace(fila[indexTarea]))
+                        {
+                            db.Execute(
+                                "sp_tareas_insertar",
+                                new {
+                                    p_titulo = fila[indexTarea],
+                                    p_descripcion = "Creada automáticamente mediante importación masiva.",
+                                    p_prioridad = "Media",
+                                    p_estado = "Pendiente",
+                                    p_fecha_limite = DateTime.Today.AddDays(7),
+                                    p_id_cliente = cli.id_cliente,
+                                    p_id_usuario = usr.id_usuario
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+                        }
+
+                        if (indexOportunidad != -1 && indexOportunidad < fila.Length && !string.IsNullOrWhiteSpace(fila[indexOportunidad]))
+                        {
+                            decimal valor = 0;
+                            if (indexOportunidadValor != -1 && indexOportunidadValor < fila.Length)
+                            {
+                                decimal.TryParse(fila[indexOportunidadValor], out valor);
+                            }
+                            
+                            db.Execute(
+                                "sp_oportunidades_insertar",
+                                new {
+                                    p_nombre = fila[indexOportunidad],
+                                    p_descripcion = "Creada automáticamente mediante importación masiva.",
+                                    p_etapa = "Nuevo",
+                                    p_probabilidad = (decimal)10.00,
+                                    p_valor_estimado = valor,
+                                    p_estado = "Activo",
+                                    p_id_cliente = cli.id_cliente,
+                                    p_id_usuario = usr.id_usuario
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+                        }
+
+                        exitos++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errores++;
+                        detallesErrores.Add($"Fila {i + 1}: Error al registrar. {ex.Message}");
+                    }
                 }
             }
-
-            db.SaveChanges();
 
             return Json(new
             {

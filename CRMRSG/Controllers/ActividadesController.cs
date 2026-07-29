@@ -1,15 +1,15 @@
 using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class ActividadesController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         private bool TienePermiso(string permiso)
         {
             if (Session["UsuarioId"] == null) return false;
@@ -43,76 +43,65 @@ namespace CRMRSG.Controllers
             ViewBag.FiltroActivo = filtro;
             ViewBag.EstadoActivo = estado;
 
-            // Determinar rango de fecha
             DateTime desde = DateTime.MinValue;
             if (filtro == "dia") desde = DateTime.Today;
             else if (filtro == "semana") desde = DateTime.Today.AddDays(-7);
             else if (filtro == "mes") desde = DateTime.Today.AddMonths(-1);
 
-            var query = db.citas.Include(c => c.cliente).Include(c => c.usuario).AsQueryable();
-
-            // Filtrar por rol
-            if (!isAdmin)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                query = query.Where(c => c.id_usuario == usuarioId);
-            }
+                var listado = db.Query<cita, cliente, usuario, cita>(
+                    "sp_citas_listar_con_relaciones",
+                    (c, cl, usr) => {
+                        c.cliente = cl;
+                        c.usuario = usr;
+                        return c;
+                    },
+                    splitOn: "id_cliente,id_usuario",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
 
-            // Aplicar rango de fecha
-            if (filtro != "todos")
-            {
-                query = query.Where(c => c.fecha >= desde);
-            }
-
-            // Aplicar rango de estado
-            if (estado != "todos")
-            {
-                if (estado == "Pendiente")
+                // Filtrar por rol
+                if (!isAdmin)
                 {
-                    query = query.Where(c => c.estado == "Pendiente" || c.estado == "Programada");
+                    listado = listado.Where(c => c.id_usuario == usuarioId).ToList();
                 }
-                else if (estado == "Realizada")
-                {
-                    query = query.Where(c => c.estado == "Completada" || c.estado == "Confirmada" || c.estado == "Realizada");
-                }
-                else if (estado == "Aplazada")
-                {
-                    query = query.Where(c => c.estado == "Aplazada");
-                }
-                else if (estado == "Cancelada")
-                {
-                    query = query.Where(c => c.estado == "Cancelada" || c.estado == "Suspendida");
-                }
-            }
 
-            var listaActividades = query.OrderByDescending(c => c.fecha).ThenByDescending(c => c.hora).ToList();
-            foreach (var act in listaActividades)
-            {
-                act.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM citas WHERE id_cita = " + act.id_cita).FirstOrDefault();
-                if (act.id_contacto.HasValue)
+                // Filtrar por fecha
+                if (filtro != "todos")
                 {
-                    int cid = act.id_contacto.Value;
-                    act.contacto_nombre = db.contacto_cliente.Where(co => co.id_contacto == cid).Select(co => co.nombre).FirstOrDefault();
+                    listado = listado.Where(c => c.fecha >= desde).ToList();
                 }
-            }
 
-            // Estadísticas rápidas por estado (sobre la query sin filtro de estado)
-            var statsQuery = db.citas.AsQueryable();
-            if (!isAdmin)
-            {
-                statsQuery = statsQuery.Where(c => c.id_usuario == usuarioId);
-            }
-            if (filtro != "todos")
-            {
-                statsQuery = statsQuery.Where(c => c.fecha >= desde);
-            }
-            var listForStats = statsQuery.ToList();
+                // Estadísticas rápidas antes de filtrar por estado
+                ViewBag.Pendientes = listado.Count(x => x.estado == "Pendiente" || x.estado == "Programada");
+                ViewBag.Confirmadas = listado.Count(x => x.estado == "Completada" || x.estado == "Confirmada" || x.estado == "Realizada");
+                ViewBag.Canceladas = listado.Count(x => x.estado == "Cancelada" || x.estado == "Suspendida");
+                ViewBag.Aplazadas = listado.Count(x => x.estado == "Aplazada");
 
-            ViewBag.Pendientes = listForStats.Count(x => x.estado == "Pendiente" || x.estado == "Programada");
-            ViewBag.Confirmadas = listForStats.Count(x => x.estado == "Completada" || x.estado == "Confirmada" || x.estado == "Realizada");
-            ViewBag.Canceladas = listForStats.Count(x => x.estado == "Cancelada" || x.estado == "Suspendida");
-            ViewBag.Aplazadas = listForStats.Count(x => x.estado == "Aplazada");
+                // Filtrar por estado
+                if (estado != "todos")
+                {
+                    if (estado == "Pendiente")
+                    {
+                        listado = listado.Where(c => c.estado == "Pendiente" || c.estado == "Programada").ToList();
+                    }
+                    else if (estado == "Realizada")
+                    {
+                        listado = listado.Where(c => c.estado == "Completada" || c.estado == "Confirmada" || c.estado == "Realizada").ToList();
+                    }
+                    else if (estado == "Aplazada")
+                    {
+                        listado = listado.Where(c => c.estado == "Aplazada").ToList();
+                    }
+                    else if (estado == "Cancelada")
+                    {
+                        listado = listado.Where(c => c.estado == "Cancelada" || c.estado == "Suspendida").ToList();
+                    }
+                }
 
-            return View(listaActividades);
+                return View(listado);
+            }
         }
 
         // GET: Actividades/Crear
@@ -127,20 +116,21 @@ namespace CRMRSG.Controllers
             int usuarioId = (int)Session["UsuarioId"];
             bool isAdmin = Session["RolId"] != null && (int)Session["RolId"] == 1;
 
-            // Cargar clientes
-            if (isAdmin)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                ViewBag.Clientes = db.clientes.ToList();
-                ViewBag.Oportunidades = db.oportunidades.ToList();
-            }
-            else
-            {
-                ViewBag.Clientes = db.clientes.Where(c => c.id_usuario == usuarioId).ToList();
-                ViewBag.Oportunidades = db.oportunidades.Where(o => o.id_usuario == usuarioId).ToList();
-            }
+                if (isAdmin)
+                {
+                    ViewBag.Clientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                    ViewBag.Oportunidades = db.Query<oportunidade>("sp_oportunidades_listar", commandType: CommandType.StoredProcedure).ToList();
+                }
+                else
+                {
+                    ViewBag.Clientes = db.Query<cliente>("sp_clientes_listar_por_usuario", new { p_id_usuario = usuarioId }, commandType: CommandType.StoredProcedure).ToList();
+                    ViewBag.Oportunidades = db.Query<oportunidade>("sp_oportunidades_listar", commandType: CommandType.StoredProcedure).Where(o => o.id_usuario == usuarioId).ToList();
+                }
 
-            // Cargar contactos secundarios (HU-021)
-            ViewBag.Contactos = db.contacto_cliente.ToList();
+                ViewBag.Contactos = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+            }
 
             return View();
         }
@@ -164,39 +154,43 @@ namespace CRMRSG.Controllers
 
             try
             {
-                var nuevaCita = new cita
-                {
-                    descripcion = tipo_actividad + ": " + descripcion,
-                    fecha = DateTime.Parse(fecha),
-                    hora = TimeSpan.Parse(hora),
-                    lugar = tipo_actividad, // Guardar el tipo como lugar
-                    estado = "Pendiente",
-                    id_cliente = id_cliente,
-                    id_usuario = (int)Session["UsuarioId"]
-                };
+                var desc = tipo_actividad + ": " + descripcion;
+                var dtFecha = DateTime.Parse(fecha);
+                var tsHora = TimeSpan.Parse(hora);
+                int usuarioId = (int)Session["UsuarioId"];
 
-                db.citas.Add(nuevaCita);
-                db.SaveChanges();
-
-                // HU-021: Guardar id_contacto via SQL crudo (no está en el EDMX)
-                if (id_contacto.HasValue && id_contacto.Value > 0)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    db.Database.ExecuteSqlCommand(
-                        "UPDATE citas SET id_contacto = @p0 WHERE id_cita = @p1",
-                        id_contacto.Value, nuevaCita.id_cita);
+                    var id_cita = db.QuerySingle<int>(
+                        "sp_citas_insertar",
+                        new {
+                            p_fecha = dtFecha,
+                            p_hora = tsHora,
+                            p_descripcion = desc,
+                            p_lugar = tipo_actividad,
+                            p_estado = "Pendiente",
+                            p_id_cliente = id_cliente,
+                            p_id_usuario = usuarioId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    if (id_contacto.HasValue && id_contacto.Value > 0)
+                    {
+                        db.Execute("UPDATE citas SET id_contacto = @IdContacto WHERE id_cita = @IdCita", new { IdContacto = id_contacto.Value, IdCita = id_cita });
+                    }
+
+                    db.Execute(
+                        "sp_notificaciones_insertar",
+                        new {
+                            p_mensaje = $"Nueva Actividad: Se ha registrado la actividad '{desc}' para el {dtFecha.ToString("dd/MM/yyyy")}.",
+                            p_id_usuario = usuarioId,
+                            p_tipo = "Actividad Creada",
+                            p_id_referencia = id_cita
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
                 }
-
-                var notiAct = new notificacione
-                {
-                    mensaje = $"Nueva Actividad: Se ha registrado la actividad '{nuevaCita.descripcion}' para el {nuevaCita.fecha.ToString("dd/MM/yyyy")}.",
-                    fecha = DateTime.Now,
-                    leida = false,
-                    id_usuario = nuevaCita.id_usuario ?? 1,
-                    tipo = "Actividad Creada",
-                    id_referencia = nuevaCita.id_cita
-                };
-                db.notificaciones.Add(notiAct);
-                db.SaveChanges();
 
                 TempData["Success"] = "Actividad registrada con éxito.";
                 return RedirectToAction("Index");
@@ -218,12 +212,32 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var c = db.citas.Find(id);
-            if (c != null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                c.estado = "Completada";
-                db.SaveChanges();
-                return Json(new { success = true, message = "Actividad marcada como realizada." });
+                var c = db.QueryFirstOrDefault<cita>(
+                    "sp_citas_obtener_por_id",
+                    new { p_id_cita = id },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (c != null)
+                {
+                    db.Execute(
+                        "sp_citas_actualizar",
+                        new {
+                            p_id_cita = id,
+                            p_fecha = c.fecha,
+                            p_hora = c.hora,
+                            p_descripcion = c.descripcion,
+                            p_lugar = c.lugar,
+                            p_estado = "Completada",
+                            p_id_cliente = c.id_cliente,
+                            p_id_usuario = c.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    return Json(new { success = true, message = "Actividad marcada como realizada." });
+                }
             }
             return Json(new { success = false, message = "Actividad no encontrada." });
         }
@@ -238,20 +252,44 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var c = db.citas.Find(id);
-            if (c != null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                c.estado = "Aplazada";
-                if (!string.IsNullOrWhiteSpace(razon))
+                var c = db.QueryFirstOrDefault<cita>(
+                    "sp_citas_obtener_por_id",
+                    new { p_id_cita = id },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (c != null)
                 {
-                    c.descripcion = (c.descripcion ?? "") + $" [Aplazada: {razon}]";
+                    string desc = c.descripcion;
+                    if (!string.IsNullOrWhiteSpace(razon))
+                    {
+                        desc = (c.descripcion ?? "") + $" [Aplazada: {razon}]";
+                    }
+
+                    DateTime fVal = c.fecha;
+                    if (!string.IsNullOrWhiteSpace(nuevaFecha))
+                    {
+                        fVal = DateTime.Parse(nuevaFecha);
+                    }
+
+                    db.Execute(
+                        "sp_citas_actualizar",
+                        new {
+                            p_id_cita = id,
+                            p_fecha = fVal,
+                            p_hora = c.hora,
+                            p_descripcion = desc,
+                            p_lugar = c.lugar,
+                            p_estado = "Aplazada",
+                            p_id_cliente = c.id_cliente,
+                            p_id_usuario = c.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    return Json(new { success = true, message = "Actividad aplazada correctamente." });
                 }
-                if (!string.IsNullOrWhiteSpace(nuevaFecha))
-                {
-                    c.fecha = DateTime.Parse(nuevaFecha);
-                }
-                db.SaveChanges();
-                return Json(new { success = true, message = "Actividad aplazada correctamente." });
             }
             return Json(new { success = false, message = "Actividad no encontrada." });
         }
@@ -266,23 +304,34 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var c = db.citas.Find(id);
-            if (c != null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                c.estado = "Cancelada";
-                db.SaveChanges();
-                return Json(new { success = true, message = "Actividad marcada como cancelada." });
+                var c = db.QueryFirstOrDefault<cita>(
+                    "sp_citas_obtener_por_id",
+                    new { p_id_cita = id },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (c != null)
+                {
+                    db.Execute(
+                        "sp_citas_actualizar",
+                        new {
+                            p_id_cita = id,
+                            p_fecha = c.fecha,
+                            p_hora = c.hora,
+                            p_descripcion = c.descripcion,
+                            p_lugar = c.lugar,
+                            p_estado = "Cancelada",
+                            p_id_cliente = c.id_cliente,
+                            p_id_usuario = c.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    return Json(new { success = true, message = "Actividad marcada como cancelada." });
+                }
             }
             return Json(new { success = false, message = "Actividad no encontrada." });
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

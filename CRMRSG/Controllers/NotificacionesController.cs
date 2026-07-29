@@ -3,19 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class NotificacionesController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         public ActionResult Index()
         {
-            
             if (Session["UsuarioId"] == null)
             {
-                
                 return RedirectToAction("Login", "Autenticacion");
             }
             return View();
@@ -24,34 +23,39 @@ namespace CRMRSG.Controllers
         private void VerificarYGenerarAlertasCitas()
         {
             DateTime limiteAlerta = DateTime.Today.AddDays(1);
-            var citasProximas = db.citas
-                .Where(c => c.estado != "Completada" 
-                         && c.estado != "Realizada" 
-                         && c.estado != "Cancelada"
-                         && c.fecha <= limiteAlerta)
-                .ToList();
 
-            bool huboCambios = false;
-            foreach (var cita in citasProximas)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                bool exists = db.notificaciones.Any(n => n.tipo == "Alerta de Cita" && n.id_referencia == cita.id_cita);
-                if (!exists)
+                var citasProximas = db.Query<cita>(
+                    "sp_citas_listar_proximas_alertas",
+                    new { p_limite = limiteAlerta },
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                foreach (var cita in citasProximas)
                 {
-                    string msg = $"Cita/Evento comercial programado: '{cita.descripcion}' el {cita.fecha.ToString("dd/MM/yyyy")} a las {cita.hora.ToString(@"hh\:mm")}. Lugar: {cita.lugar}";
-                    var noti = new notificacione
+                    int existsCount = db.QuerySingle<int>(
+                        "sp_notificaciones_existe_alerta",
+                        new { p_id_referencia = cita.id_cita, p_tipo = "Alerta de Cita" },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    if (existsCount == 0)
                     {
-                        mensaje = msg,
-                        fecha = DateTime.Now,
-                        leida = false,
-                        id_usuario = cita.id_usuario ?? 1,
-                        tipo = "Alerta de Cita",
-                        id_referencia = cita.id_cita
-                    };
-                    db.notificaciones.Add(noti);
-                    huboCambios = true;
+                        string msg = $"Cita/Evento comercial programado: '{cita.descripcion}' el {cita.fecha.ToString("dd/MM/yyyy")} a las {cita.hora.ToString(@"hh\:mm")}. Lugar: {cita.lugar}";
+                        db.Execute(
+                            "sp_notificaciones_insertar",
+                            new {
+                                p_mensaje = msg,
+                                p_id_usuario = cita.id_usuario ?? 1,
+                                p_tipo = "Alerta de Cita",
+                                p_id_referencia = cita.id_cita
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
                 }
             }
-            if (huboCambios) db.SaveChanges();
         }
 
         [HttpGet]
@@ -65,19 +69,21 @@ namespace CRMRSG.Controllers
                 VerificarYGenerarAlertasCitas();
 
                 int usuarioId = (int)Session["UsuarioId"];
-                var notificacionesCrudas = db.notificaciones
-                    .Where(n => n.id_usuario == usuarioId)
-                    .OrderByDescending(n => n.fecha)
-                    .ToList();
+                using (var db = DbConnectionFactory.GetConnection())
+                {
+                    var listado = db.Query<notificacione>(
+                        "sp_notificaciones_listar_por_usuario",
+                        new { p_id_usuario = usuarioId },
+                        commandType: CommandType.StoredProcedure
+                    ).Select(n => new {
+                        id_notificacion = n.id_notificacion,
+                        mensaje = n.mensaje,
+                        leida = n.leida ?? false,
+                        FechaRegistro = n.fecha.HasValue ? n.fecha.Value.ToString("dd/MM/yyyy hh:mm tt") : ""
+                    }).ToList();
 
-                var listado = notificacionesCrudas.Select(n => new {
-                    n.id_notificacion,
-                    n.mensaje,
-                    leida = n.leida ?? false,
-                    FechaRegistro = n.fecha.HasValue ? n.fecha.Value.ToString("dd/MM/yyyy hh:mm tt") : ""
-                }).ToList();
-
-                return Json(new { success = true, datos = listado }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = true, datos = listado }, JsonRequestBehavior.AllowGet);
+                }
             }
             catch (Exception ex)
             {
@@ -90,14 +96,15 @@ namespace CRMRSG.Controllers
         {
             try
             {
-                var noti = db.notificaciones.FirstOrDefault(n => n.id_notificacion == id);
-                if (noti != null)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    noti.leida = true;
-                    db.SaveChanges();
+                    db.Execute(
+                        "sp_notificaciones_marcar_leida",
+                        new { p_id_notificacion = id },
+                        commandType: CommandType.StoredProcedure
+                    );
                     return Json(new { success = true });
                 }
-                return Json(new { success = false, mensaje = "Notificación no encontrada" });
             }
             catch (Exception ex)
             {
@@ -113,15 +120,13 @@ namespace CRMRSG.Controllers
                 if (Session["UsuarioId"] == null)
                     return Json(new { success = false, mensaje = "Sesión no válida" });
 
-                var unreadNotifications = db.notificaciones.Where(n => n.leida == false || n.leida == null).ToList();
-
-                if (unreadNotifications.Any())
+                int usuarioId = (int)Session["UsuarioId"];
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    foreach (var noti in unreadNotifications)
-                    {
-                        noti.leida = true;
-                    }
-                    db.SaveChanges();
+                    db.Execute(
+                        "UPDATE notificaciones SET leida = 1 WHERE id_usuario = @IdUsuario AND (leida = 0 OR leida IS NULL)",
+                        new { IdUsuario = usuarioId }
+                    );
                 }
 
                 return Json(new { success = true });
@@ -130,12 +135,6 @@ namespace CRMRSG.Controllers
             {
                 return Json(new { success = false, error = ex.Message });
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) { db.Dispose(); }
-            base.Dispose(disposing);
         }
     }
 }

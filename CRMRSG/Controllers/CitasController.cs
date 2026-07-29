@@ -1,8 +1,10 @@
 using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
@@ -11,9 +13,18 @@ namespace CRMRSG.Controllers
         // GET: Citas
         public ActionResult Index()
         {
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                var citas = db.citas.Include(c => c.cliente).ToList();
+                var citas = db.Query<cita, cliente, cita>(
+                    "sp_citas_listar_con_cliente",
+                    (c, cl) => {
+                        c.cliente = cl;
+                        return c;
+                    },
+                    splitOn: "id_cliente",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
                 return View(citas);
             }
         }
@@ -23,17 +34,23 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Agendar(int id_cliente, string asunto, DateTime fecha_cita)
         {
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            int? currentUserId = Session["UsuarioId"] != null ? (int?)Session["UsuarioId"] : null;
+
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                var nuevaCita = new cita
-                {
-                    id_cliente = id_cliente,
-                    descripcion = asunto,
-                    fecha = fecha_cita.Date,
-                    hora = fecha_cita.TimeOfDay
-                };
-                db.citas.Add(nuevaCita);
-                db.SaveChanges();
+                db.Execute(
+                    "sp_citas_insertar",
+                    new {
+                        p_fecha = fecha_cita.Date,
+                        p_hora = fecha_cita.TimeOfDay,
+                        p_descripcion = asunto,
+                        p_lugar = "Virtual",
+                        p_estado = "Programada",
+                        p_id_cliente = id_cliente,
+                        p_id_usuario = currentUserId
+                    },
+                    commandType: CommandType.StoredProcedure
+                );
             }
             return RedirectToAction("Index");
         }

@@ -2,6 +2,9 @@ using System;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
@@ -20,18 +23,19 @@ namespace CRMRSG.Controllers
 
             try
             {
-                using (CRM_RSGEntities db = new CRM_RSGEntities())
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    var nuevaNota = new nota_cliente
-                    {
-                        id_cliente = id_cliente,
-                        comentario = comentario,
-                        fecha_creacion = DateTime.Now,
-                        id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1
-                    };
+                    int idUsuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
 
-                    db.nota_cliente.Add(nuevaNota);
-                    db.SaveChanges();
+                    db.Execute(
+                        "sp_notas_insertar",
+                        new {
+                            p_id_cliente = id_cliente,
+                            p_comentario = comentario,
+                            p_id_usuario = idUsuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
 
                     TempData["ExitoNota"] = "Nota registrada correctamente.";
                 }

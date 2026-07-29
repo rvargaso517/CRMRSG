@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
 using System.Web.Mvc;
-using System.Data.Entity;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class TareasController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         private bool TienePermiso(string permiso)
         {
             if (Session["UsuarioId"] == null) return false;
@@ -19,7 +19,6 @@ namespace CRMRSG.Controllers
             return perms.Split(',').Contains(permiso) || perms.Split(',').Contains("Admin:Acceso");
         }
 
-        // GET: Tareas
         // GET: Tareas
         public ActionResult Index(int? usuarioId, string filtroFecha)
         {
@@ -32,11 +31,7 @@ namespace CRMRSG.Controllers
             int currentUserId = (int)Session["UsuarioId"];
             bool isAdmin = Session["RolId"] != null && (int)Session["RolId"] == 1;
 
-            // ==========================================
-            // NUEVO: HU-019 Ejecutar el chequeo automático de alertas
-            // ==========================================
             VerificarYGenerarAlertas(currentUserId, isAdmin);
-            // ==========================================
 
             if (string.IsNullOrEmpty(filtroFecha))
             {
@@ -44,159 +39,170 @@ namespace CRMRSG.Controllers
             }
             ViewBag.FiltroFechaActivo = filtroFecha;
 
-            var query = db.tareas.AsQueryable();
-
-            if (isAdmin)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                if (usuarioId.HasValue)
+                var listado = db.Query<tarea, usuario, cliente, tarea>(
+                    "sp_tareas_listar_con_contacto",
+                    (t, u, c) => {
+                        t.usuario = u;
+                        t.cliente = c;
+                        return t;
+                    },
+                    splitOn: "id_usuario,id_cliente",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                // Filtrar por rol y usuario
+                if (isAdmin)
                 {
-                    query = query.Where(t => t.id_usuario == usuarioId.Value);
+                    if (usuarioId.HasValue)
+                    {
+                        listado = listado.Where(t => t.id_usuario == usuarioId.Value).ToList();
+                    }
+                    ViewBag.Usuarios = db.Query<usuario>(
+                        "sp_usuarios_listar",
+                        commandType: CommandType.StoredProcedure
+                    ).ToList();
                 }
-                ViewBag.Usuarios = db.usuarios.ToList();
-            }
-            else
-            {
-                query = query.Where(t => t.id_usuario == currentUserId);
-                ViewBag.Usuarios = db.usuarios.Where(u => u.id_usuario == currentUserId).ToList();
-                usuarioId = currentUserId;
-            }
-
-            // Filtrar por fecha_limite
-            DateTime today = DateTime.Today;
-            if (filtroFecha == "hoy")
-            {
-                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) == today);
-            }
-            else if (filtroFecha == "manana")
-            {
-                DateTime tomorrow = today.AddDays(1);
-                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) == tomorrow);
-            }
-            else if (filtroFecha == "semana")
-            {
-                DateTime endOfWeek = today.AddDays(7);
-                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) >= today && DbFunctions.TruncateTime(t.fecha_limite.Value) <= endOfWeek);
-            }
-            else if (filtroFecha == "mes")
-            {
-                DateTime endOfMonth = today.AddMonths(1);
-                query = query.Where(t => t.fecha_limite.HasValue && DbFunctions.TruncateTime(t.fecha_limite.Value) >= today && DbFunctions.TruncateTime(t.fecha_limite.Value) <= endOfMonth);
-            }
-
-            var tareas = query.OrderByDescending(t => t.id_tarea).ToList();
-            foreach (var t in tareas)
-            {
-                t.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM tareas WHERE id_tarea = " + t.id_tarea).FirstOrDefault();
-                if (t.id_contacto.HasValue)
+                else
                 {
-                    int cid = t.id_contacto.Value;
-                    t.contacto_nombre = db.contacto_cliente.Where(c => c.id_contacto == cid).Select(c => c.nombre).FirstOrDefault();
+                    listado = listado.Where(t => t.id_usuario == currentUserId).ToList();
+                    ViewBag.Usuarios = db.Query<usuario>(
+                        "sp_usuarios_obtener_por_id",
+                        new { p_id_usuario = currentUserId },
+                        commandType: CommandType.StoredProcedure
+                    ).ToList();
+                    usuarioId = currentUserId;
                 }
-            }
-            ViewBag.SelectedUsuarioId = usuarioId;
 
-            // 1. Tareas por Usuario (Pie Chart)
-            if (usuarioId.HasValue || !isAdmin)
-            {
-                var userStats = query
+                // Filtrar por fecha
+                DateTime today = DateTime.Today;
+                if (filtroFecha == "hoy")
+                {
+                    listado = listado.Where(t => t.fecha_limite.HasValue && t.fecha_limite.Value.Date == today).ToList();
+                }
+                else if (filtroFecha == "manana")
+                {
+                    DateTime tomorrow = today.AddDays(1);
+                    listado = listado.Where(t => t.fecha_limite.HasValue && t.fecha_limite.Value.Date == tomorrow).ToList();
+                }
+                else if (filtroFecha == "semana")
+                {
+                    DateTime endOfWeek = today.AddDays(7);
+                    listado = listado.Where(t => t.fecha_limite.HasValue && t.fecha_limite.Value.Date >= today && t.fecha_limite.Value.Date <= endOfWeek).ToList();
+                }
+                else if (filtroFecha == "mes")
+                {
+                    DateTime endOfMonth = today.AddMonths(1);
+                    listado = listado.Where(t => t.fecha_limite.HasValue && t.fecha_limite.Value.Date >= today && t.fecha_limite.Value.Date <= endOfMonth).ToList();
+                }
+
+                ViewBag.SelectedUsuarioId = usuarioId;
+
+                // 1. Tareas por Usuario (Pie Chart)
+                if (usuarioId.HasValue || !isAdmin)
+                {
+                    var userStats = listado
+                        .GroupBy(t => t.estado ?? "Pendiente")
+                        .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                        .ToList();
+                    ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
+                    ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
+                    ViewBag.UserChartTitle = "Mi Progreso de Tareas";
+                }
+                else
+                {
+                    // Cargar usuario completo para los nombres en el gráfico
+                    var usuariosMap = db.Query<usuario>("sp_usuarios_listar", commandType: CommandType.StoredProcedure)
+                                        .ToDictionary(u => u.id_usuario, u => $"{u.nombre} {u.apellido}");
+
+                    var userStats = listado
+                        .GroupBy(t => t.id_usuario.HasValue && usuariosMap.ContainsKey(t.id_usuario.Value) ? usuariosMap[t.id_usuario.Value] : "Sin asignar")
+                        .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                        .ToList();
+                    ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
+                    ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
+                    ViewBag.UserChartTitle = "Carga por Usuario";
+                }
+
+                // 2. Tareas por Estado / Categoría (Donut Chart)
+                var catStats = listado
                     .GroupBy(t => t.estado ?? "Pendiente")
-                    .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                    .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
                     .ToList();
-                ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
-                ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
-                ViewBag.UserChartTitle = "Mi Progreso de Tareas";
-            }
-            else
-            {
-                var userStats = query
-                    .GroupBy(t => t.usuario != null ? t.usuario.nombre + " " + t.usuario.apellido : "Sin asignar")
-                    .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                ViewBag.CategoryLabels = catStats.Select(x => x.Estado).ToArray();
+                ViewBag.CategoryValues = catStats.Select(x => x.Cantidad).ToArray();
+
+                // 3. Tareas por Prioridad (Bar Chart)
+                var prioStats = listado
+                    .GroupBy(t => t.prioridad ?? "Media")
+                    .Select(g => new { Prioridad = g.Key, Cantidad = g.Count() })
                     .ToList();
-                ViewBag.UserLabels = userStats.Select(x => x.Nombre).ToArray();
-                ViewBag.UserValues = userStats.Select(x => x.Cantidad).ToArray();
-                ViewBag.UserChartTitle = "Carga por Usuario";
+                ViewBag.PriorityLabels = prioStats.Select(x => x.Prioridad).ToArray();
+                ViewBag.PriorityValues = prioStats.Select(x => x.Cantidad).ToArray();
+
+                return View(listado);
             }
-
-            // 2. Tareas por Estado / Categoría (Donut Chart)
-            var catStats = query
-                .GroupBy(t => t.estado ?? "Pendiente")
-                .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
-                .ToList();
-            ViewBag.CategoryLabels = catStats.Select(x => x.Estado).ToArray();
-            ViewBag.CategoryValues = catStats.Select(x => x.Cantidad).ToArray();
-
-            // 3. Tareas por Prioridad (Bar Chart)
-            var prioStats = query
-                .GroupBy(t => t.prioridad ?? "Media")
-                .Select(g => new { Prioridad = g.Key, Cantidad = g.Count() })
-                .ToList();
-            ViewBag.PriorityLabels = prioStats.Select(x => x.Prioridad).ToArray();
-            ViewBag.PriorityValues = prioStats.Select(x => x.Cantidad).ToArray();
-
-            return View(tareas);
         }
 
-       
         private void VerificarYGenerarAlertas(int currentUserId, bool isAdmin)
         {
-            DateTime limiteAlerta = DateTime.Today.AddDays(2); // Alertas si vencen en 2 días o menos
+            DateTime limiteAlerta = DateTime.Today.AddDays(2);
             DateTime hoy = DateTime.Today;
 
-           
-            var tareasProximas = db.tareas
-                .Where(t => t.estado != "Completada"
-                         && t.fecha_limite.HasValue
-                         && t.fecha_limite.Value <= limiteAlerta
-                         
-                         && (isAdmin || t.id_usuario == currentUserId))
-                .ToList();
-
-           
-
-            bool huboCambios = false;
-
-            foreach (var tarea in tareasProximas)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                
-                if (tarea.alerta_disparada == null || tarea.alerta_disparada == false)
+                var listado = db.Query<tarea>(
+                    "sp_tareas_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                var tareasProximas = listado
+                    .Where(t => t.estado != "Completada"
+                             && t.fecha_limite.HasValue
+                             && t.fecha_limite.Value.Date <= limiteAlerta
+                             && (isAdmin || t.id_usuario == currentUserId))
+                    .ToList();
+
+                foreach (var tarea in tareasProximas)
                 {
-                    string diasRestantesMsg = "";
-                    if (tarea.fecha_limite.Value < hoy)
+                    if (tarea.alerta_disparada == null || tarea.alerta_disparada == false)
                     {
-                        diasRestantesMsg = "¡Está VENCIDA desde el " + tarea.fecha_limite.Value.ToString("dd/MM/yyyy") + "!";
-                    }
-                    else if (tarea.fecha_limite.Value == hoy)
-                    {
-                        diasRestantesMsg = "Vence HOY.";
-                    }
-                    else
-                    {
-                        int dias = (tarea.fecha_limite.Value - hoy).Days;
-                        diasRestantesMsg = $"Vence en {dias} días ({tarea.fecha_limite.Value.ToString("dd/MM/yyyy")}).";
-                    }
+                        string diasRestantesMsg = "";
+                        if (tarea.fecha_limite.Value.Date < hoy)
+                        {
+                            diasRestantesMsg = "¡Está VENCIDA desde el " + tarea.fecha_limite.Value.ToString("dd/MM/yyyy") + "!";
+                        }
+                        else if (tarea.fecha_limite.Value.Date == hoy)
+                        {
+                            diasRestantesMsg = "Vence HOY.";
+                        }
+                        else
+                        {
+                            int dias = (tarea.fecha_limite.Value.Date - hoy).Days;
+                            diasRestantesMsg = $"Vence en {dias} días ({tarea.fecha_limite.Value.ToString("dd/MM/yyyy")}).";
+                        }
 
-                    
-                    var nuevaNotificacion = new notificacione
-                    {
-                        mensaje = $"Alerta de Seguimiento: La tarea '{tarea.titulo}' requiere atención. {diasRestantesMsg}",
-                        fecha = DateTime.Now,
-                        leida = false,
-                        id_usuario = tarea.id_usuario,
-                        tipo = "Alerta de Seguimiento",
-                        id_referencia = tarea.id_tarea
-                    };
+                        // Insertar notificación
+                        db.Execute(
+                            "sp_notificaciones_insertar",
+                            new {
+                                p_mensaje = $"Alerta de Seguimiento: La tarea '{tarea.titulo}' requiere atención. {diasRestantesMsg}",
+                                p_id_usuario = tarea.id_usuario,
+                                p_tipo = "Alerta de Seguimiento",
+                                p_id_referencia = tarea.id_tarea
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
 
-                    db.notificaciones.Add(nuevaNotificacion);
-
-                    
-                    tarea.alerta_disparada = true;
-                    huboCambios = true;
+                        // Actualizar tarea alerta_disparada
+                        db.Execute(
+                            "sp_tareas_actualizar_alerta",
+                            new { p_id_tarea = tarea.id_tarea, p_alerta = 1 },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
                 }
-            }
-
-            if (huboCambios)
-            {
-                db.SaveChanges();
             }
         }
 
@@ -208,9 +214,15 @@ namespace CRMRSG.Controllers
                 TempData["Error"] = "No tiene permisos para crear Tareas.";
                 return RedirectToAction("Index");
             }
-            ViewBag.Clientes = db.clientes.ToList();
-            ViewBag.Responsables = db.usuarios.ToList();
-            ViewBag.Contactos = db.contacto_cliente.ToList();
+
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Clientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                ViewBag.Responsables = db.Query<usuario>("sp_usuarios_listar", commandType: CommandType.StoredProcedure).ToList();
+                
+                // Contactos secundarios
+                ViewBag.Contactos = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+            }
             return View();
         }
 
@@ -233,37 +245,52 @@ namespace CRMRSG.Controllers
                     nuevaTarea.id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
                 }
 
-                db.tareas.Add(nuevaTarea);
-                db.SaveChanges();
-
-                // Guardar id_contacto usando SQL crudo ya que no está mapeado en el EDMX
-                if (nuevaTarea.id_contacto.HasValue && nuevaTarea.id_contacto.Value > 0)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    db.Database.ExecuteSqlCommand("UPDATE tareas SET id_contacto = @p0 WHERE id_tarea = @p1", nuevaTarea.id_contacto.Value, nuevaTarea.id_tarea);
-                }
+                    var id_tarea = db.QuerySingle<int>(
+                        "sp_tareas_insertar",
+                        new {
+                            p_titulo = nuevaTarea.titulo,
+                            p_descripcion = nuevaTarea.descripcion,
+                            p_prioridad = nuevaTarea.prioridad,
+                            p_estado = nuevaTarea.estado,
+                            p_fecha_limite = nuevaTarea.fecha_limite,
+                            p_id_cliente = nuevaTarea.id_cliente,
+                            p_id_usuario = nuevaTarea.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    nuevaTarea.id_tarea = id_tarea;
 
-                // HU-030: Automatización - Notificar al usuario asignado
-                if (nuevaTarea.id_usuario.HasValue)
-                {
-                    var noti = new notificacione
+                    if (nuevaTarea.id_contacto.HasValue && nuevaTarea.id_contacto.Value > 0)
                     {
-                        mensaje = $"Nueva Tarea: Se te ha asignado la tarea '{nuevaTarea.titulo}' con fecha límite {(nuevaTarea.fecha_limite.HasValue ? nuevaTarea.fecha_limite.Value.ToString("dd/MM/yyyy") : "Sin definir")}.",
-                        fecha = DateTime.Now,
-                        leida = false,
-                        id_usuario = nuevaTarea.id_usuario.Value,
-                        tipo = "Tarea Creada",
-                        id_referencia = nuevaTarea.id_tarea
-                    };
-                    db.notificaciones.Add(noti);
-                    db.SaveChanges();
+                        db.Execute("UPDATE tareas SET id_contacto = @IdContacto WHERE id_tarea = @IdTarea", new { IdContacto = nuevaTarea.id_contacto.Value, IdTarea = nuevaTarea.id_tarea });
+                    }
+
+                    if (nuevaTarea.id_usuario.HasValue)
+                    {
+                        db.Execute(
+                            "sp_notificaciones_insertar",
+                            new {
+                                p_mensaje = $"Nueva Tarea: Se te ha asignado la tarea '{nuevaTarea.titulo}' con fecha límite {(nuevaTarea.fecha_limite.HasValue ? nuevaTarea.fecha_limite.Value.ToString("dd/MM/yyyy") : "Sin definir")}.",
+                                p_id_usuario = nuevaTarea.id_usuario.Value,
+                                p_tipo = "Tarea Creada",
+                                p_id_referencia = nuevaTarea.id_tarea
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
                 }
 
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Clientes = db.clientes.ToList();
-            ViewBag.Responsables = db.usuarios.ToList();
-            ViewBag.Contactos = db.contacto_cliente.ToList();
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Clientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                ViewBag.Responsables = db.Query<usuario>("sp_usuarios_listar", commandType: CommandType.StoredProcedure).ToList();
+                ViewBag.Contactos = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+            }
             return View(nuevaTarea);
         }
 
@@ -276,9 +303,12 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            ViewBag.Alta = db.tareas.Count(x => x.prioridad == "Alta");
-            ViewBag.Media = db.tareas.Count(x => x.prioridad == "Media");
-            ViewBag.Baja = db.tareas.Count(x => x.prioridad == "Baja");
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Alta = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE prioridad = 'Alta'");
+                ViewBag.Media = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE prioridad = 'Media'");
+                ViewBag.Baja = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE prioridad = 'Baja'");
+            }
 
             return View();
         }
@@ -292,9 +322,12 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            ViewBag.Pendientes = db.tareas.Count(x => x.estado == "Pendiente");
-            ViewBag.EnProceso = db.tareas.Count(x => x.estado == "En Proceso");
-            ViewBag.Completadas = db.tareas.Count(x => x.estado == "Completada");
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Pendientes = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE estado = 'Pendiente'");
+                ViewBag.EnProceso = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE estado = 'En Proceso'");
+                ViewBag.Completadas = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE estado = 'Completada'");
+            }
 
             return View();
         }
@@ -309,12 +342,32 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var t = db.tareas.Find(id);
-            if (t != null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                t.estado = "Completada";
-                db.SaveChanges();
-                return Json(new { success = true, message = "Tarea marcada como completada." });
+                var t = db.QueryFirstOrDefault<tarea>(
+                    "sp_tareas_obtener_por_id",
+                    new { p_id_tarea = id },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (t != null)
+                {
+                    db.Execute(
+                        "sp_tareas_actualizar",
+                        new {
+                            p_id_tarea = id,
+                            p_titulo = t.titulo,
+                            p_descripcion = t.descripcion,
+                            p_prioridad = t.prioridad,
+                            p_estado = "Completada",
+                            p_fecha_limite = t.fecha_limite,
+                            p_id_cliente = t.id_cliente,
+                            p_id_usuario = t.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    return Json(new { success = true, message = "Tarea marcada como completada." });
+                }
             }
             return Json(new { success = false, message = "Tarea no encontrada." });
         }
@@ -329,31 +382,46 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var t = db.tareas.Find(id);
-            if (t != null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                t.estado = "Aplazada";
-                if (!string.IsNullOrWhiteSpace(razon))
+                var t = db.QueryFirstOrDefault<tarea>(
+                    "sp_tareas_obtener_por_id",
+                    new { p_id_tarea = id },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (t != null)
                 {
-                    t.descripcion = (t.descripcion ?? "") + $" [Aplazada: {razon}]";
+                    string desc = t.descripcion;
+                    if (!string.IsNullOrWhiteSpace(razon))
+                    {
+                        desc = (t.descripcion ?? "") + $" [Aplazada: {razon}]";
+                    }
+
+                    DateTime? fLim = t.fecha_limite;
+                    if (!string.IsNullOrWhiteSpace(nuevaFecha))
+                    {
+                        fLim = DateTime.Parse(nuevaFecha);
+                    }
+
+                    db.Execute(
+                        "sp_tareas_actualizar",
+                        new {
+                            p_id_tarea = id,
+                            p_titulo = t.titulo,
+                            p_descripcion = desc,
+                            p_prioridad = t.prioridad,
+                            p_estado = "Aplazada",
+                            p_fecha_limite = fLim,
+                            p_id_cliente = t.id_cliente,
+                            p_id_usuario = t.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    return Json(new { success = true, message = "Tarea aplazada correctamente." });
                 }
-                if (!string.IsNullOrWhiteSpace(nuevaFecha))
-                {
-                    t.fecha_limite = DateTime.Parse(nuevaFecha);
-                }
-                db.SaveChanges();
-                return Json(new { success = true, message = "Tarea aplazada correctamente." });
             }
             return Json(new { success = false, message = "Tarea no encontrada." });
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

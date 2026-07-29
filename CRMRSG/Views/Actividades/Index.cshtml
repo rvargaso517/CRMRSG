@@ -266,7 +266,7 @@
                                     // Remover los botones de acción
                                     $btn.closest('.text-end').remove();
 
-                                    Swal.fire('¡Realizada!', res.message, 'success');
+                                    Swal.fire('¡Realizada!', res.message, 'success').then(() => { location.reload(); });
                                 } else {
                                     Swal.fire('Error', res.message, 'error');
                                 }
@@ -323,7 +323,7 @@
                             $('#posponer-act-fecha').val('');
                             $('#posponer-act-razon').val('');
 
-                            Swal.fire('¡Aplazada!', res.message, 'success');
+                             Swal.fire('¡Aplazada!', res.message, 'success').then(() => { location.reload(); });
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }
@@ -370,7 +370,7 @@
                                     // Remover los botones de acción
                                     $btn.closest('.text-end').remove();
 
-                                    Swal.fire('¡Cancelada!', res.message, 'success');
+                                    Swal.fire('¡Cancelada!', res.message, 'success').then(() => { location.reload(); });
                                 } else {
                                     Swal.fire('Error', res.message, 'error');
                                 }

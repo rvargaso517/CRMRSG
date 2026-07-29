@@ -3,6 +3,9 @@ using System;
 using System.Linq;
 using System.Web.Mvc;
 using System.Web.Security;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
@@ -11,12 +14,16 @@ namespace CRMRSG.Controllers
         // GET: Roles
         public ActionResult Index()
         {
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                var roles = db.roles.ToList();
+                var roles = db.Query<role>(
+                    "sp_roles_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
                 return View(roles);
             }
         }
+
         // POST: Roles/Crear
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -24,22 +31,31 @@ namespace CRMRSG.Controllers
         {
             if (string.IsNullOrEmpty(nombre_rol)) return RedirectToAction("Index");
 
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            string nombreTrimmed = nombre_rol.Trim();
+            string nombreLower = nombreTrimmed.ToLower();
+
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                string nombreTrimmed = nombre_rol.Trim();
-                string nombreLower = nombreTrimmed.ToLower();
-                if (db.roles.Any(r => r.nombre.ToLower() == nombreLower))
+                var roles = db.Query<role>(
+                    "sp_roles_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                if (roles.Any(r => r.nombre.ToLower() == nombreLower))
                 {
                     TempData["Error"] = "El rol '" + nombreTrimmed + "' ya existe.";
                     return RedirectToAction("Index");
                 }
 
                 string desc = permisos != null ? string.Join(",", permisos) : "Sin permisos";
-                var nuevoRol = new role { nombre = nombreTrimmed, descripcion = desc };
-                db.roles.Add(nuevoRol);
+
                 try
                 {
-                    db.SaveChanges();
+                    db.Execute(
+                        "sp_roles_insertar",
+                        new { p_nombre = nombreTrimmed, p_descripcion = desc },
+                        commandType: CommandType.StoredProcedure
+                    );
                     TempData["Success"] = "Rol creado con éxito.";
                 }
                 catch (Exception ex)
@@ -57,17 +73,28 @@ namespace CRMRSG.Controllers
         {
             if (string.IsNullOrEmpty(nombre_rol)) return RedirectToAction("Index");
 
-            using (CRM_RSGEntities db = new CRM_RSGEntities())
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                var rol = db.roles.Find(id_rol);
+                var rol = db.QueryFirstOrDefault<role>(
+                    "sp_roles_obtener_por_id",
+                    new { p_id_rol = id_rol },
+                    commandType: CommandType.StoredProcedure
+                );
+
                 if (rol != null)
                 {
+                    string nuevoNombre = rol.nombre;
                     if (rol.id_rol != 1) // Evitar renombrar el Administrador del sistema
                     {
-                        rol.nombre = nombre_rol.Trim();
+                        nuevoNombre = nombre_rol.Trim();
                     }
-                    rol.descripcion = permisos != null ? string.Join(",", permisos) : "Sin permisos";
-                    db.SaveChanges();
+                    string desc = permisos != null ? string.Join(",", permisos) : "Sin permisos";
+
+                    db.Execute(
+                        "sp_roles_actualizar",
+                        new { p_id_rol = id_rol, p_nombre = nuevoNombre, p_descripcion = desc },
+                        commandType: CommandType.StoredProcedure
+                    );
                     TempData["Success"] = "Rol actualizado con éxito.";
                 }
                 else

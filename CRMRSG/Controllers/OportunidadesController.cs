@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class OportunidadesController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         private bool TienePermiso(string permiso)
         {
             if (Session["UsuarioId"] == null) return false;
@@ -32,16 +32,26 @@ namespace CRMRSG.Controllers
             int usuarioId = (int)Session["UsuarioId"];
             int rolId = (int)Session["RolId"];
 
-            List<oportunidade> lista;
-            if (rolId == 1) // Admin
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                lista = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).OrderByDescending(o => o.id_oportunidad).ToList();
+                var lista = db.Query<oportunidade, cliente, usuario, oportunidade>(
+                    "sp_oportunidades_listar_con_relaciones",
+                    (op, cl, usr) => {
+                        op.cliente = cl;
+                        op.usuario = usr;
+                        return op;
+                    },
+                    splitOn: "id_cliente,id_usuario",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                if (rolId != 1) // Si no es admin, filtrar por usuario
+                {
+                    lista = lista.Where(o => o.id_usuario == usuarioId).ToList();
+                }
+
+                return View(lista);
             }
-            else
-            {
-                lista = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).Where(o => o.id_usuario == usuarioId).OrderByDescending(o => o.id_oportunidad).ToList();
-            }
-            return View(lista);
         }
 
         // GET: Oportunidades/Crear
@@ -52,7 +62,14 @@ namespace CRMRSG.Controllers
                 TempData["Error"] = "No tiene permisos para crear Oportunidades.";
                 return RedirectToAction("Index");
             }
-            ViewBag.Clientes = db.clientes.ToList();
+
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Clientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+            }
             return View();
         }
 
@@ -82,25 +99,46 @@ namespace CRMRSG.Controllers
 
                 op.probabilidad = GetProbabilidadPorEtapa(op.etapa);
 
-                db.oportunidades.Add(op);
-                db.SaveChanges();
-
-                var notiOp = new notificacione
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    mensaje = $"Nueva Oportunidad: Se ha creado la oportunidad '{op.nombre}' con probabilidad del {op.probabilidad}%.",
-                    fecha = DateTime.Now,
-                    leida = false,
-                    id_usuario = op.id_usuario ?? 1,
-                    tipo = "Oportunidad Creada",
-                    id_referencia = op.id_oportunidad
-                };
-                db.notificaciones.Add(notiOp);
-                db.SaveChanges();
+                    var id_op = db.QuerySingle<int>(
+                        "sp_oportunidades_insertar",
+                        new {
+                            p_nombre = op.nombre,
+                            p_descripcion = op.descripcion,
+                            p_etapa = op.etapa,
+                            p_probabilidad = op.probabilidad,
+                            p_valor_estimado = op.valor_estimado ?? 0,
+                            p_estado = op.estado,
+                            p_id_cliente = op.id_cliente,
+                            p_id_usuario = op.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                    op.id_oportunidad = id_op;
+
+                    db.Execute(
+                        "sp_notificaciones_insertar",
+                        new {
+                            p_mensaje = $"Nueva Oportunidad: Se ha creado la oportunidad '{op.nombre}' con probabilidad del {op.probabilidad}%.",
+                            p_id_usuario = op.id_usuario ?? 1,
+                            p_tipo = "Oportunidad Creada",
+                            p_id_referencia = op.id_oportunidad
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                }
 
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Clientes = db.clientes.ToList();
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Clientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+            }
             return View(op);
         }
 
@@ -113,17 +151,29 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            var op = db.oportunidades.Find(id);
-            if (op == null) return HttpNotFound();
-
-            int rolId = (int)Session["RolId"];
-            if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return RedirectToAction("Index");
-            }
+                var op = db.QueryFirstOrDefault<oportunidade>(
+                    "sp_oportunidades_obtener_por_id",
+                    new { p_id_oportunidad = id },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            ViewBag.Clientes = db.clientes.ToList();
-            return View(op);
+                if (op == null) return HttpNotFound();
+
+                int rolId = (int)Session["RolId"];
+                if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ViewBag.Clientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return View(op);
+            }
         }
 
         // POST: Oportunidades/Editar/5
@@ -137,53 +187,78 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            var opDb = db.oportunidades.Find(op.id_oportunidad);
-            if (opDb == null) return HttpNotFound();
-
-            int rolId = (int)Session["RolId"];
-            if (rolId != 1 && opDb.id_usuario != (int)Session["UsuarioId"])
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return RedirectToAction("Index");
-            }
+                var opDb = db.QueryFirstOrDefault<oportunidade>(
+                    "sp_oportunidades_obtener_por_id",
+                    new { p_id_oportunidad = op.id_oportunidad },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            if (ModelState.IsValid)
-            {
-                
-                bool esNuevaPropuesta = (op.etapa == "Propuesta" && opDb.etapa != "Propuesta");
+                if (opDb == null) return HttpNotFound();
 
-                opDb.nombre = op.nombre;
-                opDb.descripcion = op.descripcion;
-                opDb.etapa = op.etapa;
-                opDb.valor_estimado = op.valor_estimado;
-                opDb.id_cliente = op.id_cliente;
-                if (!string.IsNullOrEmpty(fechaClose))
+                int rolId = (int)Session["RolId"];
+                if (rolId != 1 && opDb.id_usuario != (int)Session["UsuarioId"])
                 {
-                    opDb.fecha_creacion = DateTime.Parse(fechaClose);
+                    return RedirectToAction("Index");
                 }
-                opDb.probabilidad = GetProbabilidadPorEtapa(op.etapa);
 
-                // Generar tarea automática si pasa a Propuesta
-                if (esNuevaPropuesta)
+                if (ModelState.IsValid)
                 {
-                    var tareaAutomatica = new tarea
+                    bool esNuevaPropuesta = (op.etapa == "Propuesta" && opDb.etapa != "Propuesta");
+
+                    DateTime fechaCreacion = opDb.fecha_creacion ?? DateTime.Now;
+                    if (!string.IsNullOrEmpty(fechaClose))
                     {
-                        titulo = $"Seguimiento de Propuesta: {opDb.nombre}",
-                        descripcion = $"Automatización Comercial: La oportunidad avanzó a etapa de Propuesta. Revisar requerimientos y enviar cotización formal.",
-                        prioridad = "Alta",
-                        estado = "Pendiente",
-                        fecha_limite = DateTime.Now.AddDays(3), 
-                        id_usuario = opDb.id_usuario,
-                        alerta_disparada = false
-                    };
-                    db.tareas.Add(tareaAutomatica);
+                        fechaCreacion = DateTime.Parse(fechaClose);
+                    }
+
+                    var prob = GetProbabilidadPorEtapa(op.etapa);
+
+                    db.Execute(
+                        "sp_oportunidades_actualizar",
+                        new {
+                            p_id_oportunidad = op.id_oportunidad,
+                            p_nombre = op.nombre,
+                            p_descripcion = op.descripcion,
+                            p_etapa = op.etapa,
+                            p_probabilidad = prob,
+                            p_valor_estimado = op.valor_estimado ?? 0,
+                            p_estado = opDb.estado ?? "Activo",
+                            p_id_cliente = op.id_cliente,
+                            p_id_usuario = opDb.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    // Generar tarea automática si pasa a Propuesta
+                    if (esNuevaPropuesta)
+                    {
+                        db.Execute(
+                            "sp_tareas_insertar",
+                            new {
+                                p_titulo = $"Seguimiento de Propuesta: {op.nombre}",
+                                p_descripcion = $"Automatización Comercial: La oportunidad avanzó a etapa de Propuesta. Revisar requerimientos y enviar cotización formal.",
+                                p_prioridad = "Alta",
+                                p_estado = "Pendiente",
+                                p_fecha_limite = DateTime.Now.AddDays(3),
+                                p_id_cliente = op.id_cliente,
+                                p_id_usuario = opDb.id_usuario
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
+
+                    return RedirectToAction("Index");
                 }
 
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+                ViewBag.Clientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
 
-            ViewBag.Clientes = db.clientes.ToList();
-            return View(op);
+                return View(op);
+            }
         }
 
         // GET: Oportunidades/Detalle/5
@@ -195,16 +270,30 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            var op = db.oportunidades.Include(o => o.cliente).Include(o => o.usuario).FirstOrDefault(o => o.id_oportunidad == id);
-            if (op == null) return HttpNotFound();
-
-            int rolId = (int)Session["RolId"];
-            if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return RedirectToAction("Index");
-            }
+                var op = db.Query<oportunidade, cliente, usuario, oportunidade>(
+                    "sp_oportunidades_obtener_con_relaciones",
+                    (o, cl, usr) => {
+                        o.cliente = cl;
+                        o.usuario = usr;
+                        return o;
+                    },
+                    new { p_id_oportunidad = id },
+                    splitOn: "id_cliente,id_usuario",
+                    commandType: CommandType.StoredProcedure
+                ).FirstOrDefault();
 
-            return View(op);
+                if (op == null) return HttpNotFound();
+
+                int rolId = (int)Session["RolId"];
+                if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+                {
+                    return RedirectToAction("Index");
+                }
+
+                return View(op);
+            }
         }
 
         // POST: Oportunidades/Eliminar/5
@@ -218,22 +307,33 @@ namespace CRMRSG.Controllers
 
             try
             {
-                var op = db.oportunidades.Find(id);
-                if (op == null)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    return Json(new { success = false, message = "Oportunidad no encontrada" });
+                    var op = db.QueryFirstOrDefault<oportunidade>(
+                        "sp_oportunidades_obtener_por_id",
+                        new { p_id_oportunidad = id },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    if (op == null)
+                    {
+                        return Json(new { success = false, message = "Oportunidad no encontrada" });
+                    }
+
+                    int rolId = (int)Session["RolId"];
+                    if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+                    {
+                        return Json(new { success = false, message = "No tiene permisos para eliminar esta oportunidad" });
+                    }
+
+                    db.Execute(
+                        "sp_oportunidades_eliminar",
+                        new { p_id_oportunidad = id },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    return Json(new { success = true });
                 }
-
-                int rolId = (int)Session["RolId"];
-                if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
-                {
-                    return Json(new { success = false, message = "No tiene permisos para eliminar esta oportunidad" });
-                }
-
-                db.oportunidades.Remove(op);
-                db.SaveChanges();
-
-                return Json(new { success = true });
             }
             catch (Exception ex)
             {
@@ -252,47 +352,70 @@ namespace CRMRSG.Controllers
 
             try
             {
-                var op = db.oportunidades.Find(id);
-                if (op == null)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    return Json(new { success = false, message = "Oportunidad no encontrada" });
-                }
+                    var op = db.QueryFirstOrDefault<oportunidade>(
+                        "sp_oportunidades_obtener_por_id",
+                        new { p_id_oportunidad = id },
+                        commandType: CommandType.StoredProcedure
+                    );
 
-                int rolId = (int)Session["RolId"];
-                if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
-                {
-                    return Json(new { success = false, message = "No tiene permisos para modificar esta oportunidad" });
-                }
-
-                
-                bool esNuevaPropuesta = (etapa == "Propuesta" && op.etapa != "Propuesta");
-
-                op.etapa = etapa;
-                op.probabilidad = GetProbabilidadPorEtapa(etapa);
-                if (etapa == "Cerrada Perdida" && !string.IsNullOrWhiteSpace(razon))
-                {
-                    op.descripcion = (op.descripcion ?? "") + "\n[Motivo Pérdida: " + razon + "]";
-                }
-
-               
-                if (esNuevaPropuesta)
-                {
-                    var tareaAutomatica = new tarea
+                    if (op == null)
                     {
-                        titulo = $"Seguimiento de Propuesta Rápido: {op.nombre}",
-                        descripcion = $"Automatización Comercial: Oportunidad movida a Propuesta de forma rápida. Gestionar cotización formal.",
-                        prioridad = "Alta",
-                        estado = "Pendiente",
-                        fecha_limite = DateTime.Now.AddDays(2), 
-                        id_usuario = op.id_usuario,
-                        alerta_disparada = false
-                    };
-                    db.tareas.Add(tareaAutomatica);
+                        return Json(new { success = false, message = "Oportunidad no encontrada" });
+                    }
+
+                    int rolId = (int)Session["RolId"];
+                    if (rolId != 1 && op.id_usuario != (int)Session["UsuarioId"])
+                    {
+                        return Json(new { success = false, message = "No tiene permisos para modificar esta oportunidad" });
+                    }
+
+                    bool esNuevaPropuesta = (etapa == "Propuesta" && op.etapa != "Propuesta");
+
+                    string desc = op.descripcion;
+                    if (etapa == "Cerrada Perdida" && !string.IsNullOrWhiteSpace(razon))
+                    {
+                        desc = (op.descripcion ?? "") + "\n[Motivo Pérdida: " + razon + "]";
+                    }
+
+                    var prob = GetProbabilidadPorEtapa(etapa);
+
+                    db.Execute(
+                        "sp_oportunidades_actualizar",
+                        new {
+                            p_id_oportunidad = id,
+                            p_nombre = op.nombre,
+                            p_descripcion = desc,
+                            p_etapa = etapa,
+                            p_probabilidad = prob,
+                            p_valor_estimado = op.valor_estimado ?? 0,
+                            p_estado = op.estado,
+                            p_id_cliente = op.id_cliente,
+                            p_id_usuario = op.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    if (esNuevaPropuesta)
+                    {
+                        db.Execute(
+                            "sp_tareas_insertar",
+                            new {
+                                p_titulo = $"Seguimiento de Propuesta Rápido: {op.nombre}",
+                                p_descripcion = $"Automatización Comercial: Oportunidad movida a Propuesta de forma rápida. Gestionar cotización formal.",
+                                p_prioridad = "Alta",
+                                p_estado = "Pendiente",
+                                p_fecha_limite = DateTime.Now.AddDays(2),
+                                p_id_cliente = op.id_cliente,
+                                p_id_usuario = op.id_usuario
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
+
+                    return Json(new { success = true });
                 }
-
-                db.SaveChanges();
-
-                return Json(new { success = true });
             }
             catch (Exception ex)
             {
@@ -323,15 +446,6 @@ namespace CRMRSG.Controllers
                 default:
                     return 50;
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

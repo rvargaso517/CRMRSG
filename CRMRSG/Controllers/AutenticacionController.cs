@@ -10,13 +10,14 @@ using System.Net.Mail;
 using System.Net;
 using System.Configuration;
 using System.IO;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class AutenticacionController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         // GET: Autenticacion/Login
         public ActionResult Login()
         {
@@ -24,12 +25,6 @@ namespace CRMRSG.Controllers
             {
                 return RedirectToAction("Index", "Dashboard");
             }
-
-            if (TempData["Success"] != null)
-            {
-                ViewBag.Success = TempData["Success"].ToString();
-            }
-
             return View();
         }
 
@@ -45,8 +40,31 @@ namespace CRMRSG.Controllers
 
             string hashedPassword = HashPassword(password);
 
-            // Buscar al usuario por correo
-            var usuario = db.usuarios.FirstOrDefault(u => u.correo == correo);
+            usuario usuario = null;
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                var dict = conn.QueryFirstOrDefault<dynamic>(
+                    "sp_usuarios_obtener_por_correo",
+                    new { p_correo = correo },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (dict != null)
+                {
+                    usuario = new usuario
+                    {
+                        id_usuario = dict.id_usuario,
+                        nombre = dict.nombre,
+                        apellido = dict.apellido,
+                        correo = dict.correo,
+                        password_hash = dict.password_hash,
+                        estado = dict.estado,
+                        correo_verificado = dict.correo_verificado,
+                        id_rol = dict.id_rol,
+                        role = new role { nombre = dict.RolNombre, descripcion = dict.RolDescripcion }
+                    };
+                }
+            }
 
             if (usuario == null)
             {
@@ -60,18 +78,21 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
-            // Comparar la contraseña hasheada
             if (!usuario.password_hash.Equals(hashedPassword, StringComparison.OrdinalIgnoreCase))
             {
-              ViewBag.Error = "Contraseña incorrecta.";
+                ViewBag.Error = "Contraseña incorrecta.";
                 return View();
             }
             
-            // Actualizar fecha de último login
-            usuario.ultimo_login = DateTime.Now;
-            db.SaveChanges();
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                conn.Execute(
+                    "sp_usuarios_actualizar_ultimo_login",
+                    new { p_id_usuario = usuario.id_usuario },
+                    commandType: CommandType.StoredProcedure
+                );
+            }
 
-            // Configurar variables de sesión
             Session["UsuarioId"] = usuario.id_usuario;
             Session["NombreCompleto"] = $"{usuario.nombre} {usuario.apellido}".Trim();
             Session["Nombre"] = usuario.nombre;
@@ -122,14 +143,23 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
-            // Verificar si el correo ya está registrado
-            if (db.usuarios.Any(u => u.correo == correo))
+            bool correoExiste = false;
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                var existing = conn.QueryFirstOrDefault<dynamic>(
+                    "sp_usuarios_obtener_por_correo",
+                    new { p_correo = correo },
+                    commandType: CommandType.StoredProcedure
+                );
+                correoExiste = (existing != null);
+            }
+
+            if (correoExiste)
             {
                 ViewBag.Error = "El correo electrónico ya está registrado.";
                 return View();
             }
 
-            // Dividir nombre completo en nombre y apellido
             string nombre = "";
             string apellido = "";
             if (!string.IsNullOrWhiteSpace(nombreCompleto))
@@ -142,23 +172,23 @@ namespace CRMRSG.Controllers
                 }
             }
 
-            // Crear el nuevo usuario
-            var nuevoUsuario = new usuario
-            {
-                nombre = nombre,
-                apellido = apellido,
-                correo = correo,
-                password_hash = HashPassword(password),
-                estado = true,
-                correo_verificado = false,
-                fecha_creacion = DateTime.Now,
-                id_rol = 2 // Rol por defecto (Usuario / Staff)
-            };
-
             try
             {
-                db.usuarios.Add(nuevoUsuario);
-                db.SaveChanges();
+                using (var conn = DbConnectionFactory.GetConnection())
+                {
+                    conn.Execute(
+                        "sp_usuarios_insertar",
+                        new {
+                            p_nombre = nombre,
+                            p_apellido = apellido,
+                            p_correo = correo,
+                            p_password_hash = HashPassword(password),
+                            p_telefono = (string)null,
+                            p_id_rol = 2
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                }
 
                 TempData["Success"] = "Registro exitoso. Por favor, inicie sesión con su nueva cuenta.";
                 return RedirectToAction("Login");
@@ -187,25 +217,48 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
-            // No revelar si el correo existe o no: mostrar siempre el mismo mensaje
-            var usuario = db.usuarios.FirstOrDefault(u => u.correo == correo);
+            usuario usuario = null;
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                var dict = conn.QueryFirstOrDefault<dynamic>(
+                    "sp_usuarios_obtener_por_correo",
+                    new { p_correo = correo },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (dict != null)
+                {
+                    usuario = new usuario
+                    {
+                        id_usuario = dict.id_usuario,
+                        correo = dict.correo
+                    };
+                }
+            }
 
             if (usuario != null)
             {
-                // Generar token
                 string token = Guid.NewGuid().ToString("N");
-                usuario.token_recuperacion = token;
-                usuario.fecha_expiracion_recuperacion = DateTime.Now.AddHours(2); // token válido por 2 horas
-                db.SaveChanges();
+                var fechaExp = DateTime.Now.AddHours(2);
 
-                // Construir URL de restablecimiento
+                using (var conn = DbConnectionFactory.GetConnection())
+                {
+                    conn.Execute(
+                        "sp_usuarios_actualizar_token_recuperacion",
+                        new {
+                            p_id_usuario = usuario.id_usuario,
+                            p_token = token,
+                            p_fecha_expiracion = fechaExp
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                }
+
                 string scheme = Request.Url != null ? Request.Url.Scheme : "http";
                 string resetUrl = Url.Action("Restablecer", "Autenticacion", new { token = token }, scheme);
 
-                // Enviar correo (si falla, no exponer detalles al usuario)
                 try
                 {
-                    // Leer template y reemplazar placeholders
                     var templatePath = Server.MapPath("~/Views/Emails/RecoverPasswordTemplate.cshtml");
                     string body = null;
                     if (System.IO.File.Exists(templatePath))
@@ -222,7 +275,6 @@ namespace CRMRSG.Controllers
                 }
                 catch
                 {
-                    // Loggear en real app. Aquí se silencia para no filtrar información.
                 }
             }
 
@@ -239,7 +291,15 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
-            var usuario = db.usuarios.FirstOrDefault(u => u.token_recuperacion == token);
+            usuario usuario = null;
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                usuario = conn.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_token_recuperacion",
+                    new { p_token = token },
+                    commandType: CommandType.StoredProcedure
+                );
+            }
 
             if (usuario == null || usuario.fecha_expiracion_recuperacion == null || usuario.fecha_expiracion_recuperacion < DateTime.Now)
             {
@@ -248,7 +308,7 @@ namespace CRMRSG.Controllers
             }
 
             ViewBag.Token = token;
-            return View(); // View must provide form to set new password and post to Restablecer (POST)
+            return View();
         }
 
         // POST: Autenticacion/Restablecer
@@ -283,7 +343,15 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
-            var usuario = db.usuarios.FirstOrDefault(u => u.token_recuperacion == token);
+            usuario usuario = null;
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                usuario = conn.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_token_recuperacion",
+                    new { p_token = token },
+                    commandType: CommandType.StoredProcedure
+                );
+            }
 
             if (usuario == null || usuario.fecha_expiracion_recuperacion == null || usuario.fecha_expiracion_recuperacion < DateTime.Now)
             {
@@ -291,11 +359,17 @@ namespace CRMRSG.Controllers
                 return View();
             }
 
-            // Actualizar contraseña
-            usuario.password_hash = HashPassword(password);
-            usuario.token_recuperacion = null;
-            usuario.fecha_expiracion_recuperacion = null;
-            db.SaveChanges();
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                conn.Execute(
+                    "sp_usuarios_actualizar_contrasena",
+                    new {
+                        p_id_usuario = usuario.id_usuario,
+                        p_password_hash = HashPassword(password)
+                    },
+                    commandType: CommandType.StoredProcedure
+                );
+            }
 
             TempData["Success"] = "Contraseña restaurada con éxito. Ahora puede iniciar sesión con su nueva contraseña.";
             return RedirectToAction("Login");

@@ -7,6 +7,9 @@ using System.Net;
 using System.Net.Mail;
 using System.Configuration;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
@@ -38,8 +41,6 @@ namespace CRMRSG.Controllers
 
     public class DashboardController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         // GET: Dashboard
         public ActionResult Index(string filtro)
         {
@@ -68,295 +69,291 @@ namespace CRMRSG.Controllers
             else if (filtro == "mes") desde = DateTime.Today.AddMonths(-1);
             else if (filtro == "anio") desde = DateTime.Today.AddYears(-1);
 
-            // Filtrado base por rol
-            var clientesQuery = db.clientes.AsQueryable();
-            var oportunidadesQuery = db.oportunidades.AsQueryable();
-            var tareasQuery = db.tareas.AsQueryable();
-            var citasQuery = db.citas.AsQueryable();
-
-            if (!isAdmin)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                clientesQuery = clientesQuery.Where(c => c.id_usuario == usuarioId);
-                oportunidadesQuery = oportunidadesQuery.Where(o => o.id_usuario == usuarioId);
-                tareasQuery = tareasQuery.Where(t => t.id_usuario == usuarioId);
-                citasQuery = citasQuery.Where(c => c.id_usuario == usuarioId);
-            }
+                // Consultas dinámicas optimizadas con Dapper
+                string dateClauseClientes = "";
+                string dateClauseOps = "";
+                string dateClauseTareas = "";
+                string dateClauseCitas = "";
+                var paramsObj = new DynamicParameters();
+                paramsObj.Add("@UsuarioId", usuarioId);
 
-            // Aplicar rango de fecha si es diferente de "todos"
-            if (filtro != "todos")
-            {
-                clientesQuery = clientesQuery.Where(c => c.fecha_registro >= desde);
-                oportunidadesQuery = oportunidadesQuery.Where(o => o.fecha_creacion >= desde);
-                tareasQuery = tareasQuery.Where(t => t.fecha_limite >= desde);
-                citasQuery = citasQuery.Where(c => c.fecha >= desde);
-            }
-
-            // Totales
-            ViewBag.TotalClientes = clientesQuery.Count();
-            ViewBag.TotalOportunidades = oportunidadesQuery.Count();
-            ViewBag.TotalTareas = tareasQuery.Where(t => t.estado != "Completada").Count(); // Tareas pendientes
-            ViewBag.TotalUsuarios = db.usuarios.Count();
-
-            // HU-035 - Rendimiento de vendedores (solo para el admin)
-            var vendedores = db.usuarios.Select(u => new VendedorRendimiento
-            {
-                Nombre = u.nombre + " " + u.apellido,
-                Clientes = u.clientes.Count(),
-                Oportunidades = u.oportunidades.Count(),
-                Tareas = u.tareas.Count()
-            }).ToList();
-            ViewBag.Vendedores = vendedores;
-
-            // Tareas y Actividades recientes
-            var tareasList = tareasQuery.OrderBy(t => t.fecha_limite).Take(5).ToList();
-            ViewBag.TareasProximas = tareasList;
-
-            var actividadesRecientes = db.bitacoras
-                .Where(x => x.tabla_afectada != "bitacora")
-                .OrderByDescending(x => x.fecha_hora)
-                .Take(5)
-                .ToList();
-            ViewBag.ActividadesRecientes = actividadesRecientes;
-
-            // HU-025 - Estadísticas de Eventos (Citas)
-            // 1. Estados de Eventos (Donut)
-            var estadosEventos = citasQuery
-                .GroupBy(c => c.estado ?? "Pendiente")
-                .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
-                .ToList();
-
-            ViewBag.EventosCompletados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("complet") || e.Estado.ToLower() == "realizada")?.Cantidad ?? 0;
-            ViewBag.EventosPendientes = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("pendient") || e.Estado.ToLower() == "programada")?.Cantidad ?? 0;
-            ViewBag.EventosCancelados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("cancel") || e.Estado.ToLower() == "suspendida")?.Cantidad ?? 0;
-            ViewBag.EventosAplazados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("aplaz") || e.Estado.ToLower() == "aplazada")?.Cantidad ?? 0;
-
-            // Si no hay datos, metemos valores dummy estéticos para que no quede en blanco
-            if (ViewBag.EventosCompletados == 0 && ViewBag.EventosPendientes == 0 && ViewBag.EventosCancelados == 0 && ViewBag.EventosAplazados == 0)
-            {
-                ViewBag.EventosCompletados = 5;
-                ViewBag.EventosPendientes = 8;
-                ViewBag.EventosCancelados = 2;
-                ViewBag.EventosAplazados = 3;
-            }
-
-            // 2. Cantidad de Eventos (Gráfico de Líneas/Barras por Fecha)
-            string[] fechasLabels;
-            int[] cantidadesData;
-
-            if (filtro == "dia")
-            {
-                var eventosHoy = citasQuery
-                    .Where(c => c.fecha == DateTime.Today)
-                    .ToList();
-
-                var grouped = eventosHoy
-                    .GroupBy(c => c.hora.Hours)
-                    .Select(g => new { Hora = g.Key, Cantidad = g.Count() })
-                    .OrderBy(x => x.Hora)
-                    .ToList();
-
-                if (grouped.Any())
+                if (filtro != "todos")
                 {
-                    fechasLabels = grouped.Select(g => $"{g.Hora:D2}:00").ToArray();
-                    cantidadesData = grouped.Select(g => g.Cantidad).ToArray();
-                }
-                else
-                {
-                    fechasLabels = new string[] { "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
-                    cantidadesData = new int[] { 1, 2, 0, 3, 1, 2, 0 };
-                }
-            }
-            else if (filtro == "semana")
-            {
-                DateTime startOfWeek = DateTime.Today.AddDays(-6);
-                var eventosSemana = citasQuery
-                    .Where(c => c.fecha >= startOfWeek)
-                    .ToList();
-
-                var grouped = eventosSemana
-                    .GroupBy(c => c.fecha.Date)
-                    .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
-                    .OrderBy(x => x.Fecha)
-                    .ToList();
-
-                fechasLabels = new string[7];
-                cantidadesData = new int[7];
-                for (int i = 0; i < 7; i++)
-                {
-                    var dt = startOfWeek.AddDays(i);
-                    fechasLabels[i] = dt.ToString("dd/MM");
-                    cantidadesData[i] = grouped.FirstOrDefault(g => g.Fecha == dt)?.Cantidad ?? 0;
+                    dateClauseClientes = " AND fecha_registro >= @Desde";
+                    dateClauseOps = " AND fecha_creacion >= @Desde";
+                    dateClauseTareas = " AND fecha_limite >= @Desde";
+                    dateClauseCitas = " AND fecha >= @Desde";
+                    paramsObj.Add("@Desde", desde);
                 }
 
-                if (cantidadesData.All(c => c == 0))
+                string userClause = "";
+                if (!isAdmin)
                 {
-                    cantidadesData = new int[] { 2, 4, 1, 3, 5, 2, 4 };
+                    userClause = " AND id_usuario = @UsuarioId";
                 }
-            }
-            else if (filtro == "mes")
-            {
-                DateTime startOfMonth = DateTime.Today.AddDays(-29);
-                var eventosMes = citasQuery
-                    .Where(c => c.fecha >= startOfMonth)
+
+                // Totales
+                ViewBag.TotalClientes = db.QuerySingle<int>($"SELECT COUNT(*) FROM clientes WHERE 1=1 {userClause} {dateClauseClientes}", paramsObj);
+                ViewBag.TotalOportunidades = db.QuerySingle<int>($"SELECT COUNT(*) FROM oportunidades WHERE 1=1 {userClause} {dateClauseOps}", paramsObj);
+                ViewBag.TotalTareas = db.QuerySingle<int>($"SELECT COUNT(*) FROM tareas WHERE estado != 'Completada' {userClause} {dateClauseTareas}", paramsObj);
+                ViewBag.TotalUsuarios = db.QuerySingle<int>("SELECT COUNT(*) FROM usuarios");
+
+                // Rendimiento de vendedores
+                var vendedores = db.Query<VendedorRendimiento>(
+                    @"SELECT CONCAT(u.nombre, ' ', u.apellido) AS Nombre,
+                             (SELECT COUNT(*) FROM clientes c WHERE c.id_usuario = u.id_usuario) AS Clientes,
+                             (SELECT COUNT(*) FROM oportunidades o WHERE o.id_usuario = u.id_usuario) AS Oportunidades,
+                             (SELECT COUNT(*) FROM tareas t WHERE t.id_usuario = u.id_usuario) AS Tareas
+                      FROM usuarios u"
+                ).ToList();
+                ViewBag.Vendedores = vendedores;
+
+                // Tareas y Actividades recientes
+                var tareasList = db.Query<tarea>(
+                    $"SELECT * FROM tareas WHERE 1=1 {userClause} {dateClauseTareas} ORDER BY fecha_limite ASC LIMIT 5",
+                    paramsObj
+                ).ToList();
+                ViewBag.TareasProximas = tareasList;
+
+                var actividadesRecientes = db.Query<bitacora, usuario, bitacora>(
+                    @"SELECT b.*, u.* FROM bitacora b 
+                      LEFT JOIN usuarios u ON b.id_usuario = u.id_usuario 
+                      WHERE b.tabla_afectada != 'bitacora' 
+                      ORDER BY b.fecha_hora DESC LIMIT 5",
+                    (b, u) => {
+                        b.usuario = u;
+                        return b;
+                    },
+                    splitOn: "id_usuario"
+                ).ToList();
+                ViewBag.ActividadesRecientes = actividadesRecientes;
+
+                // Estadísticas de Eventos (Citas)
+                var citasQuery = db.Query<cita>(
+                    $"SELECT * FROM citas WHERE 1=1 {userClause} {dateClauseCitas}",
+                    paramsObj
+                ).ToList();
+
+                var estadosEventos = citasQuery
+                    .GroupBy(c => c.estado ?? "Pendiente")
+                    .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
                     .ToList();
 
-                var grouped = eventosMes
-                    .GroupBy(c => c.fecha.Date)
-                    .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
-                    .OrderBy(x => x.Fecha)
-                    .ToList();
+                ViewBag.EventosCompletados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("complet") || e.Estado.ToLower() == "realizada")?.Cantidad ?? 0;
+                ViewBag.EventosPendientes = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("pendient") || e.Estado.ToLower() == "programada")?.Cantidad ?? 0;
+                ViewBag.EventosCancelados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("cancel") || e.Estado.ToLower() == "suspendida")?.Cantidad ?? 0;
+                ViewBag.EventosAplazados = estadosEventos.FirstOrDefault(e => e.Estado.ToLower().Contains("aplaz") || e.Estado.ToLower() == "aplazada")?.Cantidad ?? 0;
 
-                fechasLabels = new string[10];
-                cantidadesData = new int[10];
-                for (int i = 0; i < 10; i++)
+                if (ViewBag.EventosCompletados == 0 && ViewBag.EventosPendientes == 0 && ViewBag.EventosCancelados == 0 && ViewBag.EventosAplazados == 0)
                 {
-                    var dtStart = startOfMonth.AddDays(i * 3);
-                    var dtEnd = startOfMonth.AddDays(i * 3 + 2);
-                    fechasLabels[i] = dtStart.ToString("dd/MM");
-                    cantidadesData[i] = grouped.Where(g => g.Fecha >= dtStart && g.Fecha <= dtEnd).Sum(g => g.Cantidad);
+                    ViewBag.EventosCompletados = 5;
+                    ViewBag.EventosPendientes = 8;
+                    ViewBag.EventosCancelados = 2;
+                    ViewBag.EventosAplazados = 3;
                 }
 
-                if (cantidadesData.All(c => c == 0))
+                // Cantidad de Eventos por Fecha
+                string[] fechasLabels;
+                int[] cantidadesData;
+
+                if (filtro == "dia")
                 {
-                    cantidadesData = new int[] { 3, 5, 2, 8, 4, 6, 9, 3, 7, 5 };
-                }
-            }
-            else if (filtro == "anio")
-            {
-                DateTime startOfYear = new DateTime(DateTime.Today.Year, 1, 1);
-                var eventosAnio = citasQuery
-                    .Where(c => c.fecha >= startOfYear)
-                    .ToList();
+                    var eventosHoy = citasQuery.Where(c => c.fecha.Date == DateTime.Today).ToList();
+                    var grouped = eventosHoy
+                        .GroupBy(c => c.hora.Hours)
+                        .Select(g => new { Hora = g.Key, Cantidad = g.Count() })
+                        .OrderBy(x => x.Hora)
+                        .ToList();
 
-                var grouped = eventosAnio
-                    .GroupBy(c => c.fecha.Month)
-                    .Select(g => new { Mes = g.Key, Cantidad = g.Count() })
-                    .OrderBy(x => x.Mes)
-                    .ToList();
-
-                string[] nombreMeses = { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
-                fechasLabels = new string[12];
-                cantidadesData = new int[12];
-                for (int i = 0; i < 12; i++)
-                {
-                    fechasLabels[i] = nombreMeses[i];
-                    cantidadesData[i] = grouped.FirstOrDefault(g => g.Mes == (i + 1))?.Cantidad ?? 0;
-                }
-
-                if (cantidadesData.All(c => c == 0))
-                {
-                    cantidadesData = new int[] { 15, 22, 18, 30, 25, 35, 28, 40, 32, 45, 38, 50 };
-                }
-            }
-            else // "todos"
-            {
-                var eventosPorFecha = citasQuery
-                    .Where(c => c.fecha != null)
-                    .GroupBy(c => c.fecha)
-                    .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
-                    .OrderBy(g => g.Fecha)
-                    .Take(10)
-                    .ToList();
-
-                fechasLabels = eventosPorFecha.Select(e => e.Fecha.ToString("dd/MM")).ToArray();
-                cantidadesData = eventosPorFecha.Select(e => e.Cantidad).ToArray();
-
-                if (fechasLabels.Length == 0)
-                {
-                    fechasLabels = new string[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
-                    cantidadesData = new int[] { 3, 5, 2, 7, 6, 1, 4 };
-                }
-            }
-
-            ViewBag.EventosFechas = fechasLabels;
-            ViewBag.EventosCantidades = cantidadesData;
-
-            // Ganancias por Cliente (para el nuevo gráfico en Dashboard)
-            var gananciasClientes = oportunidadesQuery
-                .Where(o => o.id_cliente != null && o.valor_estimado != null && o.etapa.ToLower().Contains("ganada"))
-                .GroupBy(o => o.cliente.nombre)
-                .Select(g => new { Cliente = g.Key, Total = g.Sum(o => o.valor_estimado.Value) })
-                .OrderByDescending(x => x.Total)
-                .Take(5)
-                .ToList();
-
-            if (gananciasClientes.Count == 0)
-            {
-                var todosClientes = db.clientes.Take(5).ToList();
-                int idx = 0;
-                gananciasClientes = todosClientes.Select(c => new {
-                    Cliente = c.nombre,
-                    Total = (decimal)((++idx) * 12500)
-                }).OrderByDescending(x => x.Total).ToList();
-            }
-
-            // Fallback total en caso de base de datos vacía
-            if (gananciasClientes.Count == 0)
-            {
-                gananciasClientes = new[] {
-                    new { Cliente = "Acme Corp", Total = 45000m },
-                    new { Cliente = "Tech Solutions", Total = 38000m },
-                    new { Cliente = "Global Inc", Total = 29000m },
-                    new { Cliente = "Stark Labs", Total = 18000m }
-                }.ToList();
-            }
-
-            ViewBag.GananciasLabels = gananciasClientes.Select(x => (string)x.Cliente).ToArray();
-            ViewBag.GananciasData = gananciasClientes.Select(x => (decimal)x.Total).ToArray();
-
-            // HU-031 - Recomendaciones Inteligentes para Seguimiento
-            var recomendaciones = new List<RecomendacionSeguimiento>();
-            var clientesRec = db.clientes.ToList();
-            
-            // Alertas automáticas de Tareas
-            VerificarYGenerarAlertasTareasDashboard(usuarioId, isAdmin);
-
-            foreach (var c in clientesRec)
-            {
-                var tieneTareas = db.tareas.Any(t => t.id_cliente == c.id_cliente && t.estado != "Completada");
-                var tieneOportunidades = db.oportunidades.Any(o => o.id_cliente == c.id_cliente);
-                
-                if (!tieneOportunidades)
-                {
-                    recomendaciones.Add(new RecomendacionSeguimiento
+                    if (grouped.Any())
                     {
-                        Tipo = "warning",
-                        Titulo = $"Sin oportunidades: {c.empresa}",
-                        Mensaje = $"No hay oportunidades comerciales registradas para {c.nombre}. Se recomienda registrar una para iniciar la prospección.",
-                        Accion = Url.Action("Crear", "Oportunidades")
-                    });
-                }
-                else if (!tieneTareas)
-                {
-                    recomendaciones.Add(new RecomendacionSeguimiento
+                        fechasLabels = grouped.Select(g => $"{g.Hora:D2}:00").ToArray();
+                        cantidadesData = grouped.Select(g => g.Cantidad).ToArray();
+                    }
+                    else
                     {
-                        Tipo = "info",
-                        Titulo = $"Sin tareas activas: {c.empresa}",
-                        Mensaje = $"No tienes tareas pendientes con {c.nombre}. Programa una llamada o correo de seguimiento.",
-                        Accion = Url.Action("Crear", "Tareas")
-                    });
+                        fechasLabels = new string[] { "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00" };
+                        cantidadesData = new int[] { 1, 2, 0, 3, 1, 2, 0 };
+                    }
+                }
+                else if (filtro == "semana")
+                {
+                    DateTime startOfWeek = DateTime.Today.AddDays(-6);
+                    var eventosSemana = citasQuery.Where(c => c.fecha >= startOfWeek).ToList();
+                    var grouped = eventosSemana
+                        .GroupBy(c => c.fecha.Date)
+                        .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
+                        .OrderBy(x => x.Fecha)
+                        .ToList();
+
+                    fechasLabels = new string[7];
+                    cantidadesData = new int[7];
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var dt = startOfWeek.AddDays(i);
+                        fechasLabels[i] = dt.ToString("dd/MM");
+                        cantidadesData[i] = grouped.FirstOrDefault(g => g.Fecha == dt)?.Cantidad ?? 0;
+                    }
+
+                    if (cantidadesData.All(c => c == 0))
+                    {
+                        cantidadesData = new int[] { 2, 4, 1, 3, 5, 2, 4 };
+                    }
+                }
+                else if (filtro == "mes")
+                {
+                    DateTime startOfMonth = DateTime.Today.AddDays(-29);
+                    var eventosMes = citasQuery.Where(c => c.fecha >= startOfMonth).ToList();
+                    var grouped = eventosMes
+                        .GroupBy(c => c.fecha.Date)
+                        .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
+                        .OrderBy(x => x.Fecha)
+                        .ToList();
+
+                    fechasLabels = new string[10];
+                    cantidadesData = new int[10];
+                    for (int i = 0; i < 10; i++)
+                    {
+                        var dtStart = startOfMonth.AddDays(i * 3);
+                        var dtEnd = startOfMonth.AddDays(i * 3 + 2);
+                        fechasLabels[i] = dtStart.ToString("dd/MM");
+                        cantidadesData[i] = grouped.Where(g => g.Fecha >= dtStart && g.Fecha <= dtEnd).Sum(g => g.Cantidad);
+                    }
+
+                    if (cantidadesData.All(c => c == 0))
+                    {
+                        cantidadesData = new int[] { 3, 5, 2, 8, 4, 6, 9, 3, 7, 5 };
+                    }
+                }
+                else if (filtro == "anio")
+                {
+                    DateTime startOfYear = new DateTime(DateTime.Today.Year, 1, 1);
+                    var eventosAnio = citasQuery.Where(c => c.fecha >= startOfYear).ToList();
+                    var grouped = eventosAnio
+                        .GroupBy(c => c.fecha.Month)
+                        .Select(g => new { Mes = g.Key, Cantidad = g.Count() })
+                        .OrderBy(x => x.Mes)
+                        .ToList();
+
+                    string[] nombreMeses = { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
+                    fechasLabels = new string[12];
+                    cantidadesData = new int[12];
+                    for (int i = 0; i < 12; i++)
+                    {
+                        fechasLabels[i] = nombreMeses[i];
+                        cantidadesData[i] = grouped.FirstOrDefault(g => g.Mes == (i + 1))?.Cantidad ?? 0;
+                    }
+
+                    if (cantidadesData.All(c => c == 0))
+                    {
+                        cantidadesData = new int[] { 15, 22, 18, 30, 25, 35, 28, 40, 32, 45, 38, 50 };
+                    }
+                }
+                else // "todos"
+                {
+                    var eventosPorFecha = citasQuery
+                        .Where(c => c.fecha != null)
+                        .GroupBy(c => c.fecha.Date)
+                        .Select(g => new { Fecha = g.Key, Cantidad = g.Count() })
+                        .OrderBy(g => g.Fecha)
+                        .Take(10)
+                        .ToList();
+
+                    fechasLabels = eventosPorFecha.Select(e => e.Fecha.ToString("dd/MM")).ToArray();
+                    cantidadesData = eventosPorFecha.Select(e => e.Cantidad).ToArray();
+
+                    if (fechasLabels.Length == 0)
+                    {
+                        fechasLabels = new string[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" };
+                        cantidadesData = new int[] { 3, 5, 2, 7, 6, 1, 4 };
+                    }
                 }
 
-                var opAlta = db.oportunidades.FirstOrDefault(o => o.id_cliente == c.id_cliente && o.etapa == "Propuesta" && o.valor_estimado > 5000);
-                if (opAlta != null)
+                ViewBag.EventosFechas = fechasLabels;
+                ViewBag.EventosCantidades = cantidadesData;
+
+                // Ganancias por Cliente (para el gráfico)
+                var gananciasClientes = db.Query<dynamic>(
+                    $@"SELECT cl.nombre AS Cliente, SUM(o.valor_estimado) AS Total 
+                       FROM oportunidades o
+                       INNER JOIN clientes cl ON o.id_cliente = cl.id_cliente
+                       WHERE o.id_cliente IS NOT NULL AND o.valor_estimado IS NOT NULL AND LOWER(o.etapa) LIKE '%ganada%' {userClause.Replace("id_usuario", "o.id_usuario")} {dateClauseOps}
+                       GROUP BY cl.nombre ORDER BY Total DESC LIMIT 5",
+                    paramsObj
+                ).Select(x => new { Cliente = (string)x.Cliente, Total = (decimal)x.Total }).ToList();
+
+                if (gananciasClientes.Count == 0)
                 {
-                    recomendaciones.Add(new RecomendacionSeguimiento
-                    {
-                        Tipo = "success",
-                        Titulo = $"Trato caliente: {c.empresa}",
-                        Mensaje = $"Oportunidad '{opAlta.nombre}' de alto valor ({opAlta.valor_estimado:C}) está en etapa de Propuesta. Se recomienda contactar hoy.",
-                        Accion = Url.Action("Detalle", "Oportunidades", new { id = opAlta.id_oportunidad })
-                    });
+                    var todosClientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).Take(5).ToList();
+                    int idx = 0;
+                    gananciasClientes = todosClientes.Select(c => new {
+                        Cliente = c.nombre,
+                        Total = (decimal)((++idx) * 12500)
+                    }).OrderByDescending(x => x.Total).ToList();
                 }
+
+                ViewBag.GananciasLabels = gananciasClientes.Select(x => x.Cliente).ToArray();
+                ViewBag.GananciasData = gananciasClientes.Select(x => x.Total).ToArray();
+
+                // HU-031 - Recomendaciones Inteligentes para Seguimiento
+                var recomendaciones = new List<RecomendacionSeguimiento>();
+                var clientesRec = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+
+                VerificarYGenerarAlertasTareasDashboard(usuarioId, isAdmin);
+
+                foreach (var c in clientesRec)
+                {
+                    var tieneTareas = db.QuerySingle<int>("SELECT COUNT(*) FROM tareas WHERE id_cliente = @IdC AND estado != 'Completada'", new { IdC = c.id_cliente }) > 0;
+                    var tieneOportunidades = db.QuerySingle<int>("SELECT COUNT(*) FROM oportunidades WHERE id_cliente = @IdC", new { IdC = c.id_cliente }) > 0;
+
+                    if (!tieneOportunidades)
+                    {
+                        recomendaciones.Add(new RecomendacionSeguimiento
+                        {
+                            Tipo = "warning",
+                            Titulo = $"Sin oportunidades: {c.empresa}",
+                            Mensaje = $"No hay oportunidades comerciales registradas para {c.nombre}. Se recomienda registrar una para iniciar la prospección.",
+                            Accion = Url.Action("Crear", "Oportunidades")
+                        });
+                    }
+                    else if (!tieneTareas)
+                    {
+                        recomendaciones.Add(new RecomendacionSeguimiento
+                        {
+                            Tipo = "info",
+                            Titulo = $"Sin tareas activas: {c.empresa}",
+                            Mensaje = $"No tienes tareas pendientes con {c.nombre}. Programa una llamada o correo de seguimiento.",
+                            Accion = Url.Action("Crear", "Tareas")
+                        });
+                    }
+
+                    var opAlta = db.QueryFirstOrDefault<oportunidade>(
+                        "SELECT * FROM oportunidades WHERE id_cliente = @IdC AND etapa = 'Propuesta' AND valor_estimado > 5000 LIMIT 1",
+                        new { IdC = c.id_cliente }
+                    );
+
+                    if (opAlta != null)
+                    {
+                        recomendaciones.Add(new RecomendacionSeguimiento
+                        {
+                            Tipo = "success",
+                            Titulo = $"Trato caliente: {c.empresa}",
+                            Mensaje = $"Oportunidad '{opAlta.nombre}' de alto valor ({opAlta.valor_estimado:C}) está en etapa de Propuesta. Se recomienda contactar hoy.",
+                            Accion = Url.Action("Detalle", "Oportunidades", new { id = opAlta.id_oportunidad })
+                        });
+                    }
+                }
+
+                ViewBag.Recomendaciones = recomendaciones.OrderBy(r => r.Tipo == "success" ? 0 : (r.Tipo == "warning" ? 1 : 2)).Take(3).ToList();
+
+                // listas para templates de correos (HU-032)
+                ViewBag.ClientesEmail = clientesRec;
+                ViewBag.ContactosEmail = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+
+                return View();
             }
-
-            ViewBag.Recomendaciones = recomendaciones.OrderBy(r => r.Tipo == "success" ? 0 : (r.Tipo == "warning" ? 1 : 2)).Take(3).ToList();
-
-            // listas para templates de correos (HU-032)
-            ViewBag.ClientesEmail = db.clientes.ToList();
-            ViewBag.ContactosEmail = db.contacto_cliente.ToList();
-
-            return View();
         }
 
         // GET: Dashboard/RedactorCorreos
@@ -369,8 +366,11 @@ namespace CRMRSG.Controllers
 
             EnviarCorreosProgramados();
 
-            ViewBag.ClientesEmail = db.clientes.ToList();
-            ViewBag.ContactosEmail = db.contacto_cliente.ToList();
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.ClientesEmail = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                ViewBag.ContactosEmail = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+            }
 
             return View();
         }
@@ -379,51 +379,58 @@ namespace CRMRSG.Controllers
         {
             DateTime limiteAlerta = DateTime.Today.AddDays(2);
             DateTime hoy = DateTime.Today;
-            var tareasProximas = db.tareas
-                .Where(t => t.estado != "Completada"
-                          && t.fecha_limite.HasValue
-                          && t.fecha_limite.Value <= limiteAlerta
-                          && (isAdmin || t.id_usuario == currentUserId))
-                .ToList();
 
-            bool huboCambios = false;
-            foreach (var tarea in tareasProximas)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                if (tarea.alerta_disparada == null || tarea.alerta_disparada == false)
+                var listado = db.Query<tarea>(
+                    "sp_tareas_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                var tareasProximas = listado
+                    .Where(t => t.estado != "Completada"
+                             && t.fecha_limite.HasValue
+                             && t.fecha_limite.Value.Date <= limiteAlerta
+                             && (isAdmin || t.id_usuario == currentUserId))
+                    .ToList();
+
+                foreach (var tarea in tareasProximas)
                 {
-                    string diasRestantesMsg = "";
-                    if (tarea.fecha_limite.Value < hoy)
+                    if (tarea.alerta_disparada == null || tarea.alerta_disparada == false)
                     {
-                        diasRestantesMsg = "¡Está VENCIDA desde el " + tarea.fecha_limite.Value.ToString("dd/MM/yyyy") + "!";
-                    }
-                    else if (tarea.fecha_limite.Value == hoy)
-                    {
-                        diasRestantesMsg = "Vence HOY.";
-                    }
-                    else
-                    {
-                        int dias = (tarea.fecha_limite.Value - hoy).Days;
-                        diasRestantesMsg = $"Vence en {dias} días ({tarea.fecha_limite.Value.ToString("dd/MM/yyyy")}).";
-                    }
+                        string diasRestantesMsg = "";
+                        if (tarea.fecha_limite.Value.Date < hoy)
+                        {
+                            diasRestantesMsg = "¡Está VENCIDA desde el " + tarea.fecha_limite.Value.ToString("dd/MM/yyyy") + "!";
+                        }
+                        else if (tarea.fecha_limite.Value.Date == hoy)
+                        {
+                            diasRestantesMsg = "Vence HOY.";
+                        }
+                        else
+                        {
+                            int dias = (tarea.fecha_limite.Value.Date - hoy).Days;
+                            diasRestantesMsg = $"Vence en {dias} días ({tarea.fecha_limite.Value.ToString("dd/MM/yyyy")}).";
+                        }
 
-                    var nuevaNotificacion = new notificacione
-                    {
-                        mensaje = $"Alerta de Seguimiento: La tarea '{tarea.titulo}' requiere atención. {diasRestantesMsg}",
-                        fecha = DateTime.Now,
-                        leida = false,
-                        id_usuario = tarea.id_usuario,
-                        tipo = "Alerta de Seguimiento",
-                        id_referencia = tarea.id_tarea
-                    };
+                        db.Execute(
+                            "sp_notificaciones_insertar",
+                            new {
+                                p_mensaje = $"Alerta de Seguimiento: La tarea '{tarea.titulo}' requiere atención. {diasRestantesMsg}",
+                                p_id_usuario = tarea.id_usuario,
+                                p_tipo = "Alerta de Seguimiento",
+                                p_id_referencia = tarea.id_tarea
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
 
-                    db.notificaciones.Add(nuevaNotificacion);
-                    tarea.alerta_disparada = true;
-                    huboCambios = true;
+                        db.Execute(
+                            "sp_tareas_actualizar_alerta",
+                            new { p_id_tarea = tarea.id_tarea, p_alerta = 1 },
+                            commandType: CommandType.StoredProcedure
+                        );
+                    }
                 }
-            }
-            if (huboCambios)
-            {
-                db.SaveChanges();
             }
         }
 
@@ -434,8 +441,11 @@ namespace CRMRSG.Controllers
             {
                 return RedirectToAction("Login", "Autenticacion");
             }
-            ViewBag.Clientes = db.clientes.ToList();
-            ViewBag.Contactos = db.contacto_cliente.ToList();
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                ViewBag.Clientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                ViewBag.Contactos = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+            }
             return View();
         }
 
@@ -449,49 +459,58 @@ namespace CRMRSG.Controllers
 
             int usuarioId = (int)Session["UsuarioId"];
             int rolId = (int)Session["RolId"];
-            
-            // Citas
-            var queryCitas = db.citas.AsQueryable();
-            if (rolId != 1)
+
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                queryCitas = queryCitas.Where(c => c.id_usuario == usuarioId);
-            }
-            var listCitasCrudas = queryCitas.ToList();
-            foreach (var c in listCitasCrudas)
-            {
-                c.id_contacto = db.Database.SqlQuery<int?>("SELECT id_contacto FROM citas WHERE id_cita = " + c.id_cita).FirstOrDefault();
-                if (c.id_contacto.HasValue)
+                string userClause = "";
+                var paramsObj = new DynamicParameters();
+                paramsObj.Add("@UsuarioId", usuarioId);
+
+                if (rolId != 1)
                 {
-                    int cid = c.id_contacto.Value;
-                    c.contacto_nombre = db.contacto_cliente.Where(co => co.id_contacto == cid).Select(co => co.nombre).FirstOrDefault();
+                    userClause = " WHERE c.id_usuario = @UsuarioId";
                 }
-            }
-            var listCitas = listCitasCrudas.Select(c => new
-            {
-                id = "cita_" + c.id_cita,
-                title = "📅 " + (c.descripcion ?? "Cita") + (string.IsNullOrEmpty(c.contacto_nombre) ? "" : " (" + c.contacto_nombre + ")"),
-                start = c.fecha.ToString("yyyy-MM-dd") + "T" + c.hora.ToString(@"hh\:mm\:ss"),
-                description = (c.lugar ?? "Sin ubicación") + (string.IsNullOrEmpty(c.contacto_nombre) ? "" : " | Contacto: " + c.contacto_nombre),
-                className = c.estado == "Completada" ? "bg-success" : (c.estado == "Cancelada" ? "bg-danger" : "bg-warning")
-            }).ToList();
 
-            // Oportunidades
-            var queryOps = db.oportunidades.AsQueryable();
-            if (rolId != 1)
-            {
-                queryOps = queryOps.Where(o => o.id_usuario == usuarioId);
-            }
-            var listOps = queryOps.Where(o => o.fecha_creacion != null).ToList().Select(o => new
-            {
-                id = "op_" + o.id_oportunidad,
-                title = "💼 Oportunidad: " + o.nombre + " (" + o.etapa + ")",
-                start = o.fecha_creacion.Value.ToString("yyyy-MM-dd"),
-                description = $"Valor estimado: {o.valor_estimado:C}",
-                className = "bg-primary"
-            }).ToList();
+                // Citas con contacto_nombre
+                var listCitasCrudas = db.Query<cita>(
+                    $@"SELECT c.*, co.nombre AS contacto_nombre 
+                       FROM citas c 
+                       LEFT JOIN contacto_cliente co ON c.id_contacto = co.id_contacto
+                       {userClause}",
+                    paramsObj
+                ).ToList();
 
-            var todosEventos = listCitas.Cast<object>().Concat(listOps.Cast<object>()).ToList();
-            return Json(todosEventos, JsonRequestBehavior.AllowGet);
+                var listCitas = listCitasCrudas.Select(c => new
+                {
+                    id = "cita_" + c.id_cita,
+                    title = "📅 " + (c.descripcion ?? "Cita") + (string.IsNullOrEmpty(c.contacto_nombre) ? "" : " (" + c.contacto_nombre + ")"),
+                    start = c.fecha.ToString("yyyy-MM-dd") + "T" + c.hora.ToString(@"hh\:mm\:ss"),
+                    description = (c.lugar ?? "Sin ubicación") + (string.IsNullOrEmpty(c.contacto_nombre) ? "" : " | Contacto: " + c.contacto_nombre),
+                    className = c.estado == "Completada" ? "bg-success" : (c.estado == "Cancelada" ? "bg-danger" : "bg-warning")
+                }).ToList();
+
+                string userClauseOps = "";
+                if (rolId != 1)
+                {
+                    userClauseOps = " WHERE id_usuario = @UsuarioId";
+                }
+
+                // Oportunidades
+                var listOps = db.Query<oportunidade>(
+                    $"SELECT * FROM oportunidades {userClauseOps}",
+                    paramsObj
+                ).Where(o => o.fecha_creacion != null).ToList().Select(o => new
+                {
+                    id = "op_" + o.id_oportunidad,
+                    title = "💼 Oportunidad: " + o.nombre + " (" + o.etapa + ")",
+                    start = o.fecha_creacion.Value.ToString("yyyy-MM-dd"),
+                    description = $"Valor estimado: {o.valor_estimado:C}",
+                    className = "bg-primary"
+                }).ToList();
+
+                var todosEventos = listCitas.Cast<object>().Concat(listOps.Cast<object>()).ToList();
+                return Json(todosEventos, JsonRequestBehavior.AllowGet);
+            }
         }
 
         // POST: Dashboard/CrearEventoRapido
@@ -507,27 +526,31 @@ namespace CRMRSG.Controllers
 
                 DateTime dateVal = DateTime.Parse(fecha);
                 TimeSpan timeVal = TimeSpan.Parse(hora);
+                int usuarioId = (int)Session["UsuarioId"];
 
-                var nuevaCita = new cita
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    descripcion = descripcion,
-                    fecha = dateVal,
-                    hora = timeVal,
-                    lugar = lugar ?? "Oficina",
-                    estado = estado ?? "Pendiente",
-                    id_cliente = id_cliente,
-                    id_usuario = (int)Session["UsuarioId"]
-                };
+                    var id_cita = db.QuerySingle<int>(
+                        "sp_citas_insertar",
+                        new {
+                            p_fecha = dateVal,
+                            p_hora = timeVal,
+                            p_descripcion = descripcion,
+                            p_lugar = lugar ?? "Oficina",
+                            p_estado = estado ?? "Pendiente",
+                            p_id_cliente = id_cliente,
+                            p_id_usuario = usuarioId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
 
-                db.citas.Add(nuevaCita);
-                db.SaveChanges();
+                    if (id_contacto.HasValue && id_contacto.Value > 0)
+                    {
+                        db.Execute("UPDATE citas SET id_contacto = @IdContacto WHERE id_cita = @IdCita", new { IdContacto = id_contacto.Value, IdCita = id_cita });
+                    }
 
-                if (id_contacto.HasValue && id_contacto.Value > 0)
-                {
-                    db.Database.ExecuteSqlCommand("UPDATE citas SET id_contacto = @p0 WHERE id_cita = @p1", id_contacto.Value, nuevaCita.id_cita);
+                    return Json(new { success = true, id = id_cita, message = "Evento agendado con éxito." });
                 }
-
-                return Json(new { success = true, id = nuevaCita.id_cita, message = "Evento agendado con éxito." });
             }
             catch (Exception ex)
             {
@@ -566,10 +589,13 @@ namespace CRMRSG.Controllers
 
                 DateTime fProg = DateTime.Parse(fechaProgramada);
 
-                db.Database.ExecuteSqlCommand(
-                    "INSERT INTO correos_programados (destinatario, asunto, cuerpo, fecha_envio, enviado) VALUES (@p0, @p1, @p2, @p3, 0)",
-                    destinatario, asunto, cuerpo, fProg
-                );
+                using (var db = DbConnectionFactory.GetConnection())
+                {
+                    db.Execute(
+                        "INSERT INTO correos_programados (destinatario, asunto, cuerpo, fecha_envio, enviado) VALUES (@Dest, @Asunto, @Cuerpo, @Fecha, 0)",
+                        new { Dest = destinatario, Asunto = asunto, Cuerpo = cuerpo, Fecha = fProg }
+                    );
+                }
 
                 return Json(new { success = true, message = "Correo programado con éxito para el " + fProg.ToString("dd/MM/yyyy HH:mm") + "." });
             }
@@ -584,17 +610,20 @@ namespace CRMRSG.Controllers
             try
             {
                 var ahora = DateTime.Now;
-                var list = db.Database.SqlQuery<CorreoProgramado>("SELECT * FROM correos_programados WHERE enviado = 0 AND fecha_envio <= @p0", ahora).ToList();
-                foreach (var c in list)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    try
+                    var list = db.Query<CorreoProgramado>("SELECT * FROM correos_programados WHERE enviado = 0 AND fecha_envio <= @Ahora", new { Ahora = ahora }).ToList();
+                    foreach (var c in list)
                     {
-                        EnviarEmailNet(c.destinatario, c.asunto, c.cuerpo);
-                        db.Database.ExecuteSqlCommand("UPDATE correos_programados SET enviado = 1 WHERE id_correo = @p0", c.id_correo);
-                    }
-                    catch
-                    {
-                        // Ignore single email failures
+                        try
+                        {
+                            EnviarEmailNet(c.destinatario, c.asunto, c.cuerpo);
+                            db.Execute("UPDATE correos_programados SET enviado = 1 WHERE id_correo = @Id", new { Id = c.id_correo });
+                        }
+                        catch
+                        {
+                            // Ignore single email failures
+                        }
                     }
                 }
             }
@@ -659,15 +688,6 @@ namespace CRMRSG.Controllers
                     client.Send(message);
                 }
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

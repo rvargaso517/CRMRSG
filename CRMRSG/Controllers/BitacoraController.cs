@@ -1,13 +1,14 @@
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class BitacoraController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         public ActionResult Index(int? usuarioId)
         {
             if (Session["RolId"] == null || (int)Session["RolId"] != 1)
@@ -16,31 +17,44 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            var query = db.bitacoras.AsQueryable();
-
-            if (usuarioId.HasValue)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                query = query.Where(x => x.id_usuario == usuarioId.Value);
+                var historial = db.Query<bitacora, usuario, bitacora>(
+                    "sp_bitacora_listar_con_usuario",
+                    (b, u) => {
+                        b.usuario = u;
+                        return b;
+                    },
+                    splitOn: "id_usuario",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                if (usuarioId.HasValue)
+                {
+                    historial = historial.Where(x => x.id_usuario == usuarioId.Value).ToList();
+                }
+
+                var usuarios = db.Query<usuario>(
+                    "sp_usuarios_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                ViewBag.Usuarios = usuarios;
+                ViewBag.SelectedUsuarioId = usuarioId;
+
+                // Datos para el gráfico de actividad por usuario (Top 5 usuarios más activos)
+                var stats = historial
+                    .GroupBy(x => x.usuario != null ? x.usuario.nombre + " " + x.usuario.apellido : "Sistema/Anónimo")
+                    .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
+                    .OrderByDescending(x => x.Cantidad)
+                    .Take(5)
+                    .ToList();
+
+                ViewBag.ChartLabels = stats.Select(s => s.Nombre).ToArray();
+                ViewBag.ChartData = stats.Select(s => s.Cantidad).ToArray();
+
+                return View(historial);
             }
-
-            var historial = query.OrderByDescending(x => x.fecha_hora).ToList();
-
-            ViewBag.Usuarios = db.usuarios.ToList();
-            ViewBag.SelectedUsuarioId = usuarioId;
-
-            // Datos para el gráfico de actividad por usuario (Top 5 usuarios más activos)
-            var stats = db.bitacoras
-                .GroupBy(x => x.usuario != null ? x.usuario.nombre + " " + x.usuario.apellido : "Sistema/Anónimo")
-                .Select(g => new { Nombre = g.Key, Cantidad = g.Count() })
-                .OrderByDescending(x => x.Cantidad)
-                .Take(5)
-                .ToList();
-
-            ViewBag.ChartLabels = stats.Select(s => s.Nombre).ToArray();
-            ViewBag.ChartData = stats.Select(s => s.Cantidad).ToArray();
-
-            return View(historial);
         }
     }
-
 }

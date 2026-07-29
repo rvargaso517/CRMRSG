@@ -1,0 +1,167 @@
+/* Dashboard Custom Styles */
+
+.metric-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid #eef2f5;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.09);
+}
+
+.metric-card .icon-container {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.metric-card .label {
+    font-size: 14px;
+    color: #8898aa;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.metric-card .value {
+    font-size: 32px;
+    font-weight: 750;
+    color: #2b354f;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.metric-card .trend {
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 20px;
+}
+
+.metric-card .trend.up {
+    background-color: rgba(45, 206, 137, 0.12);
+    color: #2dce89;
+}
+
+.metric-card .trend.down {
+    background-color: rgba(245, 54, 92, 0.12);
+    color: #f5365c;
+}
+
+/* Mejoras para charts */
+.chart-responsive {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.box {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    background-color: #ffffff;
+    transition: all 0.3s ease;
+}
+
+.box:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.box-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.box-header .box-title,
+.box-header h4.box-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0;
+    text-transform: capitalize;
+    color: #1a2332 !important;
+    letter-spacing: 0.3px;
+    opacity: 0.95;
+}
+
+.box-body {
+    padding: 20px 24px;
+}
+
+/* Mejorar tablas */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table th {
+    background-color: #f5f7fa;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: #5a6a85;
+    padding: 12px 10px;
+}
+
+.table td {
+    padding: 12px 10px;
+    vertical-align: middle;
+    color: #3d4a60;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(245, 247, 250, 0.5);
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Responsive mobile */
+@media (max-width: 768px) {
+    .box-header .box-title {
+        font-size: 12px;
+    }
+
+    .box-body {
+        padding: 15px 15px;
+    }
+
+    .table {
+        font-size: 12px;
+    }
+}
+
+/* Tema oscuro - fuerza contraste en los títulos */
+/* Estos selectores se aplican cuando el layout inyecta estilos dinámicos */
+body .box-header .box-title {
+    font-weight: 700 !important;
+}
+
+.dark-theme .box-header .box-title,
+.dark-mode .box-header .box-title {
+    color: #ffffff !important;
+}

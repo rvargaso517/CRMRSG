@@ -4,13 +4,14 @@ using System.Web.Mvc;
 using CRMRSG.EntityFramework;
 using System.Security.Cryptography;
 using System.Text;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class PerfilController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         // GET: Perfil
         public ActionResult Index()
         {
@@ -20,14 +21,21 @@ namespace CRMRSG.Controllers
             }
 
             int usuarioId = (int)Session["UsuarioId"];
-            var usuario = db.usuarios.Find(usuarioId);
-
-            if (usuario == null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return HttpNotFound("No se encontró el usuario en la base de datos.");
-            }
+                var usuario = db.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_id",
+                    new { p_id_usuario = usuarioId },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            return View(usuario);
+                if (usuario == null)
+                {
+                    return HttpNotFound("No se encontró el usuario en la base de datos.");
+                }
+
+                return View(usuario);
+            }
         }
 
         // POST: Perfil/Actualizar
@@ -42,39 +50,61 @@ namespace CRMRSG.Controllers
 
             try
             {
-                var usuarioDb = db.usuarios.Find(datosActualizados.id_usuario);
-
-                if (usuarioDb != null)
+                using (var db = DbConnectionFactory.GetConnection())
                 {
-                    // Actualizar campos personales
-                    usuarioDb.nombre = datosActualizados.nombre;
-                    usuarioDb.apellido = datosActualizados.apellido;
-                    usuarioDb.correo = datosActualizados.correo;
-                    usuarioDb.telefono = datosActualizados.telefono;
+                    var usuarioDb = db.QueryFirstOrDefault<usuario>(
+                        "sp_usuarios_obtener_por_id",
+                        new { p_id_usuario = datosActualizados.id_usuario },
+                        commandType: CommandType.StoredProcedure
+                    );
 
-                    // Actualizar contraseña si se proporcionó una nueva
-                    if (!string.IsNullOrWhiteSpace(nuevaPassword))
+                    if (usuarioDb != null)
                     {
-                        if (nuevaPassword.Length < 8)
+                        // Actualizar campos personales
+                        db.Execute(
+                            "sp_usuarios_actualizar",
+                            new {
+                                p_id_usuario = datosActualizados.id_usuario,
+                                p_nombre = datosActualizados.nombre,
+                                p_apellido = datosActualizados.apellido,
+                                p_correo = datosActualizados.correo,
+                                p_telefono = datosActualizados.telefono,
+                                p_estado = usuarioDb.estado,
+                                p_id_rol = usuarioDb.id_rol
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+
+                        // Actualizar contraseña si se proporcionó una nueva
+                        if (!string.IsNullOrWhiteSpace(nuevaPassword))
                         {
-                            TempData["MensajeError"] = "La nueva contraseña debe tener al menos 8 caracteres.";
-                            return RedirectToAction("Index");
+                            if (nuevaPassword.Length < 8)
+                            {
+                                TempData["MensajeError"] = "La nueva contraseña debe tener al menos 8 caracteres.";
+                                return RedirectToAction("Index");
+                            }
+                            
+                            db.Execute(
+                                "sp_usuarios_actualizar_contrasena",
+                                new {
+                                    p_id_usuario = datosActualizados.id_usuario,
+                                    p_password_hash = HashPassword(nuevaPassword)
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
                         }
-                        usuarioDb.password_hash = HashPassword(nuevaPassword);
+
+                        // Actualizar variables de sesión relacionadas con la información del usuario
+                        Session["NombreCompleto"] = $"{datosActualizados.nombre} {datosActualizados.apellido}".Trim();
+                        Session["Nombre"] = datosActualizados.nombre;
+                        Session["Correo"] = datosActualizados.correo;
+
+                        TempData["MensajeExito"] = "¡Perfil actualizado con éxito!";
                     }
-
-                    db.SaveChanges();
-
-                    // Actualizar variables de sesión relacionadas con la información del usuario
-                    Session["NombreCompleto"] = $"{usuarioDb.nombre} {usuarioDb.apellido}".Trim();
-                    Session["Nombre"] = usuarioDb.nombre;
-                    Session["Correo"] = usuarioDb.correo;
-
-                    TempData["MensajeExito"] = "¡Perfil actualizado con éxito!";
-                }
-                else
-                {
-                    TempData["MensajeError"] = "No se pudo encontrar el usuario para actualizar.";
+                    else
+                    {
+                        TempData["MensajeError"] = "No se pudo encontrar el usuario para actualizar.";
+                    }
                 }
             }
             catch (Exception ex)
@@ -97,15 +127,6 @@ namespace CRMRSG.Controllers
                 }
                 return builder.ToString();
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

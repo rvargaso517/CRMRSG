@@ -9,64 +9,7 @@
     var chartCantidades = (int[])ViewBag.EventosCantidades;
 }
 
-<style>
-    .metric-card {
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        border: 1px solid #eef2f5;
-        padding: 24px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-    }
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.09);
-    }
-    .metric-card .icon-container {
-        width: 52px;
-        height: 52px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
-    .metric-card .label {
-        font-size: 14px;
-        color: #8898aa;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 15px;
-        margin-bottom: 5px;
-    }
-    .metric-card .value {
-        font-size: 32px;
-        font-weight: 750;
-        color: #2b354f;
-        margin-bottom: 8px;
-        line-height: 1;
-    }
-    .metric-card .trend {
-        font-size: 13px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        padding: 3px 8px;
-        border-radius: 20px;
-    }
-    .metric-card .trend.up {
-        background-color: rgba(45, 206, 137, 0.12);
-        color: #2dce89;
-    }
-    .metric-card .trend.down {
-        background-color: rgba(245, 54, 92, 0.12);
-        color: #f5365c;
-    }
-</style>
+<link rel="stylesheet" href="@Url.Content("~/Content/css/dashboard-custom.css")" />
 
 <div class="box-body px-0 content-header d-lg-flex d-sm-block align-items-center justify-content-between" style="margin-bottom: 30px !important;">
     <h1>
@@ -402,25 +345,31 @@
                 <div class="box-header with-border">
                     <h4 class="box-title">Rendimiento y Productividad de Vendedores</h4>
                 </div>
-                <div class="box-body" style="max-height: 250px; overflow-y: auto;">
+                <div class="box-body">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover table-striped mb-0" style="font-size: 13px;">
                             <thead class="bg-light">
                                 <tr>
-                                    <th>Colaborador / Vendedor</th>
-                                    <th class="text-center">Clientes</th>
-                                    <th class="text-center">Oportunidades</th>
-                                    <th class="text-center">Tareas</th>
+                                    <th style="min-width: 140px;">Colaborador / Vendedor</th>
+                                    <th class="text-center" style="min-width: 80px;">Clientes</th>
+                                    <th class="text-center" style="min-width: 100px;">Oportunidades</th>
+                                    <th class="text-center" style="min-width: 75px;">Tareas</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var item in (IEnumerable<CRMRSG.Controllers.VendedorRendimiento>)ViewBag.Vendedores)
                                 {
-                                    <tr>
-                                        <td class="fw-bold">@item.Nombre</td>
-                                        <td class="text-center">@item.Clientes</td>
-                                        <td class="text-center">@item.Oportunidades</td>
-                                        <td class="text-center">@item.Tareas</td>
+                                    <tr style="border-bottom: 1px solid #e9ecef;">
+                                        <td class="fw-bold text-dark">@item.Nombre</td>
+                                        <td class="text-center">
+                                            <span class="badge badge-info-light fs-11">@item.Clientes</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-success-light fs-11">@item.Oportunidades</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge badge-warning-light fs-11">@item.Tareas</span>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -433,7 +382,7 @@
 </div>
 
 @section scripts {
-    <script src="~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js"></script>
+    <script src="@Url.Content("~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js")"></script>
 
     <script>
         $(document).ready(function () {
@@ -551,27 +500,34 @@
                     }],
                     chart: {
                         type: 'bar',
-                        height: 240,
+                        height: 380,
                         toolbar: { show: false },
-                        background: 'transparent'
+                        background: 'transparent',
+                        sparkline: { enabled: false }
                     },
                     theme: { mode: chartThemeMode },
                     plotOptions: {
                         bar: {
-                            borderRadius: 6,
+                            borderRadius: 8,
                             horizontal: false,
-                            columnWidth: '45%',
-                            distributed: true
+                            columnWidth: '65%',
+                            distributed: true,
+                            dataLabels: {
+                                position: 'top'
+                            }
                         }
                     },
                     dataLabels: {
                         enabled: true,
                         formatter: function (val) {
-                            return "$" + val.toLocaleString();
+                            return "$" + Math.floor(val).toLocaleString();
                         },
                         style: {
-                            colors: ['#FFFFFF']
-                        }
+                            colors: ['#FFFFFF'],
+                            fontSize: '12px',
+                            fontWeight: 600
+                        },
+                        offsetY: -10
                     },
                     colors: selectedColors.bar,
                     xaxis: {
@@ -579,22 +535,45 @@
                         labels: {
                             style: {
                                 colors: chartLabelColor,
-                                fontWeight: 500
-                            }
+                                fontWeight: 600,
+                                fontSize: '12px'
+                            },
+                            maxHeight: 100
                         }
                     },
                     yaxis: {
                         title: {
-                            text: 'Monto ($)'
+                            text: 'Monto ($)',
+                            style: {
+                                color: chartLabelColor,
+                                fontWeight: 600
+                            }
                         },
                         labels: {
                             formatter: function (val) {
-                                return "$" + val.toLocaleString();
+                                return "$" + Math.floor(val).toLocaleString();
+                            },
+                            style: {
+                                colors: chartLabelColor,
+                                fontSize: '11px'
                             }
                         }
                     },
                     grid: {
-                        borderColor: '#ededed'
+                        borderColor: chartThemeMode === 'dark' ? '#444' : '#ededed',
+                        strokeDashArray: 4,
+                        xaxis: {
+                            lines: { show: false }
+                        }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        theme: chartThemeMode,
+                        y: {
+                            formatter: function(val) {
+                                return "$" + Math.floor(val).toLocaleString();
+                            }
+                        }
                     },
                     legend: {
                         show: false
@@ -877,6 +856,19 @@
             if (savedColor) {
                 $('.card-email-header').css('background-color', savedColor);
                 $('#btn-enviar-correo-now').css('background-color', savedColor);
+            }
+
+            // Mejorar contraste de títulos en modo oscuro (HU-038)
+            var boxBgColorForTitle = localStorage.getItem('crm_box_bg_color') || '#ffffff';
+            var rTitle = parseInt(boxBgColorForTitle.substr(1, 2), 16);
+            var gTitle = parseInt(boxBgColorForTitle.substr(3, 2), 16);
+            var bTitle = parseInt(boxBgColorForTitle.substr(5, 2), 16);
+            var yiqTitle = ((rTitle * 299) + (gTitle * 587) + (bTitle * 114)) / 1000;
+
+            if (yiqTitle < 128) {
+                // Modo oscuro: aplicar texto blanco a títulos
+                $('.box-header .box-title').css('color', '#ffffff');
+                $('.box-header h4').css('color', '#ffffff');
             }
 
         });

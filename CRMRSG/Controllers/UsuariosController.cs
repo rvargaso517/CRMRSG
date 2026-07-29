@@ -1,17 +1,17 @@
 using System;
-using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
 using System.Security.Cryptography;
 using System.Text;
+using System.Data;
+using Dapper;
+using CRMRSG.Models;
 
 namespace CRMRSG.Controllers
 {
     public class UsuariosController : Controller
     {
-        private CRM_RSGEntities db = new CRM_RSGEntities();
-
         // GET: Usuarios
         public ActionResult Index()
         {
@@ -21,9 +21,25 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index", "Dashboard");
             }
 
-            var listaUsuarios = db.usuarios.Include(u => u.role).ToList();
-            ViewBag.Roles = db.roles.ToList();
-            return View(listaUsuarios);
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                var listaUsuarios = db.Query<usuario, role, usuario>(
+                    "sp_usuarios_listar",
+                    (u, r) => {
+                        u.role = r;
+                        return u;
+                    },
+                    splitOn: "RolNombre",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                ViewBag.Roles = db.Query<role>(
+                    "sp_roles_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                return View(listaUsuarios);
+            }
         }
 
         // POST: Usuarios/ToggleEstado
@@ -36,22 +52,43 @@ namespace CRMRSG.Controllers
                 return Json(new { success = false, message = "No autorizado" });
             }
 
-            var usuario = db.usuarios.Find(id);
-            if (usuario == null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                return Json(new { success = false, message = "Usuario no encontrado" });
+                var user = db.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_id",
+                    new { p_id_usuario = id },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                // Evitar que el administrador se desactive a sí mismo
+                if (user.id_usuario == (int)Session["UsuarioId"])
+                {
+                    return Json(new { success = false, message = "No puede desactivar su propia cuenta" });
+                }
+
+                bool nuevoEstado = !(user.estado ?? false);
+
+                db.Execute(
+                    "sp_usuarios_actualizar",
+                    new {
+                        p_id_usuario = user.id_usuario,
+                        p_nombre = user.nombre,
+                        p_apellido = user.apellido,
+                        p_correo = user.correo,
+                        p_telefono = user.telefono,
+                        p_estado = nuevoEstado ? 1 : 0,
+                        p_id_rol = user.id_rol // wait, the SP parameter is p_id_rol not p_id_role! Let's check: p_id_rol. Yes!
+                    },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                return Json(new { success = true, nuevoEstado = nuevoEstado, message = "Estado actualizado con éxito" });
             }
-
-            // Evitar que el administrador se desactive a sí mismo
-            if (usuario.id_usuario == (int)Session["UsuarioId"])
-            {
-                return Json(new { success = false, message = "No puede desactivar su propia cuenta" });
-            }
-
-            usuario.estado = !(usuario.estado ?? false);
-            db.SaveChanges();
-
-            return Json(new { success = true, nuevoEstado = usuario.estado, message = "Estado actualizado con éxito" });
         }
 
         // POST: Usuarios/CambiarRol
@@ -65,22 +102,41 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            var usuario = db.usuarios.Find(id_usuario);
-            if (usuario == null)
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                TempData["Error"] = "Usuario no encontrado.";
-                return RedirectToAction("Index");
-            }
+                var user = db.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_id",
+                    new { p_id_usuario = id_usuario },
+                    commandType: CommandType.StoredProcedure
+                );
 
-            // Evitar que el administrador se cambie el rol a sí mismo
-            if (usuario.id_usuario == (int)Session["UsuarioId"])
-            {
-                TempData["Error"] = "No puede cambiar el rol de su propia cuenta.";
-                return RedirectToAction("Index");
-            }
+                if (user == null)
+                {
+                    TempData["Error"] = "Usuario no encontrado.";
+                    return RedirectToAction("Index");
+                }
 
-            usuario.id_rol = id_rol;
-            db.SaveChanges();
+                // Evitar que el administrador se cambie el rol a sí mismo
+                if (user.id_usuario == (int)Session["UsuarioId"])
+                {
+                    TempData["Error"] = "No puede cambiar el rol de su propia cuenta.";
+                    return RedirectToAction("Index");
+                }
+
+                db.Execute(
+                    "sp_usuarios_actualizar",
+                    new {
+                        p_id_usuario = id_usuario,
+                        p_nombre = user.nombre,
+                        p_apellido = user.apellido,
+                        p_correo = user.correo,
+                        p_telefono = user.telefono,
+                        p_estado = user.estado ?? true ? 1 : 0,
+                        p_id_rol = id_rol
+                    },
+                    commandType: CommandType.StoredProcedure
+                );
+            }
 
             TempData["Success"] = "Rol actualizado correctamente.";
             return RedirectToAction("Index");
@@ -103,26 +159,33 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Index");
             }
 
-            if (db.usuarios.Any(u => u.correo == correo))
+            using (var db = DbConnectionFactory.GetConnection())
             {
-                TempData["Error"] = "El correo electrónico ya está registrado.";
-                return RedirectToAction("Index");
+                var existing = db.QueryFirstOrDefault<usuario>(
+                    "sp_usuarios_obtener_por_correo",
+                    new { p_correo = correo },
+                    commandType: CommandType.StoredProcedure
+                );
+
+                if (existing != null)
+                {
+                    TempData["Error"] = "El correo electrónico ya está registrado.";
+                    return RedirectToAction("Index");
+                }
+
+                db.Execute(
+                    "sp_usuarios_insertar",
+                    new {
+                        p_nombre = nombre,
+                        p_apellido = apellido,
+                        p_correo = correo,
+                        p_password_hash = HashPassword(password),
+                        p_telefono = (string)null,
+                        p_id_rol = id_rol
+                    },
+                    commandType: CommandType.StoredProcedure
+                );
             }
-
-            var nuevoUsuario = new usuario
-            {
-                nombre = nombre,
-                apellido = apellido,
-                correo = correo,
-                password_hash = HashPassword(password),
-                estado = true,
-                correo_verificado = true,
-                fecha_creacion = DateTime.Now,
-                id_rol = id_rol
-            };
-
-            db.usuarios.Add(nuevoUsuario);
-            db.SaveChanges();
 
             TempData["Success"] = "Usuario creado con éxito.";
             return RedirectToAction("Index");
@@ -140,15 +203,6 @@ namespace CRMRSG.Controllers
                 }
                 return builder.ToString();
             }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

@@ -130,7 +130,7 @@
                     .box-title, .card-title, h1, h2, h3, h4, h5, h6, .text-dark, td, th, 
                     .metric-card .value, .timeline-title, .fc-event-title, .fc-col-header-cell-cushion, 
                     .fc-daygrid-day-number, .fc-list-event-title, .list-group-item h6, .list-group-item p,
-                    .list-group-item .text-dark, .list-group-item strong {
+                    .list-group-item .text-dark, .list-group-item strong, .box-header .box-title {
                         color: ` + contrastBoxColor + ` !important;
                     }
                     .box p, .card p, .text-fade, .text-muted, .small, .metric-card .label, 
@@ -603,13 +603,12 @@
 
                             // Mostrar alertas emergentes de SweetAlert2 para las no leídas (solo una vez por notificación)
                             if (mostrarPopups && unreadCount > 0) {
-                                if (!window.shownNotificationIds) {
-                                    window.shownNotificationIds = [];
-                                }
+                                var shownIds = JSON.parse(sessionStorage.getItem('shown_notification_ids') || '[]');
                                 var indexDelay = 0;
                                 unreadNotifications.forEach(function(noti) {
-                                    if (window.shownNotificationIds.indexOf(noti.id_notificacion) === -1) {
-                                        window.shownNotificationIds.push(noti.id_notificacion);
+                                    if (shownIds.indexOf(noti.id_notificacion) === -1) {
+                                        shownIds.push(noti.id_notificacion);
+                                        sessionStorage.setItem('shown_notification_ids', JSON.stringify(shownIds));
                                         setTimeout(function() {
                                             Swal.fire({
                                                 title: '🔔 Alerta de CRM',
