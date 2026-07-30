@@ -344,6 +344,7 @@
                                     <ul class="treeview-menu">
                                         <li><a href="@Url.Action("Index", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Oportunidades</a></li>
                                         <li><a href="@Url.Action("Crear", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Oportunidad</a></li>
+                                        <li><a href="@Url.Action("Kanban", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Tablero</a></li>
                                     </ul>
                                 </li>
                             }
@@ -394,6 +395,8 @@
                                     <li><a href="@Url.Action("Index", "Notificaciones")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Notificaciones</a></li>
                                 </ul>
                             </li>
+
+                           
 
                             @if (Session["RolId"] != null && (int)Session["RolId"] == 1)
                             {

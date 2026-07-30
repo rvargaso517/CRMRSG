@@ -2304,6 +2304,7 @@
     <Content Include="Views\Perfil\Index.cshtml" />
     <Content Include="Views\Roles\Index.cshtml" />
     <Content Include="Views\Citas\Index.cshtml" />
+    <Content Include="Views\Oportunidades\Kanban.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

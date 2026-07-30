@@ -54,6 +54,40 @@ namespace CRMRSG.Controllers
             }
         }
 
+        // GET: Oportunidades/Kanban
+        public ActionResult Kanban()
+        {
+            if (!TienePermiso("Oportunidades:Ver"))
+            {
+                TempData["Error"] = "No tiene permisos para ver Oportunidades.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+
+            int usuarioId = (int)Session["UsuarioId"];
+            int rolId = (int)Session["RolId"];
+
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                var lista = db.Query<oportunidade, cliente, usuario, oportunidade>(
+                    "sp_oportunidades_listar_con_relaciones",
+                    (op, cl, usr) => {
+                        op.cliente = cl;
+                        op.usuario = usr;
+                        return op;
+                    },
+                    splitOn: "id_cliente,id_usuario",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                if (rolId != 1)
+                {
+                    lista = lista.Where(o => o.id_usuario == usuarioId).ToList();
+                }
+
+                return View(lista);
+            }
+        }
+
         // GET: Oportunidades/Crear
         public ActionResult Crear()
         {
@@ -103,7 +137,8 @@ namespace CRMRSG.Controllers
                 {
                     var id_op = db.QuerySingle<int>(
                         "sp_oportunidades_insertar",
-                        new {
+                        new
+                        {
                             p_nombre = op.nombre,
                             p_descripcion = op.descripcion,
                             p_etapa = op.etapa,
@@ -119,7 +154,8 @@ namespace CRMRSG.Controllers
 
                     db.Execute(
                         "sp_notificaciones_insertar",
-                        new {
+                        new
+                        {
                             p_mensaje = $"Nueva Oportunidad: Se ha creado la oportunidad '{op.nombre}' con probabilidad del {op.probabilidad}%.",
                             p_id_usuario = op.id_usuario ?? 1,
                             p_tipo = "Oportunidad Creada",
@@ -217,7 +253,8 @@ namespace CRMRSG.Controllers
 
                     db.Execute(
                         "sp_oportunidades_actualizar",
-                        new {
+                        new
+                        {
                             p_id_oportunidad = op.id_oportunidad,
                             p_nombre = op.nombre,
                             p_descripcion = op.descripcion,
@@ -236,7 +273,8 @@ namespace CRMRSG.Controllers
                     {
                         db.Execute(
                             "sp_tareas_insertar",
-                            new {
+                            new
+                            {
                                 p_titulo = $"Seguimiento de Propuesta: {op.nombre}",
                                 p_descripcion = $"Automatización Comercial: La oportunidad avanzó a etapa de Propuesta. Revisar requerimientos y enviar cotización formal.",
                                 p_prioridad = "Alta",
@@ -383,7 +421,8 @@ namespace CRMRSG.Controllers
 
                     db.Execute(
                         "sp_oportunidades_actualizar",
-                        new {
+                        new
+                        {
                             p_id_oportunidad = id,
                             p_nombre = op.nombre,
                             p_descripcion = desc,
@@ -401,7 +440,8 @@ namespace CRMRSG.Controllers
                     {
                         db.Execute(
                             "sp_tareas_insertar",
-                            new {
+                            new
+                            {
                                 p_titulo = $"Seguimiento de Propuesta Rápido: {op.nombre}",
                                 p_descripcion = $"Automatización Comercial: Oportunidad movida a Propuesta de forma rápida. Gestionar cotización formal.",
                                 p_prioridad = "Alta",
