@@ -328,8 +328,9 @@
 <div class="row">
     <div class="col-xxl-6 col-xl-6 col-12">
         <div class="box">
-            <div class="box-header with-border">
+            <div class="box-header with-border d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h4 class="box-title" style="color: #040A2D;">Ganancias por Cliente (Oportunidades Ganadas)</h4>
+                <h4 class="text-success fw-bold mb-0">Total: ₡@(ViewBag.GananciasTotales.ToString("N0"))</h4>
             </div>
             <div class="box-body">
                 <div id="ganancias-bar-chart" style="min-height: 250px;"></div>
@@ -520,7 +521,7 @@
                     dataLabels: {
                         enabled: true,
                         formatter: function (val) {
-                            return "$" + Math.floor(val).toLocaleString();
+                            return "₡" + Math.floor(val).toLocaleString();
                         },
                         style: {
                             colors: ['#FFFFFF'],
@@ -543,7 +544,7 @@
                     },
                     yaxis: {
                         title: {
-                            text: 'Monto ($)',
+                            text: 'Monto (₡)',
                             style: {
                                 color: chartLabelColor,
                                 fontWeight: 600
@@ -551,7 +552,7 @@
                         },
                         labels: {
                             formatter: function (val) {
-                                return "$" + Math.floor(val).toLocaleString();
+                                return "₡" + Math.floor(val).toLocaleString();
                             },
                             style: {
                                 colors: chartLabelColor,
@@ -571,7 +572,7 @@
                         theme: chartThemeMode,
                         y: {
                             formatter: function(val) {
-                                return "$" + Math.floor(val).toLocaleString();
+                                return "₡" + Math.floor(val).toLocaleString();
                             }
                         }
                     },

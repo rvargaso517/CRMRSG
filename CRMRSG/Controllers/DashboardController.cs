@@ -274,13 +274,22 @@ namespace CRMRSG.Controllers
                 ViewBag.EventosFechas = fechasLabels;
                 ViewBag.EventosCantidades = cantidadesData;
 
+                // Ganancias Totales
+                decimal gananciasTotales = db.QuerySingleOrDefault<decimal?>(
+                    $@"SELECT SUM(o.valor_estimado) 
+                       FROM oportunidades o
+                       WHERE o.id_cliente IS NOT NULL AND o.valor_estimado IS NOT NULL AND (LOWER(o.etapa) LIKE '%ganada%' OR LOWER(o.etapa) = 'cerrada') {userClause.Replace("id_usuario", "o.id_usuario")} {dateClauseOps}",
+                    paramsObj
+                ) ?? 0;
+                ViewBag.GananciasTotales = gananciasTotales;
+
                 // Ganancias por Cliente (para el gráfico)
                 var gananciasClientes = db.Query<dynamic>(
-                    $@"SELECT cl.nombre AS Cliente, SUM(o.valor_estimado) AS Total 
+                    $@"SELECT cl.empresa AS Cliente, SUM(o.valor_estimado) AS Total 
                        FROM oportunidades o
                        INNER JOIN clientes cl ON o.id_cliente = cl.id_cliente
-                       WHERE o.id_cliente IS NOT NULL AND o.valor_estimado IS NOT NULL AND LOWER(o.etapa) LIKE '%ganada%' {userClause.Replace("id_usuario", "o.id_usuario")} {dateClauseOps}
-                       GROUP BY cl.nombre ORDER BY Total DESC LIMIT 5",
+                       WHERE o.id_cliente IS NOT NULL AND o.valor_estimado IS NOT NULL AND (LOWER(o.etapa) LIKE '%ganada%' OR LOWER(o.etapa) = 'cerrada') {userClause.Replace("id_usuario", "o.id_usuario")} {dateClauseOps}
+                       GROUP BY cl.empresa ORDER BY Total DESC LIMIT 5",
                     paramsObj
                 ).Select(x => new { Cliente = (string)x.Cliente, Total = (decimal)x.Total }).ToList();
 
@@ -289,7 +298,7 @@ namespace CRMRSG.Controllers
                     var todosClientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).Take(5).ToList();
                     int idx = 0;
                     gananciasClientes = todosClientes.Select(c => new {
-                        Cliente = c.nombre,
+                        Cliente = c.empresa ?? c.nombre,
                         Total = (decimal)((++idx) * 12500)
                     }).OrderByDescending(x => x.Total).ToList();
                 }

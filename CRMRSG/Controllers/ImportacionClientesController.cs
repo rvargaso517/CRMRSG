@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using CRMRSG.EntityFramework;
 using CRMRSG.Models;
 using ExcelDataReader;
+using Dapper;
 
 namespace CRMRSG.Controllers
 {
@@ -19,6 +20,10 @@ namespace CRMRSG.Controllers
         // GET: ImportacionClientes
         public ActionResult Index()
         {
+            if (Session["UsuarioId"] == null)
+            {
+                return RedirectToAction("Login", "Autenticacion");
+            }
             return View(new ImportacionClientesViewModel());
         }
 
@@ -27,6 +32,11 @@ namespace CRMRSG.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Index(ImportacionClientesViewModel modelo)
         {
+            if (Session["UsuarioId"] == null)
+            {
+                return RedirectToAction("Login", "Autenticacion");
+            }
+
             if (modelo == null)
             {
                 modelo = new ImportacionClientesViewModel();
@@ -528,151 +538,89 @@ namespace CRMRSG.Controllers
         {
             if (resultado.Errores == null)
             {
-                resultado.Errores =
-                    new List<string>();
+                resultado.Errores = new List<string>();
             }
 
-            foreach (
-                ClienteImportacionDto fila
-                in filas)
+            int usuarioId = ObtenerUsuarioSesion();
+
+            using (var conn = DbConnectionFactory.GetConnection())
             {
-                resultado.TotalProcesados++;
-
-                try
+                foreach (ClienteImportacionDto fila in filas)
                 {
-                    List<string> erroresFila =
-                        ValidarFila(fila);
+                    resultado.TotalProcesados++;
 
-                    if (erroresFila.Count > 0)
+                    try
                     {
-                        resultado.TotalErrores++;
+                        List<string> erroresFila = ValidarFila(fila);
 
-                        resultado.Errores.Add(
-                            "Fila " +
-                            fila.NumeroFila +
-                            ": " +
-                            string.Join(
-                                " ",
-                                erroresFila
-                            )
-                        );
-
-                        continue;
-                    }
-
-                    string correoNormalizado =
-                        fila.Correo
-                            .Trim()
-                            .ToLowerInvariant();
-
-                    cliente clienteExistente =
-                        db.clientes
-                            .FirstOrDefault(
-                                clienteActual =>
-                                    clienteActual
-                                        .correo != null &&
-                                    clienteActual
-                                        .correo
-                                        .Trim()
-                                        .ToLower() ==
-                                    correoNormalizado
-                            );
-
-                    if (clienteExistente == null)
-                    {
-                        var nuevoCliente =
-                            new cliente
-                            {
-                                nombre =
-                                    fila.Nombre
-                                        .Trim(),
-
-                                empresa =
-                                    fila.Empresa
-                                        .Trim(),
-
-                                correo =
-                                    fila.Correo
-                                        .Trim(),
-
-                                telefono =
-                                    LimpiarValor(
-                                        fila.Telefono
-                                    ),
-
-                                direccion =
-                                    LimpiarValor(
-                                        fila.Direccion
-                                    ),
-
-                                estado =
-                                    string
-                                        .IsNullOrWhiteSpace(
-                                            fila.Estado
-                                        )
-                                        ? "Activo"
-                                        : fila.Estado
-                                            .Trim(),
-
-                                fecha_registro =
-                                    DateTime.Now,
-
-                                id_usuario =
-                                    ObtenerUsuarioSesion()
-                            };
-
-                        db.clientes.Add(
-                            nuevoCliente
-                        );
-
-                        db.SaveChanges();
-
-                        resultado.TotalCreados++;
-                    }
-                    else
-                    {
-                        clienteExistente.nombre =
-                            fila.Nombre.Trim();
-
-                        clienteExistente.empresa =
-                            fila.Empresa.Trim();
-
-                        clienteExistente.correo =
-                            fila.Correo.Trim();
-
-                        clienteExistente.telefono =
-                            LimpiarValor(
-                                fila.Telefono
-                            );
-
-                        clienteExistente.direccion =
-                            LimpiarValor(
-                                fila.Direccion
-                            );
-
-                        if (!string.IsNullOrWhiteSpace(
-                            fila.Estado))
+                        if (erroresFila.Count > 0)
                         {
-                            clienteExistente.estado =
-                                fila.Estado.Trim();
+                            resultado.TotalErrores++;
+                            resultado.Errores.Add(
+                                "Fila " + fila.NumeroFila + ": " + string.Join(" ", erroresFila)
+                            );
+                            continue;
                         }
 
-                        db.SaveChanges();
+                        string correoNormalizado = fila.Correo.Trim().ToLowerInvariant();
 
-                        resultado
-                            .TotalActualizados++;
+                        // Buscar por correo usando Dapper en MySQL
+                        var clienteExistente = conn.QueryFirstOrDefault<cliente>(
+                            "SELECT * FROM clientes WHERE correo = @Correo",
+                            new { Correo = correoNormalizado }
+                        );
+
+                        if (clienteExistente == null)
+                        {
+                            var nuevoEstado = string.IsNullOrWhiteSpace(fila.Estado) ? "Activo" : fila.Estado.Trim();
+                            
+                            // Insertar usando el sp_clientes_insertar en MySQL
+                            conn.Execute(
+                                "sp_clientes_insertar",
+                                new {
+                                    p_nombre = fila.Nombre.Trim(),
+                                    p_empresa = fila.Empresa.Trim(),
+                                    p_telefono = LimpiarValor(fila.Telefono),
+                                    p_correo = fila.Correo.Trim(),
+                                    p_direccion = LimpiarValor(fila.Direccion),
+                                    p_estado = nuevoEstado,
+                                    p_id_usuario = usuarioId
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+
+                            resultado.TotalCreados++;
+                        }
+                        else
+                        {
+                            var nuevoEstado = string.IsNullOrWhiteSpace(fila.Estado) ? clienteExistente.estado : fila.Estado.Trim();
+
+                            // Actualizar usando el sp_clientes_actualizar en MySQL
+                            conn.Execute(
+                                "sp_clientes_actualizar",
+                                new {
+                                    p_id_cliente = clienteExistente.id_cliente,
+                                    p_nombre = fila.Nombre.Trim(),
+                                    p_empresa = fila.Empresa.Trim(),
+                                    p_telefono = LimpiarValor(fila.Telefono),
+                                    p_correo = fila.Correo.Trim(),
+                                    p_direccion = LimpiarValor(fila.Direccion),
+                                    p_estado = nuevoEstado,
+                                    p_id_usuario = clienteExistente.id_usuario
+                                },
+                                commandType: CommandType.StoredProcedure
+                            );
+
+                            resultado.TotalActualizados++;
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    resultado.TotalErrores++;
-
-                    resultado.Errores.Add(
-                        "Fila " +
-                        fila.NumeroFila +
-                        ": " +
-                        ObtenerMensajeError(ex)
-                    );
+                    catch (Exception ex)
+                    {
+                        resultado.TotalErrores++;
+                        resultado.Errores.Add(
+                            "Fila " + fila.NumeroFila + ": " + ObtenerMensajeError(ex)
+                        );
+                    }
                 }
             }
         }
@@ -895,15 +843,19 @@ namespace CRMRSG.Controllers
                 int usuarioId;
 
                 if (int.TryParse(
-                    Session["UsuarioId"]
-                        .ToString(),
+                    Session["UsuarioId"].ToString(),
                     out usuarioId))
                 {
                     return usuarioId;
                 }
             }
 
-            return 1;
+            // Fallback al primer usuario registrado en MySQL si la sesión no está disponible
+            using (var conn = DbConnectionFactory.GetConnection())
+            {
+                var primerUsuarioId = conn.QueryFirstOrDefault<int?>("SELECT id_usuario FROM usuarios ORDER BY id_usuario ASC LIMIT 1");
+                return primerUsuarioId ?? 1;
+            }
         }
 
         private string ObtenerMensajeError(

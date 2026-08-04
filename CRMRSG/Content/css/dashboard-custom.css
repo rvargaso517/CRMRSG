@@ -162,6 +162,8 @@ body .box-header .box-title {
 }
 
 .dark-theme .box-header .box-title,
-.dark-mode .box-header .box-title {
+.dark-mode .box-header .box-title,
+.dark-skin .box-header .box-title,
+.dark-skin .box-header h4.box-title {
     color: #ffffff !important;
 }

@@ -69,8 +69,8 @@
                                 <option value="mes" @(ViewBag.FiltroFechaActivo == "mes" ? "selected" : "")>📊 Próximos 30 días</option>
                             </select>
                         </div>
-                        <div class="col-md-3 col-12 text-end">
-                            <button type="submit" class="btn btn-primary w-100">
+                        <div class="col-md-3 col-12 form-group mb-0">
+                            <button type="submit" class="btn btn-primary w-100" style="height: 38px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fa fa-filter me-2"></i> Aplicar Filtro
                             </button>
                         </div>
@@ -87,8 +87,8 @@
                                 <option value="mes" @(ViewBag.FiltroFechaActivo == "mes" ? "selected" : "")>📊 Próximos 30 días</option>
                             </select>
                         </div>
-                        <div class="col-md-3 col-12 text-end">
-                            <button type="submit" class="btn btn-primary w-100">
+                        <div class="col-md-3 col-12 form-group mb-0">
+                            <button type="submit" class="btn btn-primary w-100" style="height: 38px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fa fa-filter me-2"></i> Aplicar Filtro
                             </button>
                         </div>
@@ -452,7 +452,7 @@
 
                 var optionsUser = {
                     series: userValues,
-                    chart: { type: 'pie', height: 280, background: 'transparent' },
+                    chart: { type: 'pie', height: 220, background: 'transparent' },
                     theme: { mode: chartThemeMode },
                     labels: userLabels,
                     colors: selectedColors.bar,
@@ -474,7 +474,7 @@
 
                 var optionsCategory = {
                     series: catValues,
-                    chart: { type: 'donut', height: 280, background: 'transparent' },
+                    chart: { type: 'donut', height: 220, background: 'transparent' },
                     theme: { mode: chartThemeMode },
                     labels: catLabels,
                     colors: selectedColors.donut,
@@ -496,7 +496,7 @@
 
                 var optionsPriority = {
                     series: [{ name: 'Tareas', data: prioValues }],
-                    chart: { type: 'bar', height: 280, toolbar: { show: false }, background: 'transparent' },
+                    chart: { type: 'bar', height: 220, toolbar: { show: false }, background: 'transparent' },
                     theme: { mode: chartThemeMode },
                     plotOptions: { bar: { columnWidth: '40%', borderRadius: 4, distributed: true } },
                     xaxis: { 

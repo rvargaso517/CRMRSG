@@ -5,13 +5,13 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     
-    var etapas = new string[] { "Prospección", "Calificación", "Propuesta", "Negociación", "Cerrada" };
+    var etapas = new string[] { "Prospección", "Calificación", "Propuesta", "Negociación", "Cerrada Ganada", "Cerrada Perdida" };
 }
 
 <style>
     .kanban-board {
         display: flex;
-        gap: 1rem;
+        gap: 0.4rem;
         overflow-x: auto;
         padding-bottom: 1rem;
         min-height: calc(100vh - 200px);
@@ -19,20 +19,20 @@
 
     .kanban-column {
         flex: 1;
-        min-width: 280px;
+        min-width: 140px;
         background-color: #f4f5f7;
         border-radius: 8px;
-        padding: 12px;
+        padding: 8px;
         display: flex;
         flex-direction: column;
     }
 
     .kanban-column-header {
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         color: #5e6c84;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -53,8 +53,8 @@
     .kanban-card {
         background: #ffffff;
         border-radius: 6px;
-        padding: 12px;
-        margin-bottom: 10px;
+        padding: 8px;
+        margin-bottom: 8px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         cursor: grab;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -70,22 +70,22 @@
         }
 
     .badge-tag {
-        font-size: 0.75rem;
-        padding: 3px 8px;
+        font-size: 0.65rem;
+        padding: 2px 5px;
         border-radius: 4px;
         font-weight: 600;
     }
 
     .avatar-circle {
-        width: 26px;
-        height: 26px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background-color: #4b6cb7;
         color: #fff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         font-weight: bold;
     }
 </style>
@@ -102,13 +102,17 @@
     @foreach (var etapa in etapas)
     {
         var tarjetasColumna = Model != null ? Model.Where(x => (x.etapa ?? "").Equals(etapa, StringComparison.OrdinalIgnoreCase) ||
-                                                              (etapa == "Cerrada" && (x.etapa ?? "").StartsWith("Cerrada"))).ToList()
+                                                              (etapa == "Cerrada Ganada" && (x.etapa ?? "").Equals("Cerrada", StringComparison.OrdinalIgnoreCase))).ToList()
                                             : new List<CRMRSG.EntityFramework.oportunidade>();
+
+        string badgeColor = "bg-secondary";
+        if (etapa == "Cerrada Ganada") { badgeColor = "bg-success"; }
+        else if (etapa == "Cerrada Perdida") { badgeColor = "bg-danger"; }
 
         <div class="kanban-column">
             <div class="kanban-column-header">
                 <span>@etapa</span>
-                <span class="badge bg-secondary rounded-pill">@tarjetasColumna.Count</span>
+                <span class="badge @badgeColor rounded-pill">@tarjetasColumna.Count</span>
             </div>
 
             <div class="kanban-cards" data-etapa="@etapa" ondragover="allowDrop(event)" ondragleave="clearDropEffect(event)" ondrop="dropCard(event)">
@@ -122,6 +126,11 @@
 
                         <h6 class="fw-bold text-dark mb-1">@item.nombre</h6>
                         <p class="text-muted small mb-2">
+                             @if (etapa == "Cerrada Perdida" && !string.IsNullOrEmpty(item.descripcion) && item.descripcion.Contains("[Motivo Pérdida:")) {
+                                 var parts = item.descripcion.Split(new[] { "[Motivo Pérdida:" }, StringSplitOptions.None);
+                                 var motivo = parts.Last().Replace("]", "").Trim();
+                                 <span class="text-danger d-block mb-1 small"><strong>Motivo:</strong> @motivo</span>
+                             }
                             <i class="fa fa-building"></i> @(item.cliente?.empresa ?? item.cliente?.nombre ?? "Sin cliente")
                         </p>
 
@@ -138,8 +147,72 @@
     }
 </div>
 
+<!-- Modal para Motivo de Pérdida -->
+<div class="modal fade" id="motivoPerdidaModal" tabindex="-1" aria-labelledby="motivoPerdidaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="motivoPerdidaModalLabel">Oportunidad Perdida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="motivoPerdidaInput" class="form-label">Por favor, ingrese el motivo de la pérdida de la oportunidad:</label>
+                    <textarea class="form-control" id="motivoPerdidaInput" rows="3" placeholder="Ej. Presupuesto insuficiente, se decidió por la competencia, etc."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btnCancelarMotivo">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarMotivo">Confirmar Pérdida</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        // Adaptación dinámica de estilos para el tablero Kanban según el tema
+        (function() {
+            var savedBoxBg = localStorage.getItem('crm_box_bg_color');
+            var sidebarSkin = localStorage.getItem('crm_sidebar_skin') || 'light';
+            
+            var cssText = '';
+            if (sidebarSkin === 'dark') {
+                cssText += `
+                    .kanban-column { background-color: #1a1a2e !important; border: 1px solid #2d2d2d !important; }
+                    .kanban-card { background-color: #24243e !important; color: #ffffff !important; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important; }
+                    .kanban-card h6 { color: #ffffff !important; }
+                    .kanban-card p { color: #a8dadc !important; }
+                    .kanban-column-header { color: #cbd5e1 !important; }
+                    .badge-tag { background-color: #1e293b !important; color: #ffffff !important; border-color: #334155 !important; }
+                `;
+            } else if (savedBoxBg) {
+                var r = parseInt(savedBoxBg.substr(1, 2), 16);
+                var g = parseInt(savedBoxBg.substr(3, 2), 16);
+                var b = parseInt(savedBoxBg.substr(5, 2), 16);
+                var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                var contrastColor = (yiq >= 128) ? '#1a1a2e' : '#ffffff';
+                var contrastMuted = (yiq >= 128) ? '#5a6a85' : '#a8dadc';
+                var columnBg = (yiq >= 128) ? '#f0f2f5' : '#141414';
+                
+                cssText += `
+                    .kanban-column { background-color: ` + columnBg + ` !important; border: 1px solid ` + (yiq >= 128 ? '#e2e8f0' : '#2b2b2b') + ` !important; }
+                    .kanban-card { background-color: ` + savedBoxBg + ` !important; color: ` + contrastColor + ` !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important; }
+                    .kanban-card h6 { color: ` + contrastColor + ` !important; }
+                    .kanban-card p { color: ` + contrastMuted + ` !important; }
+                    .kanban-column-header { color: ` + contrastColor + ` !important; }
+                    .badge-tag { background-color: ` + columnBg + ` !important; color: ` + contrastColor + ` !important; border-color: ` + (yiq >= 128 ? '#cbd5e1' : '#334155') + ` !important; }
+                `;
+            }
+            if (cssText) {
+                var styleEl = document.createElement('style');
+                styleEl.innerHTML = cssText;
+                document.head.appendChild(styleEl);
+            }
+        })();
+
+        let pendingDrop = null;
+
         function allowDrop(ev) {
             ev.preventDefault();
             ev.currentTarget.classList.add('drag-over');
@@ -163,28 +236,64 @@
             let cardElement = document.getElementById("card-" + oportunidadId);
 
             if (cardElement && container) {
-                
-                container.appendChild(cardElement);
-
-               
-                fetch('@Url.Action("CambiarEtapa", "Oportunidades")', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `id=${oportunidadId}&etapa=${encodeURIComponent(nuevaEtapa)}`
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.success) {
-                        alert("Error al actualizar la etapa: " + data.message);
-                        location.reload();
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("Ocurrió un error de conexión al mover la oportunidad.");
-                    location.reload();
-                });
+                if (nuevaEtapa === "Cerrada Perdida") {
+                    pendingDrop = {
+                        oportunidadId: oportunidadId,
+                        nuevaEtapa: nuevaEtapa,
+                        container: container,
+                        cardElement: cardElement
+                    };
+                    document.getElementById("motivoPerdidaInput").value = "";
+                    let myModal = new bootstrap.Modal(document.getElementById('motivoPerdidaModal'));
+                    myModal.show();
+                } else {
+                    ejecutarCambioEtapa(oportunidadId, nuevaEtapa, "", container, cardElement);
+                }
             }
         }
+
+        function ejecutarCambioEtapa(oportunidadId, nuevaEtapa, razon, container, cardElement) {
+            container.appendChild(cardElement);
+
+            fetch('@Url.Action("CambiarEtapa", "Oportunidades")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `id=${oportunidadId}&etapa=${encodeURIComponent(nuevaEtapa)}&razon=${encodeURIComponent(razon)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert("Error al actualizar la etapa: " + data.message);
+                    location.reload();
+                } else if (nuevaEtapa === "Cerrada Perdida") {
+                    location.reload(); // Recargar para mostrar el motivo en la tarjeta
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Ocurrió un error de conexión al mover la oportunidad.");
+                location.reload();
+            });
+        }
+
+        document.getElementById("btnConfirmarMotivo").addEventListener("click", function() {
+            if (pendingDrop) {
+                let razon = document.getElementById("motivoPerdidaInput").value;
+                let modalEl = document.getElementById('motivoPerdidaModal');
+                let modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                ejecutarCambioEtapa(pendingDrop.oportunidadId, pendingDrop.nuevaEtapa, razon, pendingDrop.container, pendingDrop.cardElement);
+                pendingDrop = null;
+            }
+        });
+
+        document.getElementById("motivoPerdidaModal").addEventListener("hidden.bs.modal", function() {
+            if (pendingDrop) {
+                pendingDrop = null;
+                location.reload(); // Si cerraron el modal sin confirmar, regresamos la tarjeta
+            }
+        });
     </script>
 }

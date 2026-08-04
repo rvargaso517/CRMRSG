@@ -256,3 +256,41 @@ h1, h2, h3, h4, h5, h6, .page-title {
     right: 0 !important;
     top: 100% !important;
 }
+
+/* Responsividad del Logo Box y Gráficos */
+.main-header .logo-box {
+    width: 260px;
+    height: 60px;
+    background-color: transparent !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    z-index: 9999;
+}
+
+@media (max-width: 767px) {
+    .main-header .logo-box {
+        width: auto !important;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+.chart-responsive {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.box, .box-body, .card, .card-body {
+    min-width: 0 !important;
+}
+
+/* Dark skin title contrast adjustments */
+.dark-skin .box-title, 
+.dark-skin .box-header .box-title,
+.dark-skin .card-title,
+.dark-skin h1, .dark-skin h2, .dark-skin h3, .dark-skin h4, .dark-skin h5, .dark-skin h6 {
+    color: #ffffff !important;
+}

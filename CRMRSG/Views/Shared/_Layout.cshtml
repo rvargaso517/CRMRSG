@@ -178,10 +178,8 @@
                     min-height: calc(100vh - 60px) !important;
                 }
                 #clientes-box, #oportunidades-box, #tareas-box, #actividades-box, #redactor-box,
-                body:not(.dashboard-page) .content-wrapper .col-12 > .box,
-                body:not(.dashboard-page) .content-wrapper .col-lg-8 > .box,
-                body:not(.dashboard-page) .content-wrapper .col-xxl-12 > .box {
-                    min-height: 75vh !important;
+                #roles-box, #usuarios-box, #bitacora-box, #notificaciones-box {
+                    min-height: 70vh !important;
                 }
                 /* Ensure logo is always correctly displayed in the sidebar header */
                 .logo-box .logo-mini span:last-child, .logo-box .logo-lg span:last-child {
@@ -220,7 +218,7 @@
         <div id="loader"></div>
 
         <header class="main-header">
-            <div class="d-flex align-items-center logo-box justify-content-start" style="display: flex !important; width: 260px !important; height: 60px !important; background-color: transparent !important; position: relative !important; z-index: 9999 !important; opacity: 1 !important; visibility: visible !important;">
+            <div class="d-flex align-items-center logo-box justify-content-start">
                 <a href="@Url.Action("Index", "Dashboard")" class="logo" style="display: block !important; width: 100% !important; height: 100% !important; line-height: 60px !important; padding: 0 15px !important; opacity: 1 !important; visibility: visible !important; text-decoration: none !important;">
                     <img src="@Url.Content("~/Content/images/logo/rsg_logo.jpg")" alt="RSG Logo" style="max-height: 45px !important; width: auto !important; display: inline-block !important; vertical-align: middle !important; visibility: visible !important; opacity: 1 !important; border: none !important; filter: invert(1) !important; mix-blend-mode: screen !important;">
                 </a>
@@ -247,17 +245,10 @@
                         </div>
                     </div>
 
-                    <div class="dropdown user user-menu">
-                        <a href="#" class="waves-effect waves-light dropdown-toggle w-auto bg-transparent p-0 no-shadow" title="Usuario" data-bs-toggle="modal" data-bs-target="#quick_user_toggle">
-                            <div class="bg-primary-light rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; overflow: hidden;">
-                                <i data-feather="user" class="text-primary"></i>
-                            </div>
-                        </a>
-                    </div>
                 </div>
 
                 <div class="navbar-custom-menu r-side">
-                    <ul class="nav navbar-nav">
+                    <ul class="nav navbar-nav" style="display: flex; flex-direction: row; align-items: center;">
                         <li class="dropdown notifications-menu btn-group">
                             <label class="switch mb-0">
                                 <a class="waves-effect waves-light btn-primary-light svg-bt-icon">
@@ -266,6 +257,14 @@
                                     <span class="switch-off"><i data-feather="sun"></i></span>
                                 </a>
                             </label>
+                        </li>
+
+                        <li class="dropdown user user-menu btn-group ms-2 me-2">
+                            <a href="#" class="waves-effect waves-light dropdown-toggle w-auto bg-transparent p-0 no-shadow" title="Usuario" data-bs-toggle="modal" data-bs-target="#quick_user_toggle">
+                                <div class="bg-primary-light rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; overflow: hidden;">
+                                    <i data-feather="user" class="text-primary"></i>
+                                </div>
+                            </a>
                         </li>
 
                         <li class="dropdown btn-group nav-item" id="notification-li">
@@ -344,7 +343,7 @@
                                     <ul class="treeview-menu">
                                         <li><a href="@Url.Action("Index", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Todas las Oportunidades</a></li>
                                         <li><a href="@Url.Action("Crear", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Nueva Oportunidad</a></li>
-                                        <li><a href="@Url.Action("Kanban", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Tablero</a></li>
+                                        <li><a href="@Url.Action("Kanban", "Oportunidades")"><i class="icon-Commit"><span class="path1"></span><span class="path2"></span></i>Tablero Kanban</a></li>
                                     </ul>
                                 </li>
                             }
@@ -540,6 +539,17 @@
             $('#toggle_left_sidebar_skin').on('change', function() {
                 var skin = $(this).is(':checked') ? 'dark' : 'light';
                 localStorage.setItem('crm_sidebar_skin', skin);
+                if (skin === 'dark') {
+                    localStorage.setItem('crm_bg_color', '#121212');
+                    localStorage.setItem('crm_box_bg_color', '#1e1e1e');
+                    localStorage.setItem('crm_sidebar_bg_color', '#181818');
+                    localStorage.setItem('crm_header_bg_color', '#1e1e1e');
+                } else {
+                    localStorage.setItem('crm_bg_color', '#f4f6f9');
+                    localStorage.setItem('crm_box_bg_color', '#ffffff');
+                    localStorage.setItem('crm_sidebar_bg_color', '#ffffff');
+                    localStorage.setItem('crm_header_bg_color', '#ffffff');
+                }
                 if (skin === 'dark') {
                     $('body').removeClass('light-skin').addClass('dark-skin');
                 } else {
