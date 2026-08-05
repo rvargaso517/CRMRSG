@@ -294,3 +294,62 @@ h1, h2, h3, h4, h5, h6, .page-title {
 .dark-skin h1, .dark-skin h2, .dark-skin h3, .dark-skin h4, .dark-skin h5, .dark-skin h6 {
     color: #ffffff !important;
 }
+
+/* Fix faint text inside badges (such as Prospección) */
+.badge-primary-light {
+    background-color: rgba(64, 153, 255, 0.15) !important;
+    color: #4099ff !important;
+    font-weight: 600 !important;
+}
+.badge-success-light {
+    background-color: rgba(46, 216, 182, 0.15) !important;
+    color: #2ed8b6 !important;
+    font-weight: 600 !important;
+}
+.badge-warning-light {
+    background-color: rgba(255, 182, 77, 0.15) !important;
+    color: #ffb64d !important;
+    font-weight: 600 !important;
+}
+.badge-danger-light {
+    background-color: rgba(255, 83, 112, 0.15) !important;
+    color: #ff5370 !important;
+    font-weight: 600 !important;
+}
+.badge-info-light {
+    background-color: rgba(0, 188, 212, 0.15) !important;
+    color: #00bcd4 !important;
+    font-weight: 600 !important;
+}
+
+/* Highly specific overrides to guarantee excellent text contrast on light skins */
+body.light-skin .badge-primary-light,
+body.light-skin .theme-primary .badge-primary-light {
+    background-color: rgba(0, 82, 204, 0.12) !important;
+    color: #0052cc !important;
+    font-weight: 600 !important;
+}
+body.light-skin .badge-success-light,
+body.light-skin .theme-primary .badge-success-light {
+    background-color: rgba(46, 216, 182, 0.12) !important;
+    color: #1b8a72 !important;
+    font-weight: 600 !important;
+}
+body.light-skin .badge-warning-light,
+body.light-skin .theme-primary .badge-warning-light {
+    background-color: rgba(255, 182, 77, 0.12) !important;
+    color: #b76200 !important;
+    font-weight: 600 !important;
+}
+body.light-skin .badge-danger-light,
+body.light-skin .theme-primary .badge-danger-light {
+    background-color: rgba(255, 83, 112, 0.12) !important;
+    color: #d61a3c !important;
+    font-weight: 600 !important;
+}
+body.light-skin .badge-info-light,
+body.light-skin .theme-primary .badge-info-light {
+    background-color: rgba(0, 188, 212, 0.12) !important;
+    color: #008fa0 !important;
+    font-weight: 600 !important;
+}

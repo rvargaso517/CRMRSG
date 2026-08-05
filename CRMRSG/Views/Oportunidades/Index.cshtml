@@ -141,60 +141,108 @@
 @section scripts {
     <script>
         function cambiarEtapa(id, etapa) {
-            var actionName = etapa === 'Cerrada Ganada' ? 'completar/ganar' : 'cancelar/perder';
-            var razon = '';
             if (etapa === 'Cerrada Perdida') {
-                razon = prompt("Es obligatorio ingresar la razón de pérdida o cancelación para esta oportunidad:");
-                if (razon === null) {
-                    return; // Clic en Cancelar
-                }
-                if (razon.trim() === '') {
-                    alert("Debe especificar una razón válida.");
-                    return;
-                }
+                Swal.fire({
+                    title: 'Razón de pérdida/cancelación',
+                    text: 'Es obligatorio ingresar la razón de pérdida o cancelación para esta oportunidad:',
+                    input: 'text',
+                    inputPlaceholder: 'Escriba la razón aquí...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Aceptar',
+                    cancelButtonText: 'Cancelar',
+                    inputValidator: (value) => {
+                        if (!value || value.trim() === '') {
+                            return '¡Debe especificar una razón válida!'
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        ejecutarCambioEtapa(id, etapa, result.value);
+                    }
+                });
             } else {
-                if (!confirm("¿Está seguro de que desea " + actionName + " esta oportunidad?")) {
-                    return;
-                }
+                Swal.fire({
+                    title: '¿Confirmar cambio?',
+                    text: '¿Está seguro de que desea completar/ganar esta oportunidad?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2ed8b6',
+                    cancelButtonColor: '#ff5370',
+                    confirmButtonText: 'Sí, completar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        ejecutarCambioEtapa(id, etapa, '');
+                    }
+                });
             }
+        }
 
+        function ejecutarCambioEtapa(id, etapa, razon) {
             $.ajax({
                 url: '@Url.Action("CambiarEtapa", "Oportunidades")',
                 type: 'POST',
                 data: { id: id, etapa: etapa, razon: razon },
                 success: function (res) {
                     if (res.success) {
-                        location.reload();
+                        Swal.fire({
+                            title: '¡Actualizado!',
+                            text: 'La oportunidad ha sido actualizada correctamente.',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
                     } else {
-                        alert("Error al actualizar la oportunidad: " + res.message);
+                        Swal.fire('Error', res.message, 'error');
                     }
                 },
                 error: function () {
-                    alert("Error de red al intentar actualizar.");
+                    Swal.fire('Error', 'Error de red al intentar actualizar.', 'error');
                 }
             });
         }
 
         function eliminarOportunidad(id, nombre) {
-            if (confirm("¿Está seguro de que desea eliminar la oportunidad '" + nombre + "'?")) {
-                $.ajax({
-                    url: '@Url.Action("Eliminar", "Oportunidades")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (res) {
-                        if (res.success) {
-                            $('#row-op-' + id).fadeOut(300, function () {
-                                $(this).remove();
-                            });
-                        } else {
-                            alert("Error al eliminar: " + res.message);
+            Swal.fire({
+                title: '¿Eliminar oportunidad?',
+                text: "¿Está seguro de que desea eliminar la oportunidad '" + nombre + "'?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("Eliminar", "Oportunidades")',
+                        type: 'POST',
+                        data: { id: id },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    title: '¡Eliminado!',
+                                    text: 'La oportunidad ha sido eliminada.',
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    $('#row-op-' + id).fadeOut(300, function () {
+                                        $(this).remove();
+                                    });
+                                });
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error', 'Error de red al intentar eliminar.', 'error');
                         }
-                    },
-                    error: function () {
-                        alert("Error de red al intentar eliminar.");
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
 
         $(document).ready(function() {

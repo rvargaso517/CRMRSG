@@ -48,32 +48,40 @@ namespace CRMRSG.Controllers
                 return RedirectToAction("Login", "Autenticacion");
             }
 
+            int usuarioId = (int)Session["UsuarioId"];
+            datosActualizados.id_usuario = usuarioId;
+
             try
             {
                 using (var db = DbConnectionFactory.GetConnection())
                 {
                     var usuarioDb = db.QueryFirstOrDefault<usuario>(
                         "sp_usuarios_obtener_por_id",
-                        new { p_id_usuario = datosActualizados.id_usuario },
+                        new { p_id_usuario = usuarioId },
                         commandType: CommandType.StoredProcedure
                     );
 
                     if (usuarioDb != null)
                     {
                         // Actualizar campos personales
-                        db.Execute(
+                        var affected = db.Execute(
                             "sp_usuarios_actualizar",
                             new {
-                                p_id_usuario = datosActualizados.id_usuario,
+                                p_id_usuario = usuarioId,
                                 p_nombre = datosActualizados.nombre,
                                 p_apellido = datosActualizados.apellido,
                                 p_correo = datosActualizados.correo,
                                 p_telefono = datosActualizados.telefono,
-                                p_estado = usuarioDb.estado,
+                                p_estado = (usuarioDb.estado ?? true) ? 1 : 0,
                                 p_id_rol = usuarioDb.id_rol
                             },
                             commandType: CommandType.StoredProcedure
                         );
+
+                        if (affected == 0)
+                        {
+                            throw new Exception("No se actualizó ningún registro. Verifique que el ID de usuario exista en la base de datos.");
+                        }
 
                         // Actualizar contraseña si se proporcionó una nueva
                         if (!string.IsNullOrWhiteSpace(nuevaPassword))

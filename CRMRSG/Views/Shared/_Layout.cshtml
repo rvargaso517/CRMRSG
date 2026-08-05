@@ -239,10 +239,12 @@
                     </ul>
 
                     <div class="search-bx mx-3 d-none d-md-block">
-                        <div class="input-group flex-nowrap align-items-center" style="background-color: #f0f4f9; border-radius: 8px;">
-                            <input type="text" class="form-control border-0 bg-transparent shadow-none" placeholder="Search" style="width: 200px;">
-                            <span class="input-group-text bg-transparent border-0 text-muted px-2"><i data-feather="search" style="width: 18px; height: 18px;"></i></span>
-                        </div>
+                        <form action="@Url.Content("~/Clientes")" method="get">
+                            <div class="input-group flex-nowrap align-items-center" style="background-color: #f0f4f9; border-radius: 8px;">
+                                <input type="text" name="search" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar clientes..." style="width: 200px;" value="@(ViewBag.SearchQuery ?? "")">
+                                <button type="submit" class="bg-transparent border-0 text-muted px-2" style="border: none; cursor: pointer;"><i data-feather="search" style="width: 18px; height: 18px;"></i></button>
+                            </div>
+                        </form>
                     </div>
 
                 </div>
@@ -687,6 +689,33 @@
                         this.nodeValue = cleaned;
                     }
                 }
+            });
+
+            // Dynamic Save/Submit Button Activator (UX Enhancement)
+            $('form').each(function() {
+                var $form = $(this);
+                // Skip the top search form and authentication login/register forms
+                if ($form.attr('action') && ($form.attr('action').includes('Login') || $form.attr('action').includes('Registro') || $form.attr('action').includes('Clientes') && $form.attr('method') === 'get')) {
+                    return;
+                }
+                
+                var $submitBtn = $form.find('button[type="submit"], input[type="submit"]');
+                if ($submitBtn.length === 0) return;
+                
+                // Set initial inactive state
+                $submitBtn.css({
+                    'opacity': '0.55',
+                    'pointer-events': 'none',
+                    'transition': 'all 0.2s ease-in-out'
+                });
+                
+                // Enable button on any input or change event in the form
+                $form.on('input change keyup', 'input, select, textarea', function() {
+                    $submitBtn.css({
+                        'opacity': '1',
+                        'pointer-events': 'auto'
+                    });
+                });
             });
         });
     </script>

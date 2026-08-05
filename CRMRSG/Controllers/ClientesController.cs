@@ -22,7 +22,7 @@ namespace CRMRSG.Controllers
         }
 
         // GET: Clientes
-        public ActionResult Index()
+        public ActionResult Index(string search)
         {
             if (!TienePermiso("Clientes:Ver"))
             {
@@ -36,6 +36,19 @@ namespace CRMRSG.Controllers
                     "sp_clientes_listar",
                     commandType: CommandType.StoredProcedure
                 ).ToList();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    search = search.Trim().ToLower();
+                    listaClientes = listaClientes.Where(c =>
+                        (c.nombre != null && c.nombre.ToLower().Contains(search)) ||
+                        (c.empresa != null && c.empresa.ToLower().Contains(search)) ||
+                        (c.correo != null && c.correo.ToLower().Contains(search)) ||
+                        (c.telefono != null && c.telefono.Contains(search))
+                    ).ToList();
+                    ViewBag.SearchQuery = search;
+                }
+
                 return View(listaClientes);
             }
         }
