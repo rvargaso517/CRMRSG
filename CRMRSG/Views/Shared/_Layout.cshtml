@@ -33,6 +33,14 @@
             var cssText = '';
             
             if (savedColor) {
+                var textCol = '#fff';
+                if (savedColor.startsWith('#') && savedColor.length === 7) {
+                    var r = parseInt(savedColor.substr(1, 2), 16);
+                    var g = parseInt(savedColor.substr(3, 2), 16);
+                    var b = parseInt(savedColor.substr(5, 2), 16);
+                    var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                    textCol = (yiq >= 170) ? '#111111' : '#ffffff';
+                }
                 cssText += `
                     :root {
                         --theme-primary-custom: ` + savedColor + ` !important;
@@ -40,7 +48,10 @@
                     .btn-primary, .bg-primary, .btn-primary-light:hover {
                         background-color: ` + savedColor + ` !important;
                         border-color: ` + savedColor + ` !important;
-                        color: #fff !important;
+                        color: ` + textCol + ` !important;
+                    }
+                    .btn-primary *, .btn-primary i, .btn-primary span {
+                        color: ` + textCol + ` !important;
                     }
                     .text-primary, .sidebar-menu > li.active > a, .sidebar-menu > li:hover > a {
                         color: ` + savedColor + ` !important;
