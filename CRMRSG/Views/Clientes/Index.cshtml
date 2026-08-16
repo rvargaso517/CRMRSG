@@ -36,6 +36,16 @@
 
                 <div class="d-flex gap-2">
 
+                    <a href="@Url.Action("ExportarClientesExcel", "Clientes")"
+                       class="btn btn-info btn-sm text-white">
+                        <i class="fa fa-file-excel-o"></i> Exportar Excel
+                    </a>
+
+                    <button type="button" id="btn-exportar-pdf"
+                            class="btn btn-danger btn-sm text-white">
+                        <i class="fa fa-file-pdf-o"></i> Exportar PDF
+                    </button>
+
                     <a href="@Url.Action("Index","ImportacionClientes")"
                        class="btn btn-success btn-sm">
                         <i class="fa fa-upload"></i> Importar Clientes
@@ -169,6 +179,72 @@
             }
             paginarTabla('clientes-table', 5);
         });
+
+        // PDF Export Handler
+        $('#btn-exportar-pdf').on('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Horizontal / Landscape
+
+            // Título
+            doc.setFontSize(18);
+            doc.setTextColor(4, 10, 45); // #040A2D
+            doc.text('Reporte de Clientes - CRM RSG', 14, 20);
+            
+            // Timestamp
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139); // Gray
+            const fecha = new Date().toLocaleString('es-CR', { timeZone: 'America/Costa_Rica' });
+            doc.text('Generado el: ' + fecha, 14, 27);
+
+            const headers = [['Empresa', 'Contacto Principal', 'Email', 'Teléfono', 'Lead Scoring', 'Clasificación', 'Estado']];
+            const data = [];
+            
+            $('.cliente-row').each(function() {
+                const $row = $(this);
+                
+                // Solo exportar si no está oculto por filtros de clasificación
+                if ($row.css('display') !== 'none') {
+                    const empresa = $row.find('td:nth-child(1) a').text().trim();
+                    const contacto = $row.find('td:nth-child(2)').text().trim();
+                    const email = $row.find('td:nth-child(3)').text().trim();
+                    const telefono = $row.find('td:nth-child(4)').text().trim();
+                    const leadScore = $row.find('td:nth-child(5) span').text().trim();
+                    let clasificacion = $row.find('td:nth-child(6)').text().trim();
+                    if (clasificacion.includes('VIP')) clasificacion = 'VIP';
+                    else if (clasificacion.includes('Medio')) clasificacion = 'Medio';
+                    else if (clasificacion.includes('Bajo')) clasificacion = 'Bajo';
+
+                    const estado = $row.find('td:nth-child(7)').text().trim();
+                    
+                    data.push([empresa, contacto, email, telefono, leadScore, clasificacion, estado]);
+                }
+            });
+
+            if (data.length === 0) {
+                Swal.fire('Sin datos', 'No hay registros visibles para exportar.', 'warning');
+                return;
+            }
+
+            doc.autoTable({
+                head: headers,
+                body: data,
+                startY: 32,
+                theme: 'striped',
+                headStyles: { fillColor: [4, 10, 45] },
+                styles: { fontSize: 9, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 40 }, // Empresa
+                    1: { cellWidth: 40 }, // Contacto
+                    2: { cellWidth: 50 }, // Email
+                    3: { cellWidth: 30 }, // Telefono
+                    4: { cellWidth: 30 }, // Lead Scoring
+                    5: { cellWidth: 30 }, // Clasificacion
+                    6: { cellWidth: 25 }  // Estado
+                }
+            });
+
+            doc.save('Reporte_Clientes_CRM.pdf');
+        });
     });
 
     function paginarTabla(tableId, recordsPerPage) {
@@ -233,6 +309,8 @@
     }
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function confirmarEliminar(id, empresa) {

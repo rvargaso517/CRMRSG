@@ -452,12 +452,17 @@
 
                 var optionsUser = {
                     series: userValues,
-                    chart: { type: 'pie', height: 220, background: 'transparent' },
+                    chart: { type: 'pie', height: 240, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     labels: userLabels,
                     colors: selectedColors.bar,
                     stroke: { colors: [boxBgColor], width: 1 },
-                    legend: { position: 'bottom' }
+                    legend: { 
+                        position: 'bottom',
+                        horizontalAlign: 'center',
+                        floating: false,
+                        labels: { colors: chartLabelColor }
+                    }
                 };
                 new ApexCharts(document.querySelector("#user-task-chart"), optionsUser).render();
             }
@@ -474,12 +479,17 @@
 
                 var optionsCategory = {
                     series: catValues,
-                    chart: { type: 'donut', height: 220, background: 'transparent' },
+                    chart: { type: 'donut', height: 240, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     labels: catLabels,
                     colors: selectedColors.donut,
                     stroke: { colors: [boxBgColor], width: 1 },
-                    legend: { position: 'bottom' }
+                    legend: { 
+                        position: 'bottom',
+                        horizontalAlign: 'center',
+                        floating: false,
+                        labels: { colors: chartLabelColor }
+                    }
                 };
                 new ApexCharts(document.querySelector("#category-task-chart"), optionsCategory).render();
             }
@@ -496,11 +506,20 @@
 
                 var optionsPriority = {
                     series: [{ name: 'Tareas', data: prioValues }],
-                    chart: { type: 'bar', height: 220, toolbar: { show: false }, background: 'transparent' },
+                    chart: { type: 'bar', height: 240, toolbar: { show: false }, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
-                    plotOptions: { bar: { columnWidth: '40%', borderRadius: 4, distributed: true } },
+                    plotOptions: { bar: { columnWidth: '45%', borderRadius: 4, distributed: true } },
                     xaxis: { 
                         categories: prioLabels,
+                        labels: {
+                            style: {
+                                colors: chartLabelColor,
+                                fontSize: '11px',
+                                fontWeight: 600
+                            }
+                        }
+                    },
+                    yaxis: {
                         labels: {
                             style: {
                                 colors: chartLabelColor
@@ -508,7 +527,11 @@
                         }
                     },
                     colors: selectedColors.bar,
-                    legend: { show: false },
+                    legend: { 
+                        position: 'bottom',
+                        horizontalAlign: 'center',
+                        labels: { colors: chartLabelColor }
+                    },
                     dataLabels: { enabled: false }
                 };
                 new ApexCharts(document.querySelector("#priority-task-chart"), optionsPriority).render();

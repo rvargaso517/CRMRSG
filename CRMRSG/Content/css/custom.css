@@ -353,3 +353,25 @@ body.light-skin .theme-primary .badge-info-light {
     color: #008fa0 !important;
     font-weight: 600 !important;
 }
+
+/* --- Mejoras de contraste en tipografía secundaria (Hallazgo Usabilidad 2) --- */
+.form-control::placeholder {
+    color: #4a5568 !important;
+    opacity: 1;
+}
+.form-control:-ms-input-placeholder {
+    color: #4a5568 !important;
+}
+.form-control::-ms-input-placeholder {
+    color: #4a5568 !important;
+}
+.text-muted, p.text-muted, .text-fade, .small, small {
+    color: #3f4e64 !important;
+}
+label.form-label {
+    color: #2d3748 !important;
+    font-weight: 550 !important;
+}
+h4.box-title.text-info {
+    color: #0b5394 !important;
+}

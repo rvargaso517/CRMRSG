@@ -29,8 +29,8 @@
         </div>
 
         <div class="me-3">
-            <a href="@Url.Action("ExportarClientesCSV", "Clientes")" class="btn btn-success d-flex align-items-center" style="background-color: #10c469; border-color: #10c469; color: white; font-weight: 500;">
-                <i class="fa fa-file-excel me-2"></i> Exportar Clientes
+            <a href="@Url.Action("ExportarClientesExcel", "Clientes")" class="btn btn-success d-flex align-items-center" style="background-color: #10c469; border-color: #10c469; color: white; font-weight: 500;">
+                <i class="fa fa-file-excel-o me-2"></i> Exportar Clientes
             </a>
         </div>
         <ol class="breadcrumb p-0 m-0">
@@ -451,10 +451,16 @@
 
                 var optionsLine = {
                     series: [{ name: 'Citas', data: cantidades }],
-                    chart: { type: 'area', height: 220, toolbar: { show: false }, background: 'transparent' },
+                    chart: { type: 'area', height: 240, toolbar: { show: false }, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     stroke: { curve: 'smooth', width: 2 },
-                    xaxis: { categories: fechas },
+                    xaxis: { 
+                        categories: fechas,
+                        labels: { style: { colors: chartLabelColor } }
+                    },
+                    yaxis: {
+                        labels: { style: { colors: chartLabelColor } }
+                    },
                     colors: selectedColors.line,
                     fill: {
                         type: 'gradient',
@@ -479,11 +485,16 @@
 
                 var optionsDonut = {
                     series: [completados, pendientes, cancelados, aplazados],
-                    chart: { type: 'donut', height: 220, background: 'transparent' },
+                    chart: { type: 'donut', height: 240, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     labels: ['Completadas', 'Pendientes', 'Canceladas', 'Aplazadas'],
                     colors: selectedColors.donut,
-                    legend: { position: 'bottom' },
+                    legend: { 
+                        position: 'bottom',
+                        horizontalAlign: 'center',
+                        floating: false,
+                        labels: { colors: chartLabelColor }
+                    },
                     stroke: { colors: [boxBgColor], width: 2 }
                 };
                 new ApexCharts(document.querySelector("#estados-donut-chart"), optionsDonut).render();
@@ -501,17 +512,18 @@
                     }],
                     chart: {
                         type: 'bar',
-                        height: 380,
+                        height: 320,
                         toolbar: { show: false },
                         background: 'transparent',
-                        sparkline: { enabled: false }
+                        sparkline: { enabled: false },
+                        redrawOnWindowResize: true
                     },
                     theme: { mode: chartThemeMode },
                     plotOptions: {
                         bar: {
                             borderRadius: 8,
                             horizontal: false,
-                            columnWidth: '65%',
+                            columnWidth: '55%',
                             distributed: true,
                             dataLabels: {
                                 position: 'top'
@@ -524,11 +536,11 @@
                             return "₡" + Math.floor(val).toLocaleString();
                         },
                         style: {
-                            colors: ['#FFFFFF'],
-                            fontSize: '12px',
+                            colors: [chartThemeMode === 'dark' ? '#FFFFFF' : '#000000'],
+                            fontSize: '11px',
                             fontWeight: 600
                         },
-                        offsetY: -10
+                        offsetY: -20
                     },
                     colors: selectedColors.bar,
                     xaxis: {
@@ -537,9 +549,10 @@
                             style: {
                                 colors: chartLabelColor,
                                 fontWeight: 600,
-                                fontSize: '12px'
+                                fontSize: '11px'
                             },
-                            maxHeight: 100
+                            maxHeight: 120,
+                            hideOverlappingLabels: true
                         }
                     },
                     yaxis: {
@@ -577,7 +590,9 @@
                         }
                     },
                     legend: {
-                        show: false
+                        position: 'bottom',
+                        horizontalAlign: 'center',
+                        labels: { colors: chartLabelColor }
                     }
                 };
                 new ApexCharts(document.querySelector("#ganancias-bar-chart"), optionsBar).render();

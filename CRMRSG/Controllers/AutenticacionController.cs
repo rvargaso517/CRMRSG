@@ -188,9 +188,12 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Poner al usuario auto-registrado en estado inactivo (pendiente de aprobación) - Opción B
+                    conn.Execute("UPDATE usuarios SET estado = 0 WHERE correo = @p_correo", new { p_correo = correo });
                 }
 
-                TempData["Success"] = "Registro exitoso. Por favor, inicie sesión con su nueva cuenta.";
+                TempData["Success"] = "Registro exitoso. Su cuenta está pendiente de aprobación por parte del administrador.";
                 return RedirectToAction("Login");
             }
             catch (Exception ex)

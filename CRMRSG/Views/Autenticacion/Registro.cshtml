@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
     ViewBag.Title = "Registro";
 }
@@ -22,7 +22,12 @@
     <!-- Style-->
     <link rel="stylesheet" href="~/Content/css/style.css">
     <link rel="stylesheet" href="~/Content/css/skin_color.css">
-
+    <style>
+        /* Hide browser-native show password reveal buttons */
+        input::-ms-reveal, input::-ms-clear {
+            display: none !important;
+        }
+    </style>
 </head>
 
 <body class="hold-transition theme-primary bg-img" style="background-image: url(@Url.Content("~/Content/images/auth-bg/bg-16.jpg"))">
@@ -58,18 +63,24 @@
                                             <input type="email" name="correo" class="form-control ps-15 bg-transparent" placeholder="Correo Electr&oacute;nico" required>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <div class="input-group mb-3">
-                                            <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
-                                            <input type="password" name="password" class="form-control ps-15 bg-transparent" placeholder="Contrase&ntilde;a" required>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <div class="input-group mb-3">
-                                            <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
-                                            <input type="password" name="confirmPassword" class="form-control ps-15 bg-transparent" placeholder="Confirmar Contrase&ntilde;a" required>
-                                        </div>
-                                    </div>
+                                     <div class="form-group">
+                                         <div class="input-group mb-3" style="position: relative;">
+                                             <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
+                                             <input type="password" name="password" id="register-password" class="form-control ps-15 bg-transparent" placeholder="Contrase&ntilde;a" required style="padding-right: 40px !important;">
+                                             <span class="btn-toggle-password" data-target="register-password" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 10; cursor: pointer;">
+                                                 <i class="fa fa-eye toggle-password-icon" style="color: #6c757d;"></i>
+                                             </span>
+                                         </div>
+                                     </div>
+                                     <div class="form-group">
+                                         <div class="input-group mb-3" style="position: relative;">
+                                             <span class="input-group-text bg-transparent"><i class="text-fade ti-lock"></i></span>
+                                             <input type="password" name="confirmPassword" id="register-confirm-password" class="form-control ps-15 bg-transparent" placeholder="Confirmar Contrase&ntilde;a" required style="padding-right: 40px !important;">
+                                             <span class="btn-toggle-password" data-target="register-confirm-password" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 10; cursor: pointer;">
+                                                 <i class="fa fa-eye toggle-password-icon" style="color: #6c757d;"></i>
+                                             </span>
+                                         </div>
+                                     </div>
                                     <div class="row">
                                         <div class="col-12 text-center">
                                             <button type="submit" class="btn btn-primary w-p100 mt-10">REGISTRARSE</button>
@@ -90,7 +101,24 @@
     <!-- Vendor JS -->
     <script src="~/Content/js/vendors.min.js"></script>
     <script src="~/Content/assets/icons/feather-icons/feather.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.btn-toggle-password').on('click', function () {
+                var targetId = $(this).data('target');
+                var passwordField = $('#' + targetId);
+                var passwordIcon = $(this).find('.toggle-password-icon');
+                var fieldType = passwordField.attr('type');
 
+                if (fieldType === 'password') {
+                    passwordField.attr('type', 'text');
+                    passwordIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    passwordField.attr('type', 'password');
+                    passwordIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 

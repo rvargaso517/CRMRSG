@@ -230,6 +230,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function() {
@@ -297,15 +298,44 @@
                         if (response.success) {
                             // Refrescar el calendario
                             $('#calendar').fullCalendar('refetchEvents');
-                            // Cerrar modal y limpiar
-                            $('#modal-nuevo-evento').modal('hide');
+                            
+                            // Cerrar modal usando API de Bootstrap 5 y limpiar
+                            var modalEl = document.getElementById('modal-nuevo-evento');
+                            var modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            if (modalInstance) {
+                                modalInstance.hide();
+                            }
+                            
+                            // Limpieza extra para prevenir screen freeze (bloqueo por backdrop residual)
+                            $('body').removeClass('modal-open');
+                            $('.modal-backdrop').remove();
+                            $('body').css('overflow', '');
+                            $('body').css('padding-right', '');
+                            
                             $('#form-nuevo-evento')[0].reset();
+
+                            // Alerta Premium
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Cita Agendada!',
+                                text: 'El evento se ha programado correctamente.',
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
                         } else {
-                            alert('Error al agendar evento: ' + response.message);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error al agendar evento: ' + response.message
+                            });
                         }
                     },
                     error: function() {
-                        alert('Error de conexión al servidor.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Conexión',
+                            text: 'No se pudo conectar con el servidor.'
+                        });
                     }
                 });
             });

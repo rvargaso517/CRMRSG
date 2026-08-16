@@ -62,7 +62,7 @@
                         </div>
                     </div>
 
-                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-briefcase me-15"></i> Detalles del Trabajo (Visual)</h4>
+                    <h4 class="box-title text-info mb-0 mt-20"><i class="ti-briefcase me-15"></i> Detalles del Trabajo (Opcionales)</h4>
                     <hr class="my-15">
                     <div class="row">
                         <div class="col-md-4">
@@ -102,6 +102,10 @@
 
                     <h4 class="box-title text-info mb-0 mt-20"><i class="ti-user me-15"></i> Contacto Principal</h4>
                     <hr class="my-15">
+                    <div class="alert alert-warning d-flex align-items-center gap-2 mt-10 py-2" role="alert" style="border-left: 5px solid #ffa800;">
+                        <i class="ti-info-alt me-5 text-warning" style="font-size: 1.2rem;"></i>
+                        <small class="text-dark">Para agregar <strong>contactos secundarios</strong> adicionales (varios contactos de la misma empresa), guarda el cliente y luego haz clic en su nombre para abrir la ficha de detalle.</small>
+                    </div>
                     <div id="contactos-container">
                         <div class="row mb-10">
                             <div class="col-md-3"><label class="form-label">Nombres <span class="text-danger">*</span></label>@Html.TextBoxFor(m => m.nombre, new { @class = "form-control", placeholder = "Ej: Juan", required = "required" })@Html.ValidationMessageFor(m => m.nombre, "", new { @class = "text-danger small" })</div>
@@ -109,10 +113,6 @@
                             <div class="col-md-2"><label class="form-label">Tel&eacute;fono</label>@Html.TextBoxFor(m => m.telefono, new { @class = "form-control", placeholder = "+1 234 567" })</div>
                             <div class="col-md-3"><label class="form-label">Correo <span class="text-danger">*</span></label>@Html.TextBoxFor(m => m.correo, new { @class = "form-control", placeholder = "email@empresa.com", type = "email", required = "required" })@Html.ValidationMessageFor(m => m.correo, "", new { @class = "text-danger small" })</div>
                         </div>
-                    </div>
-                    <div class="alert alert-info d-flex align-items-center gap-2 mt-10 py-2" role="alert">
-                        <i class="ti-info-alt me-5"></i>
-                        <small>Para agregar <strong>contactos secundarios</strong> adicionales (varios contactos de la misma empresa), guarda el cliente y luego haz clic en su nombre para abrir la ficha de detalle.</small>
                     </div>
 
                     <h4 class="box-title text-info mb-0 mt-20"><i class="ti-location-pin me-15"></i> Ubicaci&oacute;n</h4>

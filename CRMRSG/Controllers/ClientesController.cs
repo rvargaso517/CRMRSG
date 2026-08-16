@@ -199,6 +199,7 @@ namespace CRMRSG.Controllers
                     );
                 }
 
+                TempData["Success"] = "Cliente registrado con éxito.";
                 return RedirectToAction("Index");
             }
 
@@ -274,6 +275,7 @@ namespace CRMRSG.Controllers
                             commandType: CommandType.StoredProcedure
                         );
 
+                        TempData["Success"] = "Cambios guardados con éxito.";
                         return RedirectToAction("Index");
                     }
                 }
@@ -366,6 +368,90 @@ namespace CRMRSG.Controllers
                 Response.AddHeader("content-disposition", "attachment;filename=Reporte_Clientes_CRM.csv");
                 Response.Charset = "UTF-8";
                 Response.ContentType = "text/csv";
+                Response.BinaryWrite(archivoFinal);
+                Response.End();
+            }
+        }
+
+        // GET: clientes/ExportarClientesExcel
+        public void ExportarClientesExcel()
+        {
+            if (!TienePermiso("Clientes:Ver"))
+            {
+                Response.Clear();
+                Response.Write("No autorizado");
+                Response.End();
+                return;
+            }
+
+            using (var db = DbConnectionFactory.GetConnection())
+            {
+                var listaClientes = db.Query<cliente>(
+                    "sp_clientes_listar",
+                    commandType: CommandType.StoredProcedure
+                ).ToList();
+
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.AppendLine("<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">");
+                sb.AppendLine("<head>");
+                sb.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">");
+                sb.AppendLine("</head>");
+                sb.AppendLine("<body style=\"font-family: Calibri, Arial, sans-serif;\">");
+                sb.AppendLine("  <table border=\"0\" style=\"border-collapse: collapse;\">");
+                
+                // Título Principal
+                sb.AppendLine("    <tr>");
+                sb.AppendLine("      <td colspan=\"8\" style=\"font-size: 16pt; font-weight: bold; color: #1d3557; height: 35px; vertical-align: middle;\">Reporte de Clientes - CRM RSG</td>");
+                sb.AppendLine("    </tr>");
+                
+                // Fecha de Generación
+                sb.AppendLine("    <tr>");
+                sb.AppendLine($"      <td colspan=\"8\" style=\"font-size: 10pt; color: #64748b; height: 20px;\">Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</td>");
+                sb.AppendLine("    </tr>");
+                
+                // Fila vacía de separación
+                sb.AppendLine("    <tr><td colspan=\"8\" style=\"height: 15px;\"></td></tr>");
+
+                // Encabezados de Tabla
+                sb.AppendLine("    <tr style=\"background-color: #1d3557; height: 28px;\">");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: center; width: 60px;\">ID</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 180px;\">Nombre Completo</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 160px;\">Empresa</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 110px;\">Teléfono</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 220px;\">Correo Electrónico</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 240px;\">Dirección</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: center; width: 100px;\">Estado</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: center; width: 130px;\">Fecha Registro</th>");
+                sb.AppendLine("    </tr>");
+
+                foreach (var c in listaClientes)
+                {
+                    string estadoColor = (c.estado ?? "Activo").Equals("Activo", StringComparison.OrdinalIgnoreCase) ? "#16a34a" : "#dc2626";
+                    sb.AppendLine("    <tr style=\"height: 24px;\">");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; padding: 5px;\">{c.id_cliente}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.nombre ?? "N/A")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.empresa ?? "N/A")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.telefono ?? "N/A")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.correo ?? "N/A")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.direccion ?? "N/A")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: {estadoColor}; padding: 5px;\">{HttpUtility.HtmlEncode(c.estado ?? "Activo")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; padding: 5px;\">{(c.fecha_registro.HasValue ? c.fecha_registro.Value.ToString("dd/MM/yyyy") : "N/A")}</td>");
+                    sb.AppendLine("    </tr>");
+                }
+
+                sb.AppendLine("  </table>");
+                sb.AppendLine("</body>");
+                sb.AppendLine("</html>");
+
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+                byte[] bom = new byte[] { 0xEF, 0xBB, 0xBF };
+                byte[] archivoFinal = bom.Concat(buffer).ToArray();
+
+                Response.Clear();
+                Response.Buffer = true;
+                Response.AddHeader("content-disposition", "attachment;filename=Reporte_Clientes_CRM.xls");
+                Response.Charset = "UTF-8";
+                Response.ContentType = "application/vnd.ms-excel";
                 Response.BinaryWrite(archivoFinal);
                 Response.End();
             }
