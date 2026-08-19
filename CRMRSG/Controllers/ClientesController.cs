@@ -395,48 +395,62 @@ namespace CRMRSG.Controllers
                 sb.AppendLine("<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">");
                 sb.AppendLine("<head>");
                 sb.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">");
+                sb.AppendLine("<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Clientes CRM</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->");
                 sb.AppendLine("</head>");
-                sb.AppendLine("<body style=\"font-family: Calibri, Arial, sans-serif;\">");
+                sb.AppendLine("<body style=\"font-family: Calibri, Arial, sans-serif; margin: 20px;\">");
                 sb.AppendLine("  <table border=\"0\" style=\"border-collapse: collapse;\">");
+                sb.AppendLine("    <colgroup>");
+                sb.AppendLine("      <col width=\"60\">");  // ID
+                sb.AppendLine("      <col width=\"220\">"); // Nombre Completo
+                sb.AppendLine("      <col width=\"200\">"); // Empresa
+                sb.AppendLine("      <col width=\"130\">"); // Teléfono
+                sb.AppendLine("      <col width=\"260\">"); // Correo Electrónico
+                sb.AppendLine("      <col width=\"280\">"); // Dirección
+                sb.AppendLine("      <col width=\"120\">"); // Estado
+                sb.AppendLine("      <col width=\"140\">"); // Fecha Registro
+                sb.AppendLine("    </colgroup>");
                 
                 // Título Principal
                 sb.AppendLine("    <tr>");
-                sb.AppendLine("      <td colspan=\"8\" style=\"font-size: 16pt; font-weight: bold; color: #1d3557; height: 35px; vertical-align: middle;\">Reporte de Clientes - CRM RSG</td>");
+                sb.AppendLine("      <td colspan=\"8\" style=\"font-size: 16pt; font-weight: bold; color: #1d3557; height: 40px; vertical-align: middle;\">Reporte de Clientes - CRM RSG</td>");
                 sb.AppendLine("    </tr>");
                 
                 // Fecha de Generación
                 sb.AppendLine("    <tr>");
-                sb.AppendLine($"      <td colspan=\"8\" style=\"font-size: 10pt; color: #64748b; height: 20px;\">Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</td>");
+                sb.AppendLine($"      <td colspan=\"8\" style=\"font-size: 10pt; color: #64748b; height: 20px; font-style: italic;\">Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}</td>");
                 sb.AppendLine("    </tr>");
                 
                 // Fila vacía de separación
                 sb.AppendLine("    <tr><td colspan=\"8\" style=\"height: 15px;\"></td></tr>");
 
                 // Encabezados de Tabla
-                sb.AppendLine("    <tr style=\"background-color: #1d3557; height: 28px;\">");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: center; width: 60px;\">ID</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 180px;\">Nombre Completo</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 160px;\">Empresa</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 110px;\">Teléfono</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 220px;\">Correo Electrónico</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: left; width: 240px;\">Dirección</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: center; width: 100px;\">Estado</th>");
-                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 6px; text-align: center; width: 130px;\">Fecha Registro</th>");
+                sb.AppendLine("    <tr style=\"background-color: #1d3557; height: 30px;\">");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: center;\">ID</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: left;\">Nombre Completo</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: left;\">Empresa</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: left;\">Teléfono</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: left;\">Correo Electrónico</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: left;\">Dirección</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: center;\">Estado</th>");
+                sb.AppendLine("      <th style=\"background-color: #1d3557; color: #ffffff; font-weight: bold; border: 1px solid #1d3557; padding: 8px; text-align: center;\">Fecha Registro</th>");
                 sb.AppendLine("    </tr>");
 
+                int idx = 0;
                 foreach (var c in listaClientes)
                 {
+                    string rowBg = (idx % 2 == 0) ? "#ffffff" : "#f8fafc";
                     string estadoColor = (c.estado ?? "Activo").Equals("Activo", StringComparison.OrdinalIgnoreCase) ? "#16a34a" : "#dc2626";
-                    sb.AppendLine("    <tr style=\"height: 24px;\">");
-                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; padding: 5px;\">{c.id_cliente}</td>");
+                    sb.AppendLine($"    <tr style=\"background-color: {rowBg}; height: 26px; vertical-align: middle;\">");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center;\">{c.id_cliente}</td>");
                     sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.nombre ?? "N/A")}</td>");
                     sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.empresa ?? "N/A")}</td>");
                     sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.telefono ?? "N/A")}</td>");
                     sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.correo ?? "N/A")}</td>");
                     sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; padding: 5px;\">{HttpUtility.HtmlEncode(c.direccion ?? "N/A")}</td>");
-                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: {estadoColor}; padding: 5px;\">{HttpUtility.HtmlEncode(c.estado ?? "Activo")}</td>");
-                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; padding: 5px;\">{(c.fecha_registro.HasValue ? c.fecha_registro.Value.ToString("dd/MM/yyyy") : "N/A")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: {estadoColor};\">{HttpUtility.HtmlEncode(c.estado ?? "Activo")}</td>");
+                    sb.AppendLine($"      <td style=\"border: 1px solid #cbd5e1; text-align: center;\">{(c.fecha_registro.HasValue ? c.fecha_registro.Value.ToString("dd/MM/yyyy") : "N/A")}</td>");
                     sb.AppendLine("    </tr>");
+                    idx++;
                 }
 
                 sb.AppendLine("  </table>");

@@ -185,25 +185,31 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4'); // Horizontal / Landscape
 
-            // Título
+            // Título Principal
+            doc.setFont('helvetica', 'bold');
             doc.setFontSize(18);
-            doc.setTextColor(4, 10, 45); // #040A2D
-            doc.text('Reporte de Clientes - CRM RSG', 14, 20);
+            doc.setTextColor(29, 53, 87); // #1d3557 Color Corporativo Principal
+            doc.text('Reporte de Clientes - CRM RSG', 14, 18);
             
-            // Timestamp
-            doc.setFontSize(10);
-            doc.setTextColor(100, 116, 139); // Gray
+            // Timestamp y Metadatos
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(100, 116, 139); // Gray-500
             const fecha = new Date().toLocaleString('es-CR', { timeZone: 'America/Costa_Rica' });
-            doc.text('Generado el: ' + fecha, 14, 27);
+            doc.text('Generado el: ' + fecha, 14, 24);
+            doc.text('Filtro de Clasificación: ' + ($('#btn-group-filter button.active').text().trim() || 'Todos'), 14, 29);
 
             const headers = [['Empresa', 'Contacto Principal', 'Email', 'Teléfono', 'Lead Scoring', 'Clasificación', 'Estado']];
             const data = [];
             
+            // Obtener el filtro activo para exportar todos los registros correspondientes sin importar la página activa
+            const activeFilter = $('#btn-group-filter button.active').data('filter') || 'all';
+
             $('.cliente-row').each(function() {
                 const $row = $(this);
-                
-                // Solo exportar si no está oculto por filtros de clasificación
-                if ($row.css('display') !== 'none') {
+                const rowClasificacion = $row.data('clasificacion') || '';
+
+                if (activeFilter === 'all' || rowClasificacion === activeFilter) {
                     const empresa = $row.find('td:nth-child(1) a').text().trim();
                     const contacto = $row.find('td:nth-child(2)').text().trim();
                     const email = $row.find('td:nth-child(3)').text().trim();
@@ -221,25 +227,47 @@
             });
 
             if (data.length === 0) {
-                Swal.fire('Sin datos', 'No hay registros visibles para exportar.', 'warning');
+                Swal.fire('Sin datos', 'No hay registros que coincidan con el filtro actual para exportar.', 'warning');
                 return;
             }
 
             doc.autoTable({
                 head: headers,
                 body: data,
-                startY: 32,
+                startY: 34,
                 theme: 'striped',
-                headStyles: { fillColor: [4, 10, 45] },
-                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { 
+                    fillColor: [29, 53, 87], // #1d3557
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    halign: 'left'
+                },
+                alternateRowStyles: { 
+                    fillColor: [248, 250, 252] // Slate-50 alterno
+                },
+                styles: { 
+                    fontSize: 8.5, 
+                    cellPadding: 3.5, 
+                    font: 'helvetica',
+                    lineColor: [226, 232, 240], // Gray border
+                    lineWidth: 0.1
+                },
                 columnStyles: {
-                    0: { cellWidth: 40 }, // Empresa
-                    1: { cellWidth: 40 }, // Contacto
-                    2: { cellWidth: 50 }, // Email
-                    3: { cellWidth: 30 }, // Telefono
-                    4: { cellWidth: 30 }, // Lead Scoring
-                    5: { cellWidth: 30 }, // Clasificacion
-                    6: { cellWidth: 25 }  // Estado
+                    0: { cellWidth: 45 }, // Empresa
+                    1: { cellWidth: 45 }, // Contacto
+                    2: { cellWidth: 60 }, // Email
+                    3: { cellWidth: 35 }, // Telefono
+                    4: { cellWidth: 25, halign: 'center' }, // Lead Scoring
+                    5: { cellWidth: 30, halign: 'center' }, // Clasificacion
+                    6: { cellWidth: 30, halign: 'center' }  // Estado
+                },
+                didDrawPage: function(data) {
+                    // Numeración de página profesional en el footer
+                    const totalPages = doc.internal.getNumberOfPages();
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(148, 163, 184);
+                    doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
+                    doc.text('CRM RSG - Sistema de Gestión de Clientes', 14, doc.internal.pageSize.height - 10);
                 }
             });
 

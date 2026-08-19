@@ -2011,7 +2011,6 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
-    <Content Include="Scripts base de datos\server\creacion.sql" />
     <Content Include="Scripts base de datos\workbench\creacion.sql" />
     <Content Include="Content\css\color_theme.css.map" />
     <Content Include="Content\css\skin_color.css.map" />

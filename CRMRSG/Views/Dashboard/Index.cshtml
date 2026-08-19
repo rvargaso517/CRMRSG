@@ -456,7 +456,11 @@
                     stroke: { curve: 'smooth', width: 2 },
                     xaxis: { 
                         categories: fechas,
-                        labels: { style: { colors: chartLabelColor } }
+                        labels: { 
+                            rotate: -45,
+                            rotateAlways: true,
+                            style: { colors: chartLabelColor } 
+                        }
                     },
                     yaxis: {
                         labels: { style: { colors: chartLabelColor } }
@@ -493,7 +497,8 @@
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
-                        labels: { colors: chartLabelColor }
+                        labels: { colors: chartLabelColor },
+                        itemMargin: { horizontal: 5, vertical: 5 }
                     },
                     stroke: { colors: [boxBgColor], width: 2 }
                 };
@@ -546,12 +551,14 @@
                     xaxis: {
                         categories: clientesGanancias,
                         labels: {
+                            rotate: -45,
+                            rotateAlways: true,
                             style: {
                                 colors: chartLabelColor,
                                 fontWeight: 600,
-                                fontSize: '11px'
+                                fontSize: '10px'
                             },
-                            maxHeight: 120,
+                            maxHeight: 100,
                             hideOverlappingLabels: true
                         }
                     },
@@ -592,7 +599,8 @@
                     legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
-                        labels: { colors: chartLabelColor }
+                        labels: { colors: chartLabelColor },
+                        itemMargin: { horizontal: 5, vertical: 5 }
                     }
                 };
                 new ApexCharts(document.querySelector("#ganancias-bar-chart"), optionsBar).render();

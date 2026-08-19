@@ -299,11 +299,27 @@
                             // Refrescar el calendario
                             $('#calendar').fullCalendar('refetchEvents');
                             
-                            // Cerrar modal usando API de Bootstrap 5 y limpiar
-                            var modalEl = document.getElementById('modal-nuevo-evento');
-                            var modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                            if (modalInstance) {
-                                modalInstance.hide();
+                            // Cerrar modal de manera segura y limpiar
+                            try {
+                                if (window.bootstrap && bootstrap.Modal) {
+                                    var modalEl = document.getElementById('modal-nuevo-evento');
+                                    var modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                    if (!modalInstance) {
+                                        modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                                    }
+                                    if (modalInstance) {
+                                        modalInstance.hide();
+                                    }
+                                } else {
+                                    $('#modal-nuevo-evento').modal('hide');
+                                }
+                            } catch (e) {
+                                console.warn('Bootstrap modal hide failed, falling back to jQuery:', e);
+                                try {
+                                    $('#modal-nuevo-evento').modal('hide');
+                                } catch (err) {
+                                    console.error('jQuery modal hide failed:', err);
+                                }
                             }
                             
                             // Limpieza extra para prevenir screen freeze (bloqueo por backdrop residual)

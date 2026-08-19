@@ -3,6 +3,8 @@
 -- Compatible con:
 -- MySQL + MySQL Workbench + .NET Framework
 -- =====================================================
+CREATE DATABASE IF NOT EXISTS crm_rsg;
+USE crm_rsg;
 
 -- =========================================
 -- TABLA ROLES
@@ -198,6 +200,24 @@ CREATE TABLE correos_programados (
     fecha_envio DATETIME NOT NULL,
     enviado BOOLEAN DEFAULT FALSE
 );
+
+-- =====================================================
+-- INSERCIÓN DE DATOS SEMILLA (ROLES Y ADMINISTRADOR)
+-- =====================================================
+
+-- Roles del sistema
+INSERT INTO roles (id_rol, nombre, descripcion) VALUES 
+(1, 'Administrador', 'Control total del sistema, gestión de usuarios, roles e historial de acciones.'),
+(2, 'Vendedor', 'Gestión de clientes, oportunidades, tareas, interacciones y eventos comerciales.'),
+(3, 'Gerente', 'Visualización de indicadores generales y rendimiento de vendedores.'),
+(4, 'Supervisor', 'Visualización de estadísticas de eventos, tareas y clasificación de clientes.')
+ON DUPLICATE KEY UPDATE nombre=VALUES(nombre), descripcion=VALUES(descripcion);
+
+-- Usuario Administrador por defecto (Contraseña: Password123!)
+-- El hash corresponde a la encriptación SHA-256 utilizada por el sistema
+INSERT INTO usuarios (id_usuario, nombre, apellido, correo, password_hash, telefono, estado, correo_verificado, id_rol) VALUES
+(1, 'Administrador', 'CRM', 'admin.crm@gmail.com', 'a109e36947ad56de1dca1cc49f0ef8ac9ad9a7b1aa0df41fb3c4cb73c1ff01ea', '88888888', 1, 1, 1)
+ON DUPLICATE KEY UPDATE correo=VALUES(correo);
 
 -- =====================================================
 -- FIN DEL SCRIPT

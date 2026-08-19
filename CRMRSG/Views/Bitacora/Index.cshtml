@@ -183,15 +183,23 @@
 
                 var options = {
                     series: data,
-                    chart: { type: 'pie', height: 280, redrawOnWindowResize: true },
+                    chart: { type: 'pie', height: 280, background: 'transparent', redrawOnWindowResize: true },
                     labels: labels,
-                    colors: ['#040A2D', '#970000', '#10c469', '#ff9920', '#188ae2'],
+                    colors: ['#1d3557', '#e63946', '#10c469', '#f4a261', '#188ae2'],
                     stroke: { colors: ['#ffffff'], width: 1 },
                     legend: { 
                         position: 'bottom',
                         horizontalAlign: 'center',
-                        floating: false
-                    }
+                        floating: false,
+                        itemMargin: { horizontal: 5, vertical: 5 }
+                    },
+                    responsive: [{
+                        breakpoint: 480,
+                        options: {
+                            chart: { height: 320 },
+                            legend: { position: 'bottom' }
+                        }
+                    }]
                 };
                 new ApexCharts(document.querySelector("#bitacora-user-chart"), options).render();
             }

@@ -74,7 +74,7 @@ namespace CRMRSG.Controllers
 
             if (usuario.estado == false)
             {
-                ViewBag.Error = "Esta cuenta se encuentra inactiva. Contacte al administrador.";
+                ViewBag.Error = "Esta cuenta se encuentra inactiva o pendiente de aprobación. Contacte al administrador.";
                 return View();
             }
 
