@@ -444,167 +444,174 @@
             var chartThemeMode = (yiq < 128) ? 'dark' : 'light';
             var chartLabelColor = (yiq < 128) ? '#ffffff' : '#5a6a85';
 
-            // Gráfico de Citas por Fecha - ApexCharts
-            if ($('#eventos-line-chart').length > 0) {
-                var fechas = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartFechas));
-                var cantidades = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartCantidades));
+           // Gráfico de Citas por Fecha - Area Chart
+if ($('#eventos-line-chart').length > 0) {
+    var fechas = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartFechas ?? new List<string>()));
+    var cantidades = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartCantidades ?? new List<int>()));
 
-                var optionsLine = {
-                    series: [{ name: 'Citas', data: cantidades }],
-                    chart: { type: 'area', height: 240, toolbar: { show: false }, background: 'transparent', redrawOnWindowResize: true },
-                    theme: { mode: chartThemeMode },
-                    stroke: { curve: 'smooth', width: 2 },
-                    xaxis: { 
-                        categories: fechas,
-                        labels: { 
-                            rotate: -45,
-                            rotateAlways: true,
-                            style: { colors: chartLabelColor } 
-                        }
-                    },
-                    yaxis: {
-                        labels: { style: { colors: chartLabelColor } }
-                    },
-                    colors: selectedColors.line,
-                    fill: {
-                        type: 'gradient',
-                        gradient: {
-                            shadeIntensity: 1,
-                            opacityFrom: 0.3,
-                            opacityTo: 0.05,
-                            stops: [0, 90, 100]
-                        }
-                    },
-                    dataLabels: { enabled: false }
-                };
-                new ApexCharts(document.querySelector("#eventos-line-chart"), optionsLine).render();
+    var optionsLine = {
+        series: [{ name: 'Citas', data: cantidades }],
+        chart: { 
+            type: 'area', 
+            height: 240, 
+            toolbar: { show: false }, 
+            background: 'transparent', 
+            redrawOnWindowResize: true 
+        },
+        theme: { mode: chartThemeMode },
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: { 
+            categories: fechas,
+            labels: { 
+                rotate: -45,
+                rotateAlways: true,
+                style: { colors: chartLabelColor } 
             }
-
-            // Gráfico de Citas por Estado - Donut Chart
-            if ($('#estados-donut-chart').length > 0) {
-                var completados = @ViewBag.EventosCompletados;
-                var pendientes = @ViewBag.EventosPendientes;
-                var cancelados = @ViewBag.EventosCancelados;
-                var aplazados = @(ViewBag.EventosAplazados ?? 0);
-
-                var optionsDonut = {
-                    series: [completados, pendientes, cancelados, aplazados],
-                    chart: { type: 'donut', height: 240, background: 'transparent', redrawOnWindowResize: true },
-                    theme: { mode: chartThemeMode },
-                    labels: ['Completadas', 'Pendientes', 'Canceladas', 'Aplazadas'],
-                    colors: selectedColors.donut,
-                    legend: { 
-                        position: 'bottom',
-                        horizontalAlign: 'center',
-                        floating: false,
-                        labels: { colors: chartLabelColor },
-                        itemMargin: { horizontal: 5, vertical: 5 }
-                    },
-                    stroke: { colors: [boxBgColor], width: 2 }
-                };
-                new ApexCharts(document.querySelector("#estados-donut-chart"), optionsDonut).render();
+        },
+        yaxis: {
+            labels: { style: { colors: chartLabelColor } }
+        },
+        colors: selectedColors.line,
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.3,
+                opacityTo: 0.05,
+                stops: [0, 90, 100]
             }
+        },
+        dataLabels: { enabled: false }
+    };
+    new ApexCharts(document.querySelector("#eventos-line-chart"), optionsLine).render();
+}
 
-            // Gráfico de Ganancias por Cliente - Bar Chart
-            if ($('#ganancias-bar-chart').length > 0) {
-                var clientesGanancias = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.GananciasLabels));
-                var montosGanancias = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.GananciasData));
+// Gráfico de Citas por Estado - Donut Chart
+if ($('#estados-donut-chart').length > 0) {
+    var completados = Number(@(ViewBag.EventosCompletados ?? 0));
+    var pendientes = Number(@(ViewBag.EventosPendientes ?? 0));
+    var cancelados = Number(@(ViewBag.EventosCancelados ?? 0));
+    var aplazados = Number(@(ViewBag.EventosAplazados ?? 0));
 
-                var optionsBar = {
-                    series: [{
-                        name: 'Ganancias',
-                        data: montosGanancias
-                    }],
-                    chart: {
-                        type: 'bar',
-                        height: 320,
-                        toolbar: { show: false },
-                        background: 'transparent',
-                        sparkline: { enabled: false },
-                        redrawOnWindowResize: true
-                    },
-                    theme: { mode: chartThemeMode },
-                    plotOptions: {
-                        bar: {
-                            borderRadius: 8,
-                            horizontal: false,
-                            columnWidth: '55%',
-                            distributed: true,
-                            dataLabels: {
-                                position: 'top'
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function (val) {
-                            return "₡" + Math.floor(val).toLocaleString();
-                        },
-                        style: {
-                            colors: [chartThemeMode === 'dark' ? '#FFFFFF' : '#000000'],
-                            fontSize: '11px',
-                            fontWeight: 600
-                        },
-                        offsetY: -20
-                    },
-                    colors: selectedColors.bar,
-                    xaxis: {
-                        categories: clientesGanancias,
-                        labels: {
-                            rotate: -45,
-                            rotateAlways: true,
-                            style: {
-                                colors: chartLabelColor,
-                                fontWeight: 600,
-                                fontSize: '10px'
-                            },
-                            maxHeight: 100,
-                            hideOverlappingLabels: true
-                        }
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'Monto (₡)',
-                            style: {
-                                color: chartLabelColor,
-                                fontWeight: 600
-                            }
-                        },
-                        labels: {
-                            formatter: function (val) {
-                                return "₡" + Math.floor(val).toLocaleString();
-                            },
-                            style: {
-                                colors: chartLabelColor,
-                                fontSize: '11px'
-                            }
-                        }
-                    },
-                    grid: {
-                        borderColor: chartThemeMode === 'dark' ? '#444' : '#ededed',
-                        strokeDashArray: 4,
-                        xaxis: {
-                            lines: { show: false }
-                        }
-                    },
-                    tooltip: {
-                        enabled: true,
-                        theme: chartThemeMode,
-                        y: {
-                            formatter: function(val) {
-                                return "₡" + Math.floor(val).toLocaleString();
-                            }
-                        }
-                    },
-                    legend: {
-                        position: 'bottom',
-                        horizontalAlign: 'center',
-                        labels: { colors: chartLabelColor },
-                        itemMargin: { horizontal: 5, vertical: 5 }
-                    }
-                };
-                new ApexCharts(document.querySelector("#ganancias-bar-chart"), optionsBar).render();
+    var optionsDonut = {
+        series: [completados, pendientes, cancelados, aplazados],
+        chart: { 
+            type: 'donut', 
+            height: 240, 
+            background: 'transparent', 
+            redrawOnWindowResize: true 
+        },
+        theme: { mode: chartThemeMode },
+        labels: ['Completadas', 'Pendientes', 'Canceladas', 'Aplazadas'],
+        colors: selectedColors.donut,
+        legend: { 
+            position: 'bottom',
+            horizontalAlign: 'center',
+            floating: false,
+            labels: { colors: chartLabelColor },
+            itemMargin: { horizontal: 5, vertical: 5 }
+        },
+        stroke: { colors: typeof boxBgColor !== 'undefined' ? [boxBgColor] : ['#ffffff'], width: 2 }
+    };
+    new ApexCharts(document.querySelector("#estados-donut-chart"), optionsDonut).render();
+}
+
+// Gráfico de Ganancias por Cliente - Bar Chart
+if ($('#ganancias-bar-chart').length > 0) {
+    var clientesGanancias = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.GananciasLabels ?? new List<string>()));
+    var montosGanancias = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.GananciasData ?? new List<decimal>()));
+
+    var optionsBar = {
+        series: [{
+            name: 'Ganancias',
+            data: montosGanancias
+        }],
+        chart: {
+            type: 'bar',
+            height: 320,
+            toolbar: { show: false },
+            background: 'transparent',
+            redrawOnWindowResize: true
+        },
+        theme: { mode: chartThemeMode },
+        plotOptions: {
+            bar: {
+                borderRadius: 6,
+                horizontal: false,
+                columnWidth: '55%',
+                distributed: true,
+                dataLabels: {
+                    position: 'top'
+                }
             }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                return "₡" + Math.floor(val).toLocaleString();
+            },
+            style: {
+                colors: [chartLabelColor], // Utiliza la variable global de color para adaptarse al tema
+                fontSize: '11px',
+                fontWeight: 600
+            },
+            offsetY: -22
+        },
+        colors: selectedColors.bar,
+        xaxis: {
+            categories: clientesGanancias,
+            labels: {
+                rotate: -45,
+                rotateAlways: true,
+                style: {
+                    colors: chartLabelColor,
+                    fontWeight: 600,
+                    fontSize: '10px'
+                },
+                maxHeight: 100,
+                hideOverlappingLabels: true
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Monto (₡)',
+                style: {
+                    color: chartLabelColor,
+                    fontWeight: 600
+                }
+            },
+            labels: {
+                formatter: function (val) {
+                    return "₡" + Math.floor(val).toLocaleString();
+                },
+                style: {
+                    colors: chartLabelColor,
+                    fontSize: '11px'
+                }
+            }
+        },
+        grid: {
+            borderColor: chartThemeMode === 'dark' ? '#444' : '#ededed',
+            strokeDashArray: 4,
+            xaxis: {
+                lines: { show: false }
+            }
+        },
+        tooltip: {
+            enabled: true,
+            theme: chartThemeMode,
+            y: {
+                formatter: function(val) {
+                    return "₡" + Math.floor(val).toLocaleString();
+                }
+            }
+        },
+        legend: {
+            show: false // Se oculta porque las barras distribuidas ya tienen los nombres en el eje X
+        }
+    };
+    new ApexCharts(document.querySelector("#ganancias-bar-chart"), optionsBar).render();
+}
 
             // Script para Redactor de Correos Inteligente (HU-032)
             const baseTemplates = {
