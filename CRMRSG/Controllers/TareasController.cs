@@ -335,11 +335,16 @@ namespace CRMRSG.Controllers
         // POST: Tareas/Completar
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Completar(int id)
+        public ActionResult Completar(int id, string descripcionFinalizacion)
         {
             if (!TienePermiso("Tareas:Gestionar"))
             {
                 return Json(new { success = false, message = "No autorizado" });
+            }
+
+            if (string.IsNullOrWhiteSpace(descripcionFinalizacion))
+            {
+                return Json(new { success = false, message = "Debe ingresar una descripción de finalización." });
             }
 
             using (var db = DbConnectionFactory.GetConnection())
@@ -354,7 +359,8 @@ namespace CRMRSG.Controllers
                 {
                     db.Execute(
                         "sp_tareas_actualizar",
-                        new {
+                        new
+                        {
                             p_id_tarea = id,
                             p_titulo = t.titulo,
                             p_descripcion = t.descripcion,
@@ -366,6 +372,12 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    db.Execute(
+                        "UPDATE tareas SET descripcion_finalizacion = @Desc WHERE id_tarea = @IdTarea",
+                        new { Desc = descripcionFinalizacion, IdTarea = id }
+                    );
+
                     return Json(new { success = true, message = "Tarea marcada como completada." });
                 }
             }

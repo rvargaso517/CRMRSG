@@ -21,6 +21,7 @@ namespace CRMRSG.EntityFramework
         }
     
         public int id_tarea { get; set; }
+        public string descripcion_finalizacion { get; set; }
         public string titulo { get; set; }
         public string descripcion { get; set; }
         public string prioridad { get; set; }
