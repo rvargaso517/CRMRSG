@@ -27,7 +27,6 @@
 </div>
 
 <div class="row">
-    <!-- Gráfico de Actividad por Usuario -->
     <div class="col-xl-4 col-12">
         <div class="box">
             <div class="box-header with-border">
@@ -39,7 +38,6 @@
         </div>
     </div>
 
-    <!-- Filtro de la Bitácora -->
     <div class="col-xl-8 col-12">
         <div class="box">
             <div class="box-header with-border">
@@ -60,6 +58,7 @@
                             }
                         </select>
                     </div>
+
                     <div class="col-md-4 col-12 text-end">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fa fa-filter me-2"></i> Filtrar
@@ -74,23 +73,31 @@
 <div class="row">
     <div class="col-12">
         <div class="box">
+
             <div class="box-header with-border">
                 <h3 class="box-title">Registro de Actividades del Sistema</h3>
             </div>
+
             <div class="box-body p-0">
+
                 <div class="table-responsive">
+
                     <table class="table table-hover mb-0">
+
                         <thead class="bg-light">
+
                             <tr>
                                 <th>Fecha y Hora</th>
                                 <th>Usuario</th>
                                 <th>Acción</th>
                                 <th>Módulo/Tabla</th>
                                 <th>Detalle de Actividad</th>
-
                             </tr>
+
                         </thead>
-                        <tbody>
+
+                        <tbody id="bitacora-tbody">
+
                             @if (Model.Count == 0)
                             {
                                 <tr>
@@ -99,110 +106,428 @@
                                     </td>
                                 </tr>
                             }
+
                             @foreach (var item in Model)
                             {
                                 <tr>
+
                                     <td class="text-nowrap">
                                         @(item.fecha_hora.HasValue
                                             ? item.fecha_hora.Value.ToString("dd/MM/yyyy HH:mm:ss")
                                             : "N/A")
                                     </td>
+
                                     <td class="fw-bold">
                                         @(item.usuario != null
                                             ? item.usuario.nombre + " " + item.usuario.apellido
                                             : "Sistema/Anónimo")
                                     </td>
+
                                     <td>
+
                                         @if (item.accion == "Creación")
                                         {
-                                            <span class="badge badge-success-light">Creación</span>
+                                            <span class="badge badge-success-light">
+                                                Creación
+                                            </span>
                                         }
                                         else if (item.accion == "Modificación")
                                         {
-                                            <span class="badge badge-warning-light">Modificación</span>
+                                            <span class="badge badge-warning-light">
+                                                Modificación
+                                            </span>
                                         }
                                         else
                                         {
-                                            <span class="badge badge-danger-light">Eliminación</span>
+                                            <span class="badge badge-danger-light">
+                                                Eliminación
+                                            </span>
                                         }
+
                                     </td>
-                                    <td class="text-capitalize">@item.tabla_afectada</td>
+
+                                    <td class="text-capitalize">
+                                        @item.tabla_afectada
+                                    </td>
+
                                     <td>
+
                                         @{
+
                                             string desc = "";
-                                            string modulo = item.tabla_afectada ?? "";
-                                            if (modulo == "clientes") { modulo = "Clientes"; }
-                                            else if (modulo == "oportunidades") { modulo = "Oportunidades"; }
-                                            else if (modulo == "tareas") { modulo = "Tareas"; }
-                                            else if (modulo == "citas") { modulo = "Citas / Eventos"; }
-                                            else if (modulo == "usuarios") { modulo = "Usuarios"; }
-                                            else if (modulo == "contacto_cliente") { modulo = "Contactos"; }
-                                            else if (modulo == "nota_cliente") { modulo = "Notas"; }
+
+                                            string modulo =
+                                                item.tabla_afectada ?? "";
+
+                                            if (modulo == "clientes")
+                                            {
+                                                modulo = "Clientes";
+                                            }
+                                            else if (modulo == "oportunidades")
+                                            {
+                                                modulo = "Oportunidades";
+                                            }
+                                            else if (modulo == "tareas")
+                                            {
+                                                modulo = "Tareas";
+                                            }
+                                            else if (modulo == "citas")
+                                            {
+                                                modulo = "Citas / Eventos";
+                                            }
+                                            else if (modulo == "usuarios")
+                                            {
+                                                modulo = "Usuarios";
+                                            }
+                                            else if (modulo == "contacto_cliente")
+                                            {
+                                                modulo = "Contactos";
+                                            }
+                                            else if (modulo == "nota_cliente")
+                                            {
+                                                modulo = "Notas";
+                                            }
+
 
                                             if (item.accion == "Creación")
                                             {
-                                                desc = $"Creó un nuevo registro en {modulo}.";
+                                                desc =
+                                                    $"Creó un nuevo registro en {modulo}.";
                                             }
                                             else if (item.accion == "Modificación")
                                             {
-                                                desc = $"Modificó un registro existente en {modulo}.";
+                                                desc =
+                                                    $"Modificó un registro existente en {modulo}.";
                                             }
                                             else if (item.accion == "Eliminación")
                                             {
-                                                desc = $"Eliminó un registro de {modulo}.";
+                                                desc =
+                                                    $"Eliminó un registro de {modulo}.";
                                             }
                                             else
                                             {
-                                                desc = $"{item.accion} en {modulo}.";
+                                                desc =
+                                                    $"{item.accion} en {modulo}.";
                                             }
+
                                         }
+
                                         @desc
+
                                     </td>
+
                                 </tr>
                             }
+
                         </tbody>
+
                     </table>
+
                 </div>
+
+
+                <div id="bitacora-paginacion-container"
+                     class="d-flex justify-content-between align-items-center flex-wrap mt-3 px-3 pb-3">
+
+                    <small id="bitacora-info-paginacion"
+                           class="info-paginacion">
+                    </small>
+
+                    <div id="bitacora-paginacion">
+                    </div>
+
+                </div>
+
             </div>
+
         </div>
     </div>
 </div>
 
+
 @section scripts {
+
     <script src="@Url.Content("~/Content/assets/vendor_components/apexcharts-bundle/dist/apexcharts.js")"></script>
+
     <script>
+
+        var bitacoraPorPagina = 10;
+
+        var paginaBitacoraActual = 1;
+
+
         $(document).ready(function() {
+
             if ($('#bitacora-user-chart').length > 0) {
+
                 var labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartLabels));
+
                 var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartData));
 
+
                 if (labels.length === 0) {
+
                     labels = ['Sin datos'];
+
                     data = [0];
+
                 }
 
+
                 var options = {
+
                     series: data,
-                    chart: { type: 'pie', height: 280, background: 'transparent', redrawOnWindowResize: true },
+
+                    chart: {
+                        type: 'pie',
+                        height: 280,
+                        background: 'transparent',
+                        redrawOnWindowResize: true
+                    },
+
                     labels: labels,
-                    colors: ['#1d3557', '#e63946', '#10c469', '#f4a261', '#188ae2'],
-                    stroke: { colors: ['#ffffff'], width: 1 },
-                    legend: { 
+
+                    colors: [
+                        '#1d3557',
+                        '#e63946',
+                        '#10c469',
+                        '#f4a261',
+                        '#188ae2'
+                    ],
+
+                    stroke: {
+                        colors: ['#ffffff'],
+                        width: 1
+                    },
+
+                    legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
-                        itemMargin: { horizontal: 5, vertical: 5 }
-                    },
-                    responsive: [{
-                        breakpoint: 480,
-                        options: {
-                            chart: { height: 320 },
-                            legend: { position: 'bottom' }
+                        itemMargin: {
+                            horizontal: 5,
+                            vertical: 5
                         }
+                    },
+
+                    responsive: [{
+
+                        breakpoint: 480,
+
+                        options: {
+
+                            chart: {
+                                height: 320
+                            },
+
+                            legend: {
+                                position: 'bottom'
+                            }
+
+                        }
+
                     }]
+
                 };
-                new ApexCharts(document.querySelector("#bitacora-user-chart"), options).render();
+
+
+                new ApexCharts(
+                    document.querySelector("#bitacora-user-chart"),
+                    options
+                ).render();
+
             }
+
+
+            paginarBitacora();
+
         });
+
+
+        function paginarBitacora() {
+
+            var filas =
+                $("#bitacora-tbody tr");
+
+
+            var totalRegistros =
+                filas.length;
+
+
+            if (
+                totalRegistros === 1 &&
+                filas.find("td").attr("colspan") === "5"
+            ) {
+
+                $("#bitacora-paginacion-container")
+                    .hide();
+
+                return;
+
+            }
+
+
+            var totalPaginas =
+                Math.ceil(
+                    totalRegistros /
+                    bitacoraPorPagina
+                );
+
+
+            filas.hide();
+
+
+            var inicio =
+                (paginaBitacoraActual - 1) *
+                bitacoraPorPagina;
+
+
+            var fin =
+                inicio +
+                bitacoraPorPagina;
+
+
+            filas
+                .slice(inicio, fin)
+                .show();
+
+
+            if (totalPaginas <= 1) {
+
+                $("#bitacora-paginacion-container")
+                    .hide();
+
+                return;
+
+            }
+
+
+            $("#bitacora-paginacion-container")
+                .show();
+
+
+            var html = `
+
+                <nav aria-label="Paginación de bitácora">
+
+                    <ul class="pagination pagination-sm mb-0">
+
+                        <li class="page-item
+                            ${paginaBitacoraActual === 1 ? 'disabled' : ''}">
+
+                            <a class="page-link"
+                               href="javascript:void(0)"
+                               onclick="cambiarPaginaBitacora(${paginaBitacoraActual - 1})">
+
+                                Anterior
+
+                            </a>
+
+                        </li>
+
+            `;
+
+
+            for (
+                var i = 1;
+                i <= totalPaginas;
+                i++
+            ) {
+
+                html += `
+
+                    <li class="page-item
+                        ${i === paginaBitacoraActual ? 'active' : ''}">
+
+                        <a class="page-link"
+                           href="javascript:void(0)"
+                           onclick="cambiarPaginaBitacora(${i})">
+
+                            ${i}
+
+                        </a>
+
+                    </li>
+
+                `;
+
+            }
+
+
+            html += `
+
+                        <li class="page-item
+                            ${paginaBitacoraActual === totalPaginas ? 'disabled' : ''}">
+
+                            <a class="page-link"
+                               href="javascript:void(0)"
+                               onclick="cambiarPaginaBitacora(${paginaBitacoraActual + 1})">
+
+                                Siguiente
+
+                            </a>
+
+                        </li>
+
+                    </ul>
+
+                </nav>
+
+            `;
+
+
+            $("#bitacora-paginacion")
+                .html(html);
+
+
+            $("#bitacora-info-paginacion").text(
+
+                "Mostrando " +
+                (inicio + 1) +
+                " - " +
+                Math.min(
+                    fin,
+                    totalRegistros
+                ) +
+                " de " +
+                totalRegistros +
+                " registros"
+
+            );
+
+        }
+
+
+        function cambiarPaginaBitacora(pagina) {
+
+            var totalRegistros =
+                $("#bitacora-tbody tr").length;
+
+
+            var totalPaginas =
+                Math.ceil(
+                    totalRegistros /
+                    bitacoraPorPagina
+                );
+
+
+            if (
+                pagina < 1 ||
+                pagina > totalPaginas
+            ) {
+
+                return;
+
+            }
+
+
+            paginaBitacoraActual =
+                pagina;
+
+
+            paginarBitacora();
+
+        }
+
     </script>
 }
