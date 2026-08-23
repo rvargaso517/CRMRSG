@@ -578,6 +578,27 @@ namespace CRMRSG.Controllers
                 }
 
                 EnviarEmailNet(destinatario, asunto, cuerpo);
+
+                // Registrar en Bitácora (trazabilidad completa)
+                using (var db = DbConnectionFactory.GetConnection())
+                {
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Envío Correo",
+                            p_tabla_afectada = "dashboard",
+                            p_id_registro_afectado = 0,
+                            p_valor_anterior = "NULL",
+                            p_valor_nuevo = $"Para: {destinatario}, Asunto: {asunto}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                }
+
                 return Json(new { success = true, message = "Correo enviado con éxito." });
             }
             catch (Exception ex)
@@ -597,6 +618,26 @@ namespace CRMRSG.Controllers
                 }
 
                 DateTime fProg = DateTime.Parse(fechaProgramada);
+
+                // Registrar en Bitácora (trazabilidad completa)
+                using (var db = DbConnectionFactory.GetConnection())
+                {
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "dashboard",
+                            p_id_registro_afectado = 0,
+                            p_valor_anterior = "NULL",
+                            p_valor_nuevo = $"Correo Programado para: {destinatario} en fecha {fProg.ToString("dd/MM/yyyy HH:mm")}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+                }
 
                 using (var db = DbConnectionFactory.GetConnection())
                 {

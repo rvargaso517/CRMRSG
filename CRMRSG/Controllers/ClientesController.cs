@@ -197,6 +197,23 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Creación",
+                            p_tabla_afectada = "clientes",
+                            p_id_registro_afectado = id_cliente,
+                            p_valor_anterior = "NULL",
+                            p_valor_nuevo = $"Empresa: {nuevoCliente.empresa}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
                 }
 
                 TempData["Success"] = "Cliente registrado con éxito.";
@@ -275,6 +292,23 @@ namespace CRMRSG.Controllers
                             commandType: CommandType.StoredProcedure
                         );
 
+                        // Insertar en Bitácora (trazabilidad completa)
+                        string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                        int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                        db.Execute(
+                            "sp_bitacora_insertar",
+                            new {
+                                p_accion = "Modificación",
+                                p_tabla_afectada = "clientes",
+                                p_id_registro_afectado = clienteModificado.id_cliente,
+                                p_valor_anterior = $"Empresa: {clienteDb.empresa}, Estado: {clienteDb.estado}",
+                                p_valor_nuevo = $"Empresa: {clienteModificado.empresa}, Estado: {clienteModificado.estado}",
+                                p_direccion_ip = ipAddress,
+                                p_id_usuario = currentUserId
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+
                         TempData["Success"] = "Cambios guardados con éxito.";
                         return RedirectToAction("Index");
                     }
@@ -306,6 +340,23 @@ namespace CRMRSG.Controllers
                     db.Execute(
                         "sp_clientes_eliminar",
                         new { p_id_cliente = id },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Eliminación",
+                            p_tabla_afectada = "clientes",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = $"Empresa: {clienteEliminar.empresa}",
+                            p_valor_nuevo = "ELIMINADO",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
                         commandType: CommandType.StoredProcedure
                     );
 

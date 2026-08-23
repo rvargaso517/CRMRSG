@@ -499,3 +499,131 @@ body.dark-skin #paginacion-notificaciones .page-item.disabled .page-link {
 body.dark-skin .info-paginacion {
     color: #adb5bd !important;
 }
+
+/* Visibilidad de Datepicker nativo en Modo Oscuro */
+body.dark-skin input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    cursor: pointer;
+}
+body.dark-skin input[type="date"] {
+    color: #ffffff !important;
+    background-color: #252c3a !important;
+    border-color: #343b4a !important;
+}
+body.dark-skin .form-control[type="date"] {
+    color: #ffffff !important;
+    background-color: #252c3a !important;
+}
+
+/* Forzar que los textos de porcentajes dentro de las donas y pasteles de ApexCharts sean legibles */
+.apexcharts-datalabel, .apexcharts-datalabel-label, .apexcharts-datalabel-value, 
+.apexcharts-data-labels text, text.apexcharts-datalabel-value, text.apexcharts-pie-label, 
+.apexcharts-pie-label-text, .apexcharts-pie-label, svg text.apexcharts-pie-label {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    text-shadow: 0px 1px 4px #000000, 0px 2px 8px #000000, 0px 0px 12px #000000 !important; /* Sombras súper pesadas para contraste total */
+    opacity: 1 !important;
+}
+
+svg g.apexcharts-data-labels text {
+    fill: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* Visibilidad de Datepicker y Timepicker nativo en Modo Oscuro */
+body.dark-skin input[type="date"]::-webkit-calendar-picker-indicator,
+body.dark-skin input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    cursor: pointer;
+}
+body.dark-skin input[type="date"],
+body.dark-skin input[type="time"] {
+    color: #ffffff !important;
+    background-color: #252c3a !important;
+    border-color: #343b4a !important;
+}
+body.dark-skin .form-control[type="date"],
+body.dark-skin .form-control[type="time"] {
+    color: #ffffff !important;
+    background-color: #252c3a !important;
+}
+
+body.dark-skin .apexcharts-legend-text {
+    color: #ffffff !important;
+}
+
+body.light-skin .apexcharts-legend-text {
+    color: #5a6a85 !important;
+}
+
+/* Asegurar visibilidad del bullet o círculo de color en la leyenda de ApexCharts */
+.apexcharts-legend-marker {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    margin-right: 5px !important;
+}
+
+/* Evitar que otras reglas de CSS o resets globales oculten los bullets de la leyenda */
+.apexcharts-legend-series *, .apexcharts-legend-series span {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* --- Ajustes de Roles y Permisos (Seguridad) --- */
+/* Quitar fondo blanco y cuadros grises del check-list de permisos */
+.border.rounded.p-3.bg-transparent {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Ajustes de contraste en modo oscuro */
+body.dark-skin .text-primary.border-bottom {
+    color: #8ab4f8 !important; /* Azul legible en modo oscuro en lugar de azul oscuro */
+    border-bottom-color: rgba(255, 255, 255, 0.15) !important;
+}
+body.dark-skin .form-check-label {
+    color: #e8eaed !important; /* Texto legible en modo oscuro */
+}
+
+/* Ajustes de contraste en modo claro */
+body.light-skin .text-primary.border-bottom {
+    color: #1a0dab !important;
+    border-bottom-color: rgba(0, 0, 0, 0.15) !important;
+}
+body.light-skin .form-check-label {
+    color: #202124 !important;
+}
+
+/* Ajuste general para cuando el fondo es pesado (ej. Rojo o color personalizado) */
+/* El color de los badges de permisos y su fondo */
+.badge-primary-light {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+/* Pero si el body es light-skin y no tiene un fondo pesado (detectado por textContrastColor) heredamos de forma optima */
+body.light-skin:not([style*="background-color"]) .badge-primary-light,
+body.light-skin[style*="background-color*='#fff'"] .badge-primary-light,
+body.light-skin[style*="background-color*='#f'"] .badge-primary-light {
+    background-color: rgba(29, 53, 87, 0.1) !important;
+    color: #1d3557 !important;
+    border: 1px solid rgba(29, 53, 87, 0.15) !important;
+}
+/* Forzar que los textos y títulos de permisos no usen colores verdes o rígidos en modo oscuro */
+.form-check-input:checked + .form-check-label {
+    font-weight: bold;
+}
+body.dark-skin .form-check-input {
+    background-color: #2b303b;
+    border-color: #495057;
+}
+body.dark-skin .form-check-input:checked {
+    background-color: var(--theme-primary-custom, #4099ff) !important;
+    border-color: var(--theme-primary-custom, #4099ff) !important;
+}

@@ -152,6 +152,10 @@
                                         {
                                             <span class="badge badge-secondary-light">Salida (Logout)</span>
                                         }
+                                        else if (item.accion == "Envío Correo")
+                                        {
+                                            <span class="badge badge-success-light">Envío Correo</span>
+                                        }
                                         else
                                         {
                                             <span class="badge badge-info-light">@item.accion</span>
@@ -159,7 +163,13 @@
                                     </td>
 
                                     <td class="text-capitalize">
-                                        @item.tabla_afectada
+                                        @{
+                                            string tblAfectada = item.tabla_afectada ?? "";
+                                            if (tblAfectada.ToLower() == "citas") { tblAfectada = "Actividades"; }
+                                            else if (tblAfectada.ToLower() == "contacto_cliente") { tblAfectada = "Contactos"; }
+                                            else if (tblAfectada.ToLower() == "nota_cliente") { tblAfectada = "Notas"; }
+                                        }
+                                        @tblAfectada
                                     </td>
 
                                     <td>
@@ -171,7 +181,7 @@
                                             if (modulo == "clientes") { modulo = "Clientes"; }
                                             else if (modulo == "oportunidades") { modulo = "Oportunidades"; }
                                             else if (modulo == "tareas") { modulo = "Tareas"; }
-                                            else if (modulo == "citas") { modulo = "Citas / Eventos"; }
+                                            else if (modulo == "citas") { modulo = "Actividades"; }
                                             else if (modulo == "usuarios") { modulo = "Usuarios"; }
                                             else if (modulo == "contacto_cliente") { modulo = "Contactos"; }
                                             else if (modulo == "nota_cliente") { modulo = "Notas"; }
@@ -179,18 +189,45 @@
 
                                             if (item.accion == "Creación")
                                             {
-                                                desc =
-                                                    $"Creó un nuevo registro en {modulo}.";
+                                                desc = $"Creó un nuevo registro en {modulo}.";
+                                                if (!string.IsNullOrEmpty(item.valor_nuevo))
+                                                {
+                                                    desc += $" ({item.valor_nuevo})";
+                                                }
                                             }
                                             else if (item.accion == "Modificación")
                                             {
-                                                desc =
-                                                    $"Modificó un registro existente en {modulo}.";
+                                                string valN = item.valor_nuevo ?? "";
+                                                string valA = item.valor_anterior ?? "";
+                                                if (valN == "Completada")
+                                                {
+                                                    desc = $"Completó / Realizó una actividad de {modulo}.";
+                                                }
+                                                else if (valN == "Aplazada")
+                                                {
+                                                    desc = $"Aplazó / Pospuso una actividad de {modulo}.";
+                                                }
+                                                else if (valN == "Cancelada")
+                                                {
+                                                    desc = $"Canceló una actividad de {modulo}.";
+                                                }
+                                                else
+                                                {
+                                                    desc = $"Modificó un registro existente en {modulo}.";
+                                                }
+
+                                                if (!string.IsNullOrEmpty(valN) && valN != "Completada" && valN != "Aplazada" && valN != "Cancelada")
+                                                {
+                                                    desc += $" (De '{valA}' a '{valN}')";
+                                                }
                                             }
                                             else if (item.accion == "Eliminación")
                                             {
-                                                desc =
-                                                    $"Eliminó un registro de {modulo}.";
+                                                desc = $"Eliminó un registro de {modulo}.";
+                                                if (!string.IsNullOrEmpty(item.valor_anterior))
+                                                {
+                                                    desc += $" ({item.valor_anterior})";
+                                                }
                                             }
                                             else if (item.accion == "Login" || item.accion == "Ingreso" || item.accion == "Logear")
                                             {
@@ -200,12 +237,18 @@
                                             {
                                                 desc = "El usuario cerró sesión en el sistema.";
                                             }
+                                            else if (item.accion == "Envío Correo")
+                                            {
+                                                desc = $"Envió un correo electrónico desde el sistema. ({item.valor_nuevo})";
+                                            }
                                             else
                                             {
-                                                desc =
-                                                    $"{item.accion} en {modulo}.";
+                                                desc = $"{item.accion} en {modulo}.";
+                                                if (!string.IsNullOrEmpty(item.valor_nuevo))
+                                                {
+                                                    desc += $" ({item.valor_nuevo})";
+                                                }
                                             }
-
                                         }
 
                                         @desc
@@ -273,14 +316,65 @@
                 var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(chartData));
 
 
-                if (labels.length === 0) {
+                var chartPalette = localStorage.getItem('crm_chart_palette') || 'classic';
+                var palettes = {
+                    classic: {
+                        line: ['#1d3557'],
+                        donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc', '#457b9d', '#e76f51', '#264653', '#e9c46a', '#f4a261', '#e76f51', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946'],
+                        bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261', '#e76f51', '#264653', '#e9c46a', '#f4a261', '#e76f51', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
+                    },
+                    ocean: {
+                        line: ['#0077b6'],
+                        donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef', '#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8', '#90e0ef', '#48cae4', '#00f5d4', '#00bbf9', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                        bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8', '#90e0ef', '#48cae4', '#00f5d4', '#00bbf9', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
+                    },
+                    neon: {
+                        line: ['#7209b7'],
+                        donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0', '#b5179e', '#480ca8', '#3a0ca3', '#3f37c9', '#4361ee', '#4cc9f0', '#7209b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                        bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9', '#4361ee', '#4cc9f0', '#7209b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
+                    },
+                    sunset: {
+                        line: ['#d90429'],
+                        donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7', '#ef233c', '#ffb703', '#fb8500', '#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                        bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ffb703', '#fb8500', '#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
+                    },
+                    forest: {
+                        line: ['#2c6e49'],
+                        donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157', '#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d', '#2c6e49', '#4c956c', '#a3b18a', '#588157', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                        bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d', '#2c6e49', '#4c956c', '#a3b18a', '#588157', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
+                    }
+                };
 
-                    labels = ['Sin datos'];
-
-                    data = [0];
-
+                var selectedColors = palettes[chartPalette] || palettes.classic;
+                if (chartPalette === 'custom') {
+                    var customColorsStr = localStorage.getItem('crm_custom_chart_colors');
+                    var customColors = ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'];
+                    if (customColorsStr) {
+                        try { customColors = JSON.parse(customColorsStr); } catch(e) {}
+                    }
+                    // Forzar que la paleta personalizada contenga suficientes colores para el grafico
+                    if (customColors.length < 20) {
+                        customColors = customColors.concat(['#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#2a9d8f', '#f4a261', '#e63946']);
+                    }
+                    selectedColors = {
+                        line: [customColors[0]],
+                        donut: customColors,
+                        bar: customColors
+                    };
                 }
 
+                var boxBgColor = localStorage.getItem('crm_box_bg_color') || '#ffffff';
+                var r = parseInt(boxBgColor.substr(1, 2), 16);
+                var g = parseInt(boxBgColor.substr(3, 2), 16);
+                var b = parseInt(boxBgColor.substr(5, 2), 16);
+                var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                var chartThemeMode = (yiq < 128) ? 'dark' : 'light';
+                var chartLabelColor = (yiq < 128) ? '#ffffff' : '#5a6a85';
+
+                if (labels.length === 0) {
+                    labels = ['Sin datos'];
+                    data = [0];
+                }
 
                 var options = {
 
@@ -294,15 +388,25 @@
                     },
 
                     labels: labels,
-                    colors: ['#1d3557', '#e63946', '#10c469', '#f4a261', '#188ae2'],
-                    stroke: { colors: ['#ffffff'], width: 1 },
+                    colors: selectedColors.donut,
+                    stroke: { colors: [boxBgColor], width: 1 },
+                    dataLabels: {
+                        enabled: false
+                    },
                     legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
+                        labels: { colors: chartLabelColor },
                         itemMargin: {
                             horizontal: 5,
                             vertical: 5
+                        },
+                        formatter: function(seriesName, opts) {
+                            var total = opts.w.globals.series.reduce(function(acc, val) { return acc + val; }, 0);
+                            var val = opts.w.globals.series[opts.seriesIndex];
+                            var pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                            return seriesName + " - " + val + " (" + pct + "%)";
                         }
                     },
 

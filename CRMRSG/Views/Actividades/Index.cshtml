@@ -155,6 +155,15 @@
                                             else if (item.estado == "Aplazada")
                                             {
                                                 <span class="badge badge-warning-light">Aplazada</span>
+                                                if (!string.IsNullOrEmpty(item.descripcion) && item.descripcion.Contains("[Aplazada:"))
+                                                {
+                                                    var stIndex = item.descripcion.IndexOf("[Aplazada:");
+                                                    var razonTextAct = item.descripcion.Substring(stIndex).Replace("[Aplazada:", "").Replace("]", "").Trim();
+                                                    <br />
+                                                    <small class="text-warning-light d-block mt-2 font-italic" style="font-size: 13px;">
+                                                        <i class="fa fa-info-circle me-1"></i> Razón: <strong>@razonTextAct</strong>
+                                                    </small>
+                                                }
                                             }
                                             else if (item.estado == "Cancelada")
                                             {
@@ -385,15 +394,63 @@
 
             // Inicializar paginación de la línea de tiempo (5 por página)
             paginarTimeline('.timeline', 5);
+
+            // Adaptar buscador del header para Actividades
+            var $globalSearch = $('#buscador-global-header');
+            if ($globalSearch.length > 0) {
+                $('#form-buscador-global').on('submit', function(e) {
+                    e.preventDefault();
+                });
+                $globalSearch.attr('placeholder', 'Buscar actividades (descripción, tipo)...');
+                
+                $globalSearch.on('keyup input', function() {
+                    var query = $(this).val().toLowerCase().trim();
+                    
+                    $('.timeline-item').each(function() {
+                        var $item = $(this);
+                        // Buscar en el titulo (descripcion) y cuerpo (cliente, contacto)
+                        var descripcion = $item.find('.timeline-title').text().toLowerCase();
+                        var cuerpo = $item.find('.timeline-body').text().toLowerCase();
+                        
+                        if (descripcion.indexOf(query) > -1 || cuerpo.indexOf(query) > -1) {
+                            $item.removeClass('filtrado-oculto');
+                        } else {
+                            $item.addClass('filtrado-oculto');
+                        }
+                    });
+                    
+                    paginarTimeline('.timeline', 5);
+                });
+            }
         });
 
         function paginarTimeline(timelineSelector, itemsPerPage) {
             const $timeline = $(timelineSelector);
             if ($timeline.length === 0) return;
             
-            const $items = $timeline.find('.timeline-item');
+            $('#timeline-pagination').remove();
+            
+            // Solo considerar ítems que no estén ocultos por el buscador
+            const $items = $timeline.find('.timeline-item').filter(function() {
+                return !$(this).hasClass('filtrado-oculto');
+            });
+            
             const totalItems = $items.length;
-            if (totalItems <= itemsPerPage) return;
+            if (totalItems === 0) {
+                $timeline.find('.timeline-item').hide();
+                $timeline.find('.timeline-label').hide();
+                return;
+            }
+            
+            if (totalItems <= itemsPerPage) {
+                $timeline.find('.timeline-item').hide();
+                $timeline.find('.timeline-label').hide();
+                $items.show();
+                $items.each(function() {
+                    $(this).prevAll('.timeline-label').first().show();
+                });
+                return;
+            }
             
             let currentPage = 1;
             const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -409,7 +466,7 @@
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
                 
-                $items.hide();
+                $timeline.find('.timeline-item').hide();
                 $timeline.find('.timeline-label').hide();
                 
                 const $pageItems = $items.slice(start, end);

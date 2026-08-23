@@ -249,11 +249,11 @@
                         </li>
                     </ul>
 
-                    <div class="search-bx mx-3 d-none d-md-block">
-                        <form action="@Url.Content("~/Clientes")" method="get">
-                            <div class="input-group flex-nowrap align-items-center" style="background-color: #f0f4f9; border-radius: 8px;">
-                                <input type="text" name="search" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar clientes..." style="width: 200px;" value="@(ViewBag.SearchQuery ?? "")">
-                                <button type="submit" class="bg-transparent border-0 text-muted px-2" style="border: none; cursor: pointer;"><i data-feather="search" style="width: 18px; height: 18px;"></i></button>
+                    <div class="search-bx mx-3 d-none d-md-block" style="flex-grow: 1; max-width: 500px;">
+                        <form action="@Url.Content("~/Clientes")" method="get" id="form-buscador-global" style="width: 100%;">
+                            <div class="input-group flex-nowrap align-items-center" style="background-color: #f0f4f9; border-radius: 8px; width: 100%;">
+                                <input type="text" name="search" id="buscador-global-header" class="form-control border-0 bg-transparent shadow-none py-2 px-3 fw-normal" placeholder="Buscar..." style="width: 100%; font-size: 14px;" value="@(ViewBag.SearchQuery ?? "")">
+                                <button type="submit" class="bg-transparent border-0 text-muted px-3" style="border: none; cursor: pointer;"><i data-feather="search" style="width: 20px; height: 20px;"></i></button>
                             </div>
                         </form>
                     </div>

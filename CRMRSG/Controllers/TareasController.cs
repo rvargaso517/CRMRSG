@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using CRMRSG.EntityFramework;
@@ -141,6 +142,15 @@ namespace CRMRSG.Controllers
                 ViewBag.PriorityLabels = prioStats.Select(x => x.Prioridad).ToArray();
                 ViewBag.PriorityValues = prioStats.Select(x => x.Cantidad).ToArray();
 
+                // Resolver el nombre del contacto principal si id_contacto es negativo
+                foreach (var t in listado)
+                {
+                    if (t.id_contacto.HasValue && t.id_contacto.Value < 0 && t.cliente != null)
+                    {
+                        t.contacto_nombre = t.cliente.nombre;
+                    }
+                }
+
                 return View(listado);
             }
         }
@@ -217,11 +227,28 @@ namespace CRMRSG.Controllers
 
             using (var db = DbConnectionFactory.GetConnection())
             {
-                ViewBag.Clientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                var clientes = db.Query<cliente>("sp_clientes_listar", commandType: CommandType.StoredProcedure).ToList();
+                ViewBag.Clientes = clientes;
                 ViewBag.Responsables = db.Query<usuario>("sp_usuarios_listar", commandType: CommandType.StoredProcedure).ToList();
                 
-                // Contactos secundarios
-                ViewBag.Contactos = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+                // Mapear contactos secundarios
+                var contactosSecundarios = db.Query<contacto_cliente>("SELECT * FROM contacto_cliente").ToList();
+                
+                // Combinar con contactos principales para que se puedan asociar
+                var listaContactosCompleta = new List<contacto_cliente>();
+                foreach (var c in clientes)
+                {
+                    listaContactosCompleta.Add(new contacto_cliente {
+                        id_contacto = -c.id_cliente, // Usamos ID negativo para diferenciar que es el principal
+                        id_cliente = c.id_cliente,
+                        nombre = c.nombre + " (Principal)",
+                        puesto = "Contacto Principal",
+                        correo = c.correo,
+                        telefono = c.telefono
+                    });
+                }
+                listaContactosCompleta.AddRange(contactosSecundarios);
+                ViewBag.Contactos = listaContactosCompleta;
             }
             return View();
         }
@@ -262,7 +289,7 @@ namespace CRMRSG.Controllers
                     );
                     nuevaTarea.id_tarea = id_tarea;
 
-                    if (nuevaTarea.id_contacto.HasValue && nuevaTarea.id_contacto.Value > 0)
+                    if (nuevaTarea.id_contacto.HasValue && nuevaTarea.id_contacto.Value != 0)
                     {
                         db.Execute("UPDATE tareas SET id_contacto = @IdContacto WHERE id_tarea = @IdTarea", new { IdContacto = nuevaTarea.id_contacto.Value, IdTarea = nuevaTarea.id_tarea });
                     }
@@ -280,6 +307,21 @@ namespace CRMRSG.Controllers
                             commandType: CommandType.StoredProcedure
                         );
                     }
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Creación",
+                            p_tabla_afectada = "tareas",
+                            p_id_registro_afectado = id_tarea,
+                            p_valor_anterior = "NULL",
+                            p_valor_nuevo = $"Titulo: {nuevaTarea.titulo}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
                 }
 
                 return RedirectToAction("Index");
@@ -378,6 +420,22 @@ namespace CRMRSG.Controllers
                         new { Desc = descripcionFinalizacion, IdTarea = id }
                     );
 
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "tareas",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = "Pendiente",
+                            p_valor_nuevo = "Completada",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
                     return Json(new { success = true, message = "Tarea marcada como completada." });
                 }
             }
@@ -430,6 +488,23 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "tareas",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = t.estado,
+                            p_valor_nuevo = "Aplazada",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
                     return Json(new { success = true, message = "Tarea aplazada correctamente." });
                 }
             }

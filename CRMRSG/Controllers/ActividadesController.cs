@@ -190,6 +190,22 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Creación",
+                            p_tabla_afectada = "citas",
+                            p_id_registro_afectado = id_cita,
+                            p_valor_anterior = "NULL",
+                            p_valor_nuevo = $"Tipo: {tipo_actividad}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = usuarioId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
                 }
 
                 TempData["Success"] = "Actividad registrada con éxito.";
@@ -236,6 +252,24 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "citas",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = c.estado,
+                            p_valor_nuevo = "Completada",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
                     return Json(new { success = true, message = "Actividad marcada como realizada." });
                 }
             }
@@ -288,6 +322,24 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "citas",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = c.estado,
+                            p_valor_nuevo = "Aplazada",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
                     return Json(new { success = true, message = "Actividad aplazada correctamente." });
                 }
             }
@@ -328,6 +380,24 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "citas",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = c.estado,
+                            p_valor_nuevo = "Cancelada",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
                     return Json(new { success = true, message = "Actividad marcada como cancelada." });
                 }
             }

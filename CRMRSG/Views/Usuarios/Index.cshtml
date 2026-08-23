@@ -86,11 +86,18 @@
 
         <div class="box">
 
-            <div class="box-header with-border">
+            <div class="box-header with-border d-flex justify-content-between align-items-center flex-wrap gap-2">
 
                 <h3 class="box-title">
                     Usuarios y Empleados Registrados
                 </h3>
+
+                <div class="d-flex align-items-center" style="max-width: 300px; width: 100%;">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0"><i class="fa fa-search text-muted"></i></span>
+                        <input type="search" id="buscar-usuario-input" class="form-control border-start-0" placeholder="Buscar usuario..." />
+                    </div>
+                </div>
 
             </div>
 
@@ -99,7 +106,7 @@
 
                 <div class="table-responsive">
 
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="usuarios-table">
 
                         <thead class="bg-light">
 
@@ -511,18 +518,39 @@
 
             paginarUsuarios();
 
+            // Buscador dinámico de usuarios
+            $('#buscar-usuario-input').on('keyup', function() {
+                var query = $(this).val().toLowerCase().trim();
+                
+                $('#usuarios-tbody tr').each(function() {
+                    var $row = $(this);
+                    // Buscar en nombre/apellido (primer td) y correo (segundo td)
+                    var nombre = $row.find('td:nth-child(1)').text().toLowerCase();
+                    var correo = $row.find('td:nth-child(2)').text().toLowerCase();
+                    
+                    if (nombre.indexOf(query) > -1 || correo.indexOf(query) > -1) {
+                        $row.addClass('filtrado-visible').removeClass('filtrado-oculto');
+                    } else {
+                        $row.removeClass('filtrado-visible').addClass('filtrado-oculto');
+                    }
+                });
+                
+                paginaUsuariosActual = 1;
+                paginarUsuarios();
+            });
+
         });
 
 
         function paginarUsuarios() {
 
-            var filas =
-                $("#usuarios-tbody tr");
-
+            var isSearching = $('#buscar-usuario-input').val().trim().length > 0;
+            var filas = isSearching 
+                ? $("#usuarios-tbody tr.filtrado-visible")
+                : $("#usuarios-tbody tr");
 
             var totalUsuarios =
                 filas.length;
-
 
             var totalPaginas =
                 Math.ceil(
@@ -530,24 +558,19 @@
                     usuariosPorPagina
                 );
 
-
-            filas.hide();
-
+            $("#usuarios-tbody tr").hide();
 
             var inicio =
                 (paginaUsuariosActual - 1) *
                 usuariosPorPagina;
 
-
             var fin =
                 inicio +
                 usuariosPorPagina;
 
-
             filas
                 .slice(inicio, fin)
                 .show();
-
 
             if (totalPaginas <= 1) {
 

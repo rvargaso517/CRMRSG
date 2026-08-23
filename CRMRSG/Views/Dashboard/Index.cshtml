@@ -348,7 +348,7 @@
                 </div>
                 <div class="box-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped mb-0" style="font-size: 13px;">
+                        <table class="table table-hover table-striped mb-0" id="vendedores-table" style="font-size: 13px;">
                             <thead class="bg-light">
                                 <tr>
                                     <th style="min-width: 140px;">Colaborador / Vendedor</th>
@@ -397,36 +397,39 @@
             var palettes = {
                 classic: {
                     line: ['#1d3557'],
-                    donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557'],
-                    bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261']
+                    donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc', '#457b9d', '#e76f51', '#264653', '#e9c46a', '#f4a261', '#e76f51', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946'],
+                    bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261', '#e76f51', '#264653', '#e9c46a', '#f4a261', '#e76f51', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 ocean: {
                     line: ['#0077b6'],
-                    donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef'],
-                    bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8']
+                    donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef', '#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8', '#90e0ef', '#48cae4', '#00f5d4', '#00bbf9', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8', '#90e0ef', '#48cae4', '#00f5d4', '#00bbf9', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 neon: {
                     line: ['#7209b7'],
-                    donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0'],
-                    bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9']
+                    donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0', '#b5179e', '#480ca8', '#3a0ca3', '#3f37c9', '#4361ee', '#4cc9f0', '#7209b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9', '#4361ee', '#4cc9f0', '#7209b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 sunset: {
                     line: ['#d90429'],
-                    donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7'],
-                    bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7']
+                    donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7', '#ef233c', '#ffb703', '#fb8500', '#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ffb703', '#fb8500', '#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 forest: {
                     line: ['#2c6e49'],
-                    donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157'],
-                    bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d']
+                    donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157', '#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d', '#2c6e49', '#4c956c', '#a3b18a', '#588157', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d', '#2c6e49', '#4c956c', '#a3b18a', '#588157', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 }
             };
             var selectedColors = palettes[chartPalette] || palettes.classic;
             if (chartPalette === 'custom') {
                 var customColorsStr = localStorage.getItem('crm_custom_chart_colors');
-                var customColors = ['#2a9d8f', '#f4a261', '#e63946'];
+                var customColors = ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440'];
                 if (customColorsStr) {
                     try { customColors = JSON.parse(customColorsStr); } catch(e) {}
+                }
+                if (customColors.length < 20) {
+                    customColors = customColors.concat(['#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#2a9d8f', '#f4a261', '#e63946']);
                 }
                 selectedColors = {
                     line: [customColors[0]],
@@ -453,7 +456,7 @@ if ($('#eventos-line-chart').length > 0) {
         series: [{ name: 'Citas', data: cantidades }],
         chart: {
             type: 'area',
-            height: 240,
+            height: 320,
             toolbar: { show: false },
             background: 'transparent',
             redrawOnWindowResize: true
@@ -497,19 +500,28 @@ if ($('#estados-donut-chart').length > 0) {
         series: [completados, pendientes, cancelados, aplazados],
         chart: {
             type: 'donut',
-            height: 240,
+            height: 320,
             background: 'transparent',
             redrawOnWindowResize: true
         },
         theme: { mode: chartThemeMode },
         labels: ['Completadas', 'Pendientes', 'Canceladas', 'Aplazadas'],
         colors: selectedColors.donut,
+        dataLabels: {
+            enabled: false
+        },
         legend: {
             position: 'bottom',
             horizontalAlign: 'center',
             floating: false,
             labels: { colors: chartLabelColor },
-            itemMargin: { horizontal: 5, vertical: 5 }
+            itemMargin: { horizontal: 5, vertical: 5 },
+            formatter: function(seriesName, opts) {
+                var total = opts.w.globals.series.reduce(function(acc, val) { return acc + val; }, 0);
+                var val = opts.w.globals.series[opts.seriesIndex];
+                var pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                return seriesName + " - " + val + " (" + pct + "%)";
+            }
         },
         stroke: { colors: typeof boxBgColor !== 'undefined' ? [boxBgColor] : ['#ffffff'], width: 2 }
     };
@@ -902,6 +914,63 @@ if ($('#ganancias-bar-chart').length > 0) {
                 $('.box-header h4').css('color', '#ffffff');
             }
 
+            // Inicializar paginación para la tabla de vendedores (Top 5 por página)
+            paginarTabla('vendedores-table', 5);
         });
+
+        function paginarTabla(tableId, recordsPerPage) {
+            const $table = $('#' + tableId);
+            if ($table.length === 0) return;
+            
+            $('#' + tableId + '-pagination').remove();
+            
+            const $tbody = $table.find('tbody');
+            const $rows = $tbody.find('tr');
+            
+            const totalRows = $rows.length;
+            if (totalRows === 0) return;
+            if (totalRows <= recordsPerPage) return;
+            
+            let currentPage = 1;
+            const totalPages = Math.ceil(totalRows / recordsPerPage);
+            
+            const $navContainer = $('<div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2" id="' + tableId + '-pagination"></div>');
+            const $infoText = $('<span class="text-muted small"></span>');
+            const $paginationUl = $('<ul class="pagination pagination-sm mb-0"></ul>');
+            $navContainer.append($infoText).append($paginationUl);
+            $table.after($navContainer);
+            
+            function showPage(page) {
+                currentPage = page;
+                const start = (page - 1) * recordsPerPage;
+                const end = start + recordsPerPage;
+                
+                $rows.hide();
+                $rows.slice(start, end).show();
+                
+                const shownCount = Math.min(end, totalRows);
+                $infoText.text('Mostrando del ' + (start + 1) + ' al ' + shownCount + ' de ' + totalRows + ' registros.');
+                
+                $paginationUl.empty();
+                const $prevLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&laquo;</a></li>');
+                if (currentPage === 1) $prevLi.addClass('disabled');
+                else $prevLi.on('click', () => showPage(currentPage - 1));
+                $paginationUl.append($prevLi);
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    const $pageLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>');
+                    if (i === currentPage) $pageLi.addClass('active');
+                    else $pageLi.on('click', () => showPage(i));
+                    $paginationUl.append($pageLi);
+                }
+                
+                const $nextLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&raquo;</a></li>');
+                if (currentPage === totalPages) $nextLi.addClass('disabled');
+                else $nextLi.on('click', () => showPage(currentPage + 1));
+                $paginationUl.append($nextLi);
+            }
+            
+            showPage(1);
+        }
     </script>
 }

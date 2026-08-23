@@ -24,7 +24,7 @@
 <div class="row">
     <div class="col-12">
         <div class="box" id="oportunidades-box">
-            <div class="box-header with-border d-flex justify-content-between align-items-center">
+            <div class="box-header with-border d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h3 class="box-title">Todas las Oportunidades</h3>
                 <a href="~/Oportunidades/Crear" class="btn btn-primary"><i class="fa fa-plus"></i> Nueva Oportunidad</a>
             </div>
@@ -247,6 +247,38 @@
 
         $(document).ready(function() {
             paginarTabla('oportunidades-table', 5);
+
+            // Adaptar buscador del header para Oportunidades
+            var $globalSearch = $('#buscador-global-header');
+            if ($globalSearch.length > 0) {
+                // Desactivar el submit del formulario de búsqueda para que sea reactivo localmente
+                $('#form-buscador-global').on('submit', function(e) {
+                    e.preventDefault();
+                });
+                $globalSearch.attr('placeholder', 'Buscar oport. (cliente, valor, etapa)...');
+                
+                $globalSearch.on('keyup input', function() {
+                    var query = $(this).val().toLowerCase().trim();
+                    
+                    $('#oportunidades-table tbody tr').each(function() {
+                        var $row = $(this);
+                        // Nombre (1), cliente (2), valor (3), etapa (4), responsable (7)
+                        var nombre = $row.find('td:nth-child(1)').text().toLowerCase();
+                        var cliente = $row.find('td:nth-child(2)').text().toLowerCase();
+                        var valor = $row.find('td:nth-child(3)').text().toLowerCase();
+                        var etapa = $row.find('td:nth-child(4)').text().toLowerCase();
+                        var responsable = $row.find('td:nth-child(7)').text().toLowerCase();
+                        
+                        if (nombre.indexOf(query) > -1 || cliente.indexOf(query) > -1 || valor.indexOf(query) > -1 || etapa.indexOf(query) > -1 || responsable.indexOf(query) > -1) {
+                            $row.removeClass('filtrado-oculto');
+                        } else {
+                            $row.addClass('filtrado-oculto');
+                        }
+                    });
+                    
+                    paginarTabla('oportunidades-table', 5);
+                });
+            }
         });
 
         function paginarTabla(tableId, recordsPerPage) {
@@ -256,11 +288,22 @@
             $('#' + tableId + '-pagination').remove();
             
             const $tbody = $table.find('tbody');
-            const $rows = $tbody.find('tr');
+            // Filtrar solo las filas que no estén ocultas por el buscador
+            const $rows = $tbody.find('tr').filter(function() {
+                return !$(this).hasClass('filtrado-oculto');
+            });
             
             const totalRows = $rows.length;
-            if (totalRows === 0) return;
-            if (totalRows <= recordsPerPage) return;
+            if (totalRows === 0) {
+                $tbody.find('tr').hide();
+                return;
+            }
+            
+            if (totalRows <= recordsPerPage) {
+                $tbody.find('tr').hide();
+                $rows.show();
+                return;
+            }
             
             let currentPage = 1;
             const totalPages = Math.ceil(totalRows / recordsPerPage);
@@ -277,7 +320,7 @@
                 const start = (page - 1) * recordsPerPage;
                 const end = start + recordsPerPage;
                 
-                $rows.hide();
+                $tbody.find('tr').hide();
                 $rows.slice(start, end).show();
                 
                 const shownCount = Math.min(end, totalRows);

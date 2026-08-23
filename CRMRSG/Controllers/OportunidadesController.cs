@@ -163,6 +163,22 @@ namespace CRMRSG.Controllers
                         },
                         commandType: CommandType.StoredProcedure
                     );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Creación",
+                            p_tabla_afectada = "oportunidades",
+                            p_id_registro_afectado = id_op,
+                            p_valor_anterior = "NULL",
+                            p_valor_nuevo = $"Nombre: {op.nombre}, Etapa: {op.etapa}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = op.id_usuario
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
                 }
 
                 return RedirectToAction("Index");
@@ -287,6 +303,23 @@ namespace CRMRSG.Controllers
                         );
                     }
 
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Modificación",
+                            p_tabla_afectada = "oportunidades",
+                            p_id_registro_afectado = op.id_oportunidad,
+                            p_valor_anterior = $"Nombre: {opDb.nombre}, Etapa: {opDb.etapa}",
+                            p_valor_nuevo = $"Nombre: {op.nombre}, Etapa: {op.etapa}",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
+
                     return RedirectToAction("Index");
                 }
 
@@ -367,6 +400,23 @@ namespace CRMRSG.Controllers
                     db.Execute(
                         "sp_oportunidades_eliminar",
                         new { p_id_oportunidad = id },
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    // Insertar en Bitácora (trazabilidad completa)
+                    string ipAddress = Request.UserHostAddress ?? "127.0.0.1";
+                    int currentUserId = Session["UsuarioId"] != null ? (int)Session["UsuarioId"] : 1;
+                    db.Execute(
+                        "sp_bitacora_insertar",
+                        new {
+                            p_accion = "Eliminación",
+                            p_tabla_afectada = "oportunidades",
+                            p_id_registro_afectado = id,
+                            p_valor_anterior = $"Nombre: {op.nombre}",
+                            p_valor_nuevo = "ELIMINADO",
+                            p_direccion_ip = ipAddress,
+                            p_id_usuario = currentUserId
+                        },
                         commandType: CommandType.StoredProcedure
                     );
 

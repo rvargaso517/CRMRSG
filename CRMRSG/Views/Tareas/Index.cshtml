@@ -216,12 +216,19 @@
                                         }
                                     </td>
                                     <td>
-                                        @(item.cliente != null
-                                             ? item.cliente.empresa
-                                             : "Sin cliente")
+                                        @if (item.cliente != null)
+                                        {
+                                            <span class="fw-bold">@item.cliente.empresa</span>
+                                            <br /><small class="text-dark"><i class="fa fa-user-circle-o me-1"></i> Principal: @item.cliente.nombre</small>
+                                        }
+                                        else
+                                        {
+                                            <span>Sin cliente</span>
+                                        }
+
                                         @if (!string.IsNullOrEmpty(item.contacto_nombre))
                                         {
-                                            <br /><small class="text-fade"><i class="fa fa-user me-1"></i> Contacto: @item.contacto_nombre</small>
+                                            <br /><small class="text-fade"><i class="fa fa-user me-1"></i> Secundario: @item.contacto_nombre</small>
                                         }
                                     </td>
                                     <td>
@@ -261,7 +268,16 @@
                                         @if (item.estado == "Completada" && !string.IsNullOrEmpty(item.descripcion_finalizacion))
                                         {
                                             <button type="button" class="btn btn-sm btn-outline-primary btn-ver-desc-finalizacion" data-desc="@item.descripcion_finalizacion" title="Ver descripción de finalización">
-                                                <i class="fa fa-eye"></i> Ver
+                                                <i class="fa fa-eye"></i> Ver Cierre
+                                            </button>
+                                        }
+                                        else if (item.estado == "Aplazada" && !string.IsNullOrEmpty(item.descripcion) && item.descripcion.Contains("[Aplazada:"))
+                                        {
+                                            // Extraer la razón
+                                            var startIndex = item.descripcion.IndexOf("[Aplazada:");
+                                            var razonText = item.descripcion.Substring(startIndex).Replace("[Aplazada:", "").Replace("]", "").Trim();
+                                            <button type="button" class="btn btn-sm btn-outline-warning btn-ver-desc-finalizacion" data-desc="Razón de aplazamiento: @razonText" title="Ver razón del aplazamiento">
+                                                <i class="fa fa-clock-o"></i> Ver Razón
                                             </button>
                                         }
                                         else
@@ -427,36 +443,39 @@ $('.btn-completar-tarea').on('click', function() {
             var palettes = {
                 classic: {
                     line: ['#1d3557'],
-                    donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557'],
-                    bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261']
+                    donut: ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc', '#457b9d', '#e76f51', '#264653', '#e9c46a', '#f4a261', '#e76f51', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946'],
+                    bar: ['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f4a261', '#e76f51', '#264653', '#e9c46a', '#f4a261', '#e76f51', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 ocean: {
                     line: ['#0077b6'],
-                    donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef'],
-                    bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8']
+                    donut: ['#0096c7', '#00b4d8', '#48cae4', '#90e0ef', '#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8', '#90e0ef', '#48cae4', '#00f5d4', '#00bbf9', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#03045e', '#023e8a', '#0077b6', '#0096c7', '#00b4d8', '#90e0ef', '#48cae4', '#00f5d4', '#00bbf9', '#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 neon: {
                     line: ['#7209b7'],
-                    donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0'],
-                    bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9']
+                    donut: ['#f72585', '#7209b7', '#3f37c9', '#4cc9f0', '#b5179e', '#480ca8', '#3a0ca3', '#3f37c9', '#4361ee', '#4cc9f0', '#7209b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#f72585', '#b5179e', '#7209b7', '#480ca8', '#3f37c9', '#4361ee', '#4cc9f0', '#7209b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 sunset: {
                     line: ['#d90429'],
-                    donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7'],
-                    bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7']
+                    donut: ['#d90429', '#f77f00', '#fcbf49', '#eae2b7', '#ef233c', '#ffb703', '#fb8500', '#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ffb703', '#fb8500', '#d90429', '#ef233c', '#f77f00', '#fcbf49', '#eae2b7', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 },
                 forest: {
                     line: ['#2c6e49'],
-                    donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157'],
-                    bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d']
+                    donut: ['#2c6e49', '#4c956c', '#a3b18a', '#588157', '#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d', '#2c6e49', '#4c956c', '#a3b18a', '#588157', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200'],
+                    bar: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#74c69d', '#2c6e49', '#4c956c', '#a3b18a', '#588157', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#00f5d4', '#00bbf9', '#ff006e', '#f15bb5', '#9b5de5', '#2a9d8f', '#e63946']
                 }
             };
             var selectedColors = palettes[chartPalette] || palettes.classic;
             if (chartPalette === 'custom') {
                 var customColorsStr = localStorage.getItem('crm_custom_chart_colors');
-                var customColors = ['#2a9d8f', '#f4a261', '#e63946'];
+                var customColors = ['#2a9d8f', '#f4a261', '#e63946', '#1d3557', '#a8dadc', '#9b5de5', '#f15bb5', '#00f5d4', '#00bbf9', '#fee440'];
                 if (customColorsStr) {
                     try { customColors = JSON.parse(customColorsStr); } catch(e) {}
+                }
+                if (customColors.length < 20) {
+                    customColors = customColors.concat(['#3a86c8', '#8338ec', '#ff006e', '#ffbe0b', '#fb5607', '#38b000', '#007200', '#2a9d8f', '#f4a261', '#e63946']);
                 }
                 selectedColors = {
                     line: [customColors[0]],
@@ -479,23 +498,32 @@ $('.btn-completar-tarea').on('click', function() {
                 var userValues = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(userValues));
 
                 if (userLabels.length === 0) {
-                    userLabels = ['Sin datos'];
-                    userValues = [0];
+                     userLabels = ['Sin datos'];
+                     userValues = [0];
                 }
 
                 var optionsUser = {
                     series: userValues,
-                    chart: { type: 'pie', height: 250, background: 'transparent', redrawOnWindowResize: true },
+                    chart: { type: 'pie', height: 320, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     labels: userLabels,
                     colors: selectedColors.bar,
                     stroke: { colors: [boxBgColor], width: 1 },
+                    dataLabels: {
+                        enabled: false
+                    },
                     legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
                         labels: { colors: chartLabelColor },
-                        itemMargin: { horizontal: 5, vertical: 5 }
+                        itemMargin: { horizontal: 5, vertical: 5 },
+                        formatter: function(seriesName, opts) {
+                            var total = opts.w.globals.series.reduce(function(acc, val) { return acc + val; }, 0);
+                            var val = opts.w.globals.series[opts.seriesIndex];
+                            var pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                            return seriesName + " - " + val + " (" + pct + "%)";
+                        }
                     },
                     responsive: [{
                         breakpoint: 480,
@@ -520,17 +548,26 @@ $('.btn-completar-tarea').on('click', function() {
 
                 var optionsCategory = {
                     series: catValues,
-                    chart: { type: 'donut', height: 250, background: 'transparent', redrawOnWindowResize: true },
+                    chart: { type: 'donut', height: 320, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     labels: catLabels,
                     colors: selectedColors.donut,
                     stroke: { colors: [boxBgColor], width: 1 },
+                    dataLabels: {
+                        enabled: false
+                    },
                     legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
                         labels: { colors: chartLabelColor },
-                        itemMargin: { horizontal: 5, vertical: 5 }
+                        itemMargin: { horizontal: 5, vertical: 5 },
+                        formatter: function(seriesName, opts) {
+                            var total = opts.w.globals.series.reduce(function(acc, val) { return acc + val; }, 0);
+                            var val = opts.w.globals.series[opts.seriesIndex];
+                            var pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                            return seriesName + " - " + val + " (" + pct + "%)";
+                        }
                     },
                     responsive: [{
                         breakpoint: 480,
@@ -555,7 +592,7 @@ $('.btn-completar-tarea').on('click', function() {
 
                 var optionsPriority = {
                     series: [{ name: 'Tareas', data: prioValues }],
-                    chart: { type: 'bar', height: 250, toolbar: { show: false }, background: 'transparent', redrawOnWindowResize: true },
+                    chart: { type: 'bar', height: 320, toolbar: { show: false }, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     plotOptions: { bar: { columnWidth: '45%', borderRadius: 4, distributed: true } },
                     xaxis: {
@@ -591,6 +628,38 @@ $('.btn-completar-tarea').on('click', function() {
 
             // Inicializar paginación de tareas
             paginarTabla('tareas-table', 5);
+
+            // Adaptar buscador del header para Tareas
+            var $globalSearch = $('#buscador-global-header');
+            if ($globalSearch.length > 0) {
+                $('#form-buscador-global').on('submit', function(e) {
+                    e.preventDefault();
+                });
+                $globalSearch.attr('placeholder', 'Buscar tareas (descripción, relacionado, prioridad)...');
+                
+                $globalSearch.on('keyup input', function() {
+                    var query = $(this).val().toLowerCase().trim();
+                    
+                    $('#tareas-table tbody tr').each(function() {
+                        var $row = $(this);
+                        if ($row.find('td').length === 1 && $row.find('td').attr('colspan')) return; // Saltar fila de sin datos
+                        
+                        var responsable = $row.find('td:nth-child(1)').text().toLowerCase();
+                        var descripcion = $row.find('td:nth-child(2)').text().toLowerCase();
+                        var relacionado = $row.find('td:nth-child(3)').text().toLowerCase();
+                        var prioridad = $row.find('td:nth-child(5)').text().toLowerCase();
+                        var estado = $row.find('td:nth-child(6)').text().toLowerCase();
+                        
+                        if (responsable.indexOf(query) > -1 || descripcion.indexOf(query) > -1 || relacionado.indexOf(query) > -1 || prioridad.indexOf(query) > -1 || estado.indexOf(query) > -1) {
+                            $row.removeClass('filtrado-oculto');
+                        } else {
+                            $row.addClass('filtrado-oculto');
+                        }
+                    });
+                    
+                    paginarTabla('tareas-table', 5);
+                });
+            }
         });
 
         function paginarTabla(tableId, recordsPerPage) {
@@ -600,11 +669,20 @@ $('.btn-completar-tarea').on('click', function() {
             $('#' + tableId + '-pagination').remove();
 
             const $tbody = $table.find('tbody');
-            const $rows = $tbody.find('tr');
+            const $rows = $tbody.find('tr').filter(function() {
+                return !$(this).hasClass('filtrado-oculto');
+            });
 
             const totalRows = $rows.length;
-            if (totalRows === 0) return;
-            if (totalRows <= recordsPerPage) return;
+            if (totalRows === 0) {
+                $tbody.find('tr').hide();
+                return;
+            }
+            if (totalRows <= recordsPerPage) {
+                $tbody.find('tr').hide();
+                $rows.show();
+                return;
+            }
 
             let currentPage = 1;
             const totalPages = Math.ceil(totalRows / recordsPerPage);
@@ -621,7 +699,7 @@ $('.btn-completar-tarea').on('click', function() {
                 const start = (page - 1) * recordsPerPage;
                 const end = start + recordsPerPage;
 
-                $rows.hide();
+                $tbody.find('tr').hide();
                 $rows.slice(start, end).show();
 
                 const shownCount = Math.min(end, totalRows);

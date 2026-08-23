@@ -165,20 +165,50 @@
         // Inicializar paginación
         paginarTabla('clientes-table', 5);
 
+        // Adaptar buscador del header para Clientes
+        var $globalSearch = $('#buscador-global-header');
+        if ($globalSearch.length > 0) {
+            $('#form-buscador-global').on('submit', function(e) {
+                e.preventDefault();
+            });
+            $globalSearch.attr('placeholder', 'Buscar clientes (empresa, contacto, email)...');
+            
+            $globalSearch.on('keyup input', function() {
+                aplicarFiltrosClientes();
+            });
+        }
+
         // Filtro interactivo en cliente
         $('#btn-group-filter button').on('click', function() {
             $('#btn-group-filter button').removeClass('active');
             $(this).addClass('active');
-
-            var filter = $(this).data('filter');
-            if (filter === 'all') {
-                $('.cliente-row').show();
-            } else {
-                $('.cliente-row').hide();
-                $('.cliente-row[data-clasificacion="' + filter + '"]').show();
-            }
-            paginarTabla('clientes-table', 5);
+            aplicarFiltrosClientes();
         });
+
+        function aplicarFiltrosClientes() {
+            var filter = $('#btn-group-filter button.active').data('filter') || 'all';
+            var query = $globalSearch.length > 0 ? $globalSearch.val().toLowerCase().trim() : '';
+
+            $('.cliente-row').each(function() {
+                var $row = $(this);
+                var rowClasificacion = $row.data('clasificacion') || '';
+                
+                var empresa = $row.find('td:nth-child(1)').text().toLowerCase();
+                var contacto = $row.find('td:nth-child(2)').text().toLowerCase();
+                var email = $row.find('td:nth-child(3)').text().toLowerCase();
+
+                var coincideFiltro = (filter === 'all' || rowClasificacion === filter);
+                var coincideBusqueda = (query === '' || empresa.indexOf(query) > -1 || contacto.indexOf(query) > -1 || email.indexOf(query) > -1);
+
+                if (coincideFiltro && coincideBusqueda) {
+                    $row.removeClass('filtrado-oculto');
+                } else {
+                    $row.addClass('filtrado-oculto');
+                }
+            });
+
+            paginarTabla('clientes-table', 5);
+        }
 
         // PDF Export Handler
         $('#btn-exportar-pdf').on('click', function() {
@@ -283,12 +313,16 @@
         
         const $tbody = $table.find('tbody');
         const $rows = $tbody.find('tr').filter(function() {
-            return $(this).css('display') !== 'none';
+            return !$(this).hasClass('filtrado-oculto');
         });
         
         const totalRows = $rows.length;
-        if (totalRows === 0) return;
+        if (totalRows === 0) {
+            $tbody.find('tr').hide();
+            return;
+        }
         if (totalRows <= recordsPerPage) {
+            $tbody.find('tr').hide();
             $rows.show();
             return;
         }
@@ -308,7 +342,7 @@
             const start = (page - 1) * recordsPerPage;
             const end = start + recordsPerPage;
             
-            $rows.hide();
+            $tbody.find('tr').hide();
             $rows.slice(start, end).show();
             
             const shownCount = Math.min(end, totalRows);
