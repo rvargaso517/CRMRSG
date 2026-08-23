@@ -1,10 +1,11 @@
 @model List<CRMRSG.EntityFramework.bitacora>
-
 @{
     ViewBag.Title = "Bitácora del Sistema";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var usuarios = (List<CRMRSG.EntityFramework.usuario>)ViewBag.Usuarios;
     var selectedId = (int?)ViewBag.SelectedUsuarioId;
+    int currentPage = ViewBag.CurrentPage != null ? (int)ViewBag.CurrentPage : 1;
+    int totalPages = ViewBag.TotalPages != null ? (int)ViewBag.TotalPages : 1;
 
     var chartLabels = (string[])ViewBag.ChartLabels;
     var chartData = (int[])ViewBag.ChartData;
@@ -137,13 +138,24 @@
                                                 Modificación
                                             </span>
                                         }
-                                        else
+                                        else if (item.accion == "Eliminación")
                                         {
                                             <span class="badge badge-danger-light">
                                                 Eliminación
                                             </span>
                                         }
-
+                                        else if (item.accion == "Login" || item.accion == "Ingreso" || item.accion == "Logear")
+                                        {
+                                            <span class="badge badge-primary-light">Ingreso (Login)</span>
+                                        }
+                                        else if (item.accion == "Logout" || item.accion == "Salida" || item.accion == "Deslogear")
+                                        {
+                                            <span class="badge badge-secondary-light">Salida (Logout)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-info-light">@item.accion</span>
+                                        }
                                     </td>
 
                                     <td class="text-capitalize">
@@ -155,39 +167,15 @@
                                         @{
 
                                             string desc = "";
-
-                                            string modulo =
-                                                item.tabla_afectada ?? "";
-
-                                            if (modulo == "clientes")
-                                            {
-                                                modulo = "Clientes";
-                                            }
-                                            else if (modulo == "oportunidades")
-                                            {
-                                                modulo = "Oportunidades";
-                                            }
-                                            else if (modulo == "tareas")
-                                            {
-                                                modulo = "Tareas";
-                                            }
-                                            else if (modulo == "citas")
-                                            {
-                                                modulo = "Citas / Eventos";
-                                            }
-                                            else if (modulo == "usuarios")
-                                            {
-                                                modulo = "Usuarios";
-                                            }
-                                            else if (modulo == "contacto_cliente")
-                                            {
-                                                modulo = "Contactos";
-                                            }
-                                            else if (modulo == "nota_cliente")
-                                            {
-                                                modulo = "Notas";
-                                            }
-
+                                            string modulo = item.tabla_afectada ?? "";
+                                            if (modulo == "clientes") { modulo = "Clientes"; }
+                                            else if (modulo == "oportunidades") { modulo = "Oportunidades"; }
+                                            else if (modulo == "tareas") { modulo = "Tareas"; }
+                                            else if (modulo == "citas") { modulo = "Citas / Eventos"; }
+                                            else if (modulo == "usuarios") { modulo = "Usuarios"; }
+                                            else if (modulo == "contacto_cliente") { modulo = "Contactos"; }
+                                            else if (modulo == "nota_cliente") { modulo = "Notas"; }
+                                            else if (modulo == "auth" || modulo == "sesion") { modulo = "Sesión"; }
 
                                             if (item.accion == "Creación")
                                             {
@@ -203,6 +191,14 @@
                                             {
                                                 desc =
                                                     $"Eliminó un registro de {modulo}.";
+                                            }
+                                            else if (item.accion == "Login" || item.accion == "Ingreso" || item.accion == "Logear")
+                                            {
+                                                desc = "El usuario inició sesión en el sistema.";
+                                            }
+                                            else if (item.accion == "Logout" || item.accion == "Salida" || item.accion == "Deslogear")
+                                            {
+                                                desc = "El usuario cerró sesión en el sistema.";
                                             }
                                             else
                                             {
@@ -225,19 +221,31 @@
 
                 </div>
 
+                <!-- Paginación por Pestañas (Máximo 10 por página) -->
+                @if (totalPages > 1)
+                {
+                    <div class="p-20 d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Mostrando página @currentPage de @totalPages</span>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, usuarioId = selectedId })">Anterior</a>
+                                </li>
 
-                <div id="bitacora-paginacion-container"
-                     class="d-flex justify-content-between align-items-center flex-wrap mt-3 px-3 pb-3">
+                                @for (int i = 1; i <= totalPages; i++)
+                                {
+                                    <li class="page-item @(currentPage == i ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { page = i, usuarioId = selectedId })">@i</a>
+                                    </li>
+                                }
 
-                    <small id="bitacora-info-paginacion"
-                           class="info-paginacion">
-                    </small>
-
-                    <div id="bitacora-paginacion">
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, usuarioId = selectedId })">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
-
-                </div>
-
+                }
             </div>
 
         </div>
@@ -286,20 +294,8 @@
                     },
 
                     labels: labels,
-
-                    colors: [
-                        '#1d3557',
-                        '#e63946',
-                        '#10c469',
-                        '#f4a261',
-                        '#188ae2'
-                    ],
-
-                    stroke: {
-                        colors: ['#ffffff'],
-                        width: 1
-                    },
-
+                    colors: ['#1d3557', '#e63946', '#10c469', '#f4a261', '#188ae2'],
+                    stroke: { colors: ['#ffffff'], width: 1 },
                     legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',

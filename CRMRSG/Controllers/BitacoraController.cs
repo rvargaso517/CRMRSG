@@ -4,18 +4,21 @@ using CRMRSG.EntityFramework;
 using System.Data;
 using Dapper;
 using CRMRSG.Models;
+using System;
 
 namespace CRMRSG.Controllers
 {
     public class BitacoraController : Controller
     {
-        public ActionResult Index(int? usuarioId)
+        public ActionResult Index(int? usuarioId, int page = 1)
         {
             if (Session["RolId"] == null || (int)Session["RolId"] != 1)
             {
                 TempData["Error"] = "No tiene permisos para acceder a la bitácora.";
                 return RedirectToAction("Index", "Dashboard");
             }
+
+            int pageSize = 10; // Máximo 10 tablas/registros por página
 
             using (var db = DbConnectionFactory.GetConnection())
             {
@@ -34,6 +37,19 @@ namespace CRMRSG.Controllers
                     historial = historial.Where(x => x.id_usuario == usuarioId.Value).ToList();
                 }
 
+                int totalRecords = historial.Count;
+                int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+                // Asegurar que la página esté en un rango válido
+                if (page < 1) page = 1;
+                if (totalPages > 0 && page > totalPages) page = totalPages;
+
+                // Aplicar Paginación (10 elementos por página)
+                var historialPaginado = historial
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
                 var usuarios = db.Query<usuario>(
                     "sp_usuarios_listar",
                     commandType: CommandType.StoredProcedure
@@ -41,6 +57,8 @@ namespace CRMRSG.Controllers
 
                 ViewBag.Usuarios = usuarios;
                 ViewBag.SelectedUsuarioId = usuarioId;
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
 
                 // Datos para el gráfico de actividad por usuario (Top 5 usuarios más activos)
                 var stats = historial
@@ -53,7 +71,7 @@ namespace CRMRSG.Controllers
                 ViewBag.ChartLabels = stats.Select(s => s.Nombre).ToArray();
                 ViewBag.ChartData = stats.Select(s => s.Cantidad).ToArray();
 
-                return View(historial);
+                return View(historialPaginado);
             }
         }
     }

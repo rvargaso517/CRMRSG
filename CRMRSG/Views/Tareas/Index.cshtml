@@ -187,6 +187,7 @@
                                 <th>Vencimiento</th>
                                 <th>Prioridad</th>
                                 <th>Estado</th>
+                                <th>Descripción de Finalización</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -194,7 +195,7 @@
                             @if (Model.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted p-20">
+                                    <td colspan="8" class="text-center text-muted p-20">
                                         No se encontraron tareas registradas.
                                     </td>
                                 </tr>
@@ -215,14 +216,14 @@
                                         }
                                     </td>
                                     <td>
-                                         @(item.cliente != null
+                                        @(item.cliente != null
                                              ? item.cliente.empresa
                                              : "Sin cliente")
-                                         @if (!string.IsNullOrEmpty(item.contacto_nombre))
-                                         {
-                                             <br /><small class="text-fade"><i class="fa fa-user me-1"></i> Contacto: @item.contacto_nombre</small>
-                                         }
-                                     </td>
+                                        @if (!string.IsNullOrEmpty(item.contacto_nombre))
+                                        {
+                                            <br /><small class="text-fade"><i class="fa fa-user me-1"></i> Contacto: @item.contacto_nombre</small>
+                                        }
+                                    </td>
                                     <td>
                                         @(item.fecha_limite.HasValue
                                             ? item.fecha_limite.Value.ToString("dd/MM/yyyy")
@@ -256,6 +257,19 @@
                                             <span class="badge badge-warning-light">@item.estado</span>
                                         }
                                     </td>
+                                    <td class="text-center">
+                                        @if (item.estado == "Completada" && !string.IsNullOrEmpty(item.descripcion_finalizacion))
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-ver-desc-finalizacion" data-desc="@item.descripcion_finalizacion" title="Ver descripción de finalización">
+                                                <i class="fa fa-eye"></i> Ver
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+
                                     <td class="text-center">
                                         @if (item.estado != "Completada")
                                         {
@@ -308,42 +322,61 @@
     <script>
         $(document).ready(function() {
             // Completar Tarea AJAX
-            $('.btn-completar-tarea').on('click', function() {
-                var taskId = $(this).data('id');
-                var token = $('input[name="__RequestVerificationToken"]').val();
-                
-                Swal.fire({
-                    title: '¿Completar tarea?',
-                    text: "¿Desea marcar esta tarea como completada?",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10c469',
-                    cancelButtonColor: '#9e9e9e',
-                    confirmButtonText: 'Sí, completar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '@Url.Action("Completar", "Tareas")',
-                            type: 'POST',
-                            data: {
-                                id: taskId,
-                                __RequestVerificationToken: token
-                            },
-                            success: function(res) {
-                                if (res.success) {
-                                    Swal.fire('¡Completada!', res.message, 'success').then(function() {
-                                        location.reload();
-                                    });
-                                } else {
-                                    Swal.fire('Error', res.message, 'error');
-                                }
-                            },
-                            error: function() {
-                                Swal.fire('Error', 'Error de red al completar la tarea.', 'error');
-                            }
+$('.btn-completar-tarea').on('click', function() {
+    var taskId = $(this).data('id');
+    var token = $('input[name="__RequestVerificationToken"]').val();
+
+    Swal.fire({
+        title: '¿Completar tarea?',
+        text: 'Ingrese la descripción de cómo se finalizó esta tarea:',
+        icon: 'question',
+        input: 'textarea',
+        inputPlaceholder: 'Describa el resultado o detalle de la finalización...',
+        showCancelButton: true,
+        confirmButtonColor: '#10c469',
+        cancelButtonColor: '#9e9e9e',
+        confirmButtonText: 'Sí, completar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Debe ingresar una descripción para completar la tarea.';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '@Url.Action("Completar", "Tareas")',
+                type: 'POST',
+                data: {
+                    id: taskId,
+                    descripcionFinalizacion: result.value,
+                    __RequestVerificationToken: token
+                },
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire('¡Completada!', res.message, 'success').then(function() {
+                            location.reload();
                         });
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
                     }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Error de red al completar la tarea.', 'error');
+                }
+            });
+        }
+    });
+});
+
+            // Ver descripción de finalización
+            $(document).on('click', '.btn-ver-desc-finalizacion', function () {
+                var desc = $(this).data('desc');
+                Swal.fire({
+                    title: 'Descripción de Finalización',
+                    text: desc,
+                    icon: 'info',
+                    confirmButtonText: 'Cerrar'
                 });
             });
 
@@ -457,7 +490,7 @@
                     labels: userLabels,
                     colors: selectedColors.bar,
                     stroke: { colors: [boxBgColor], width: 1 },
-                    legend: { 
+                    legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
@@ -492,7 +525,7 @@
                     labels: catLabels,
                     colors: selectedColors.donut,
                     stroke: { colors: [boxBgColor], width: 1 },
-                    legend: { 
+                    legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         floating: false,
@@ -525,7 +558,7 @@
                     chart: { type: 'bar', height: 250, toolbar: { show: false }, background: 'transparent', redrawOnWindowResize: true },
                     theme: { mode: chartThemeMode },
                     plotOptions: { bar: { columnWidth: '45%', borderRadius: 4, distributed: true } },
-                    xaxis: { 
+                    xaxis: {
                         categories: prioLabels,
                         labels: {
                             rotate: -45,
@@ -545,7 +578,7 @@
                         }
                     },
                     colors: selectedColors.bar,
-                    legend: { 
+                    legend: {
                         position: 'bottom',
                         horizontalAlign: 'center',
                         labels: { colors: chartLabelColor },
@@ -563,56 +596,56 @@
         function paginarTabla(tableId, recordsPerPage) {
             const $table = $('#' + tableId);
             if ($table.length === 0) return;
-            
+
             $('#' + tableId + '-pagination').remove();
-            
+
             const $tbody = $table.find('tbody');
             const $rows = $tbody.find('tr');
-            
+
             const totalRows = $rows.length;
             if (totalRows === 0) return;
             if (totalRows <= recordsPerPage) return;
-            
+
             let currentPage = 1;
             const totalPages = Math.ceil(totalRows / recordsPerPage);
-            
+
             const $navContainer = $('<div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3 flex-wrap gap-2" id="' + tableId + '-pagination"></div>');
             const $infoText = $('<span class="text-muted small"></span>');
             const $paginationUl = $('<ul class="pagination pagination-sm mb-0"></ul>');
-            
+
             $navContainer.append($infoText).append($paginationUl);
             $table.after($navContainer);
-            
+
             function showPage(page) {
                 currentPage = page;
                 const start = (page - 1) * recordsPerPage;
                 const end = start + recordsPerPage;
-                
+
                 $rows.hide();
                 $rows.slice(start, end).show();
-                
+
                 const shownCount = Math.min(end, totalRows);
                 $infoText.text('Mostrando del ' + (start + 1) + ' al ' + shownCount + ' de ' + totalRows + ' registros.');
-                
+
                 $paginationUl.empty();
                 const $prevLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&laquo;</a></li>');
                 if (currentPage === 1) $prevLi.addClass('disabled');
                 else $prevLi.on('click', () => showPage(currentPage - 1));
                 $paginationUl.append($prevLi);
-                
+
                 for (let i = 1; i <= totalPages; i++) {
                     const $pageLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">' + i + '</a></li>');
                     if (i === currentPage) $pageLi.addClass('active');
                     else $pageLi.on('click', () => showPage(i));
                     $paginationUl.append($pageLi);
                 }
-                
+
                 const $nextLi = $('<li class="page-item"><a class="page-link" href="javascript:void(0)">&raquo;</a></li>');
                 if (currentPage === totalPages) $nextLi.addClass('disabled');
                 else $nextLi.on('click', () => showPage(currentPage + 1));
                 $paginationUl.append($nextLi);
             }
-            
+
             showPage(1);
         }
     </script>

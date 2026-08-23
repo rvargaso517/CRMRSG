@@ -83,7 +83,7 @@ namespace CRMRSG.Controllers
                 ViewBag.Error = "Contraseña incorrecta.";
                 return View();
             }
-            
+
             using (var conn = DbConnectionFactory.GetConnection())
             {
                 conn.Execute(
@@ -91,6 +91,22 @@ namespace CRMRSG.Controllers
                     new { p_id_usuario = usuario.id_usuario },
                     commandType: CommandType.StoredProcedure
                 );
+
+                // Registrar inicio de sesión (Login / Logear) en la bitácora
+                try
+                {
+                    conn.Execute(
+                        "INSERT INTO bitacora (id_usuario, accion, tabla_afectada, fecha_hora) VALUES (@idUsuario, @accion, @tabla, @fecha)",
+                        new
+                        {
+                            idUsuario = usuario.id_usuario,
+                            accion = "Login",
+                            tabla = "sesion",
+                            fecha = DateTime.Now
+                        }
+                    );
+                }
+                catch { }
             }
 
             Session["UsuarioId"] = usuario.id_usuario;
@@ -118,7 +134,7 @@ namespace CRMRSG.Controllers
         [HttpPost]
         public ActionResult Registro(string nombreCompleto, string correo, string password, string confirmPassword)
         {
-            if (string.IsNullOrWhiteSpace(nombreCompleto) || string.IsNullOrWhiteSpace(correo) || 
+            if (string.IsNullOrWhiteSpace(nombreCompleto) || string.IsNullOrWhiteSpace(correo) ||
                 string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(confirmPassword))
             {
                 ViewBag.Error = "Todos los campos son obligatorios.";
@@ -130,13 +146,13 @@ namespace CRMRSG.Controllers
                 ViewBag.Error = "La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.";
                 return View();
             }
-            
+
             if (!correo.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase))
             {
                 ViewBag.Error = "Debe registrarse utilizando un correo @gmail.com válido.";
                 return View();
             }
-            
+
             if (password != confirmPassword)
             {
                 ViewBag.Error = "Las contraseñas no coinciden.";
@@ -178,7 +194,8 @@ namespace CRMRSG.Controllers
                 {
                     conn.Execute(
                         "sp_usuarios_insertar",
-                        new {
+                        new
+                        {
                             p_nombre = nombre,
                             p_apellido = apellido,
                             p_correo = correo,
@@ -189,7 +206,6 @@ namespace CRMRSG.Controllers
                         commandType: CommandType.StoredProcedure
                     );
 
-                    // Poner al usuario auto-registrado en estado inactivo (pendiente de aprobación) - Opción B
                     conn.Execute("UPDATE usuarios SET estado = 0 WHERE correo = @p_correo", new { p_correo = correo });
                 }
 
@@ -203,7 +219,7 @@ namespace CRMRSG.Controllers
             }
         }
 
-        // GET: Autenticacion/CambiarContrasena (vista para solicitar recuperación)
+        // GET: Autenticacion/CambiarContrasena
         public ActionResult CambiarContrasena()
         {
             return View();
@@ -248,7 +264,8 @@ namespace CRMRSG.Controllers
                 {
                     conn.Execute(
                         "sp_usuarios_actualizar_token_recuperacion",
-                        new {
+                        new
+                        {
                             p_id_usuario = usuario.id_usuario,
                             p_token = token,
                             p_fecha_expiracion = fechaExp
@@ -285,7 +302,7 @@ namespace CRMRSG.Controllers
             return View();
         }
 
-        // GET: Autenticacion/Restablecer?token=...
+        // GET: Autenticacion/Restablecer
         public ActionResult Restablecer(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
@@ -366,7 +383,8 @@ namespace CRMRSG.Controllers
             {
                 conn.Execute(
                     "sp_usuarios_actualizar_contrasena",
-                    new {
+                    new
+                    {
                         p_id_usuario = usuario.id_usuario,
                         p_password_hash = HashPassword(password)
                     },
@@ -381,6 +399,29 @@ namespace CRMRSG.Controllers
         // GET: Autenticacion/Logout
         public ActionResult Logout()
         {
+            // Registrar cierre de sesión (Logout / Deslogear) antes de limpiar la sesión
+            if (Session["UsuarioId"] != null)
+            {
+                int idUsuario = Convert.ToInt32(Session["UsuarioId"]);
+                try
+                {
+                    using (var conn = DbConnectionFactory.GetConnection())
+                    {
+                        conn.Execute(
+                            "INSERT INTO bitacora (id_usuario, accion, tabla_afectada, fecha_hora) VALUES (@idUsuario, @accion, @tabla, @fecha)",
+                            new
+                            {
+                                idUsuario = idUsuario,
+                                accion = "Logout",
+                                tabla = "sesion",
+                                fecha = DateTime.Now
+                            }
+                        );
+                    }
+                }
+                catch { }
+            }
+
             Session.Clear();
             Session.Abandon();
             return RedirectToAction("Login");
@@ -401,7 +442,7 @@ namespace CRMRSG.Controllers
             }
         }
 
-        // Envío de correo de recuperación (lee configuración desde web.config appSettings)
+        // Envío de correo de recuperación
         private void SendRecoveryEmail(string toEmail, string resetUrl)
         {
             SendRecoveryEmail(toEmail, resetUrl, null);
@@ -409,8 +450,6 @@ namespace CRMRSG.Controllers
 
         private void SendRecoveryEmail(string toEmail, string resetUrl, string htmlBody)
         {
-            // Configuración esperada en web.config (appSettings):
-            // SmtpHost, SmtpPort, SmtpUser, SmtpPass, SmtpFrom, SmtpEnableSsl
             var host = ConfigurationManager.AppSettings["SmtpHost"];
             var portStr = ConfigurationManager.AppSettings["SmtpPort"];
             var user = ConfigurationManager.AppSettings["SmtpUser"];
@@ -442,7 +481,7 @@ namespace CRMRSG.Controllers
                 {
                     message.Body = $"<p>Se solicitó restablecer la contraseña. Haga clic en el siguiente enlace para elegir una nueva contraseña:</p>" +
                                    $"<p><a href=\"{resetUrl}\">{resetUrl}</a></p>" +
-                                   "<p>Si no solicitó este cambio, puede ignorar este mensaje.</p>";
+                                   $"<p>Si no solicitó este cambio, puede ignorar este mensaje.</p>";
                 }
 
                 using (var client = new SmtpClient(host, port))
